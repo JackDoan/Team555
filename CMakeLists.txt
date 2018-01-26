@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.9)
+project(AirHockeyRobot)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_STANDARD 11)
+#set(OpenCV_PREFIX C:/opencv/mingw)
+set(OpenCV_DIR C:/opencv/mingw/install)
+find_package( OpenCV REQUIRED opencv_core opencv_imgproc opencv_highgui opencv_imgcodecs
+        PATHS ${OpenCV_PREFIX}
+        NO_DEFAULT_PATH) # For some reason CMake uses its defaults before the above paths.)
+INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS} )
+add_executable(AirHockeyRobot main.cpp Puck.cpp Puck.h Table.cpp Table.h Camera.cpp Camera.h ThresholdImage.cpp ThresholdImage.h ViewFinder.cpp ViewFinder.h)
+link_directories(${OpenCV_LIB_DIR})
+target_link_libraries( AirHockeyRobot ${OpenCV_LIBS} )
+
+

@@ -1,0 +1,14 @@
+//
+// Created by jad140230 on 1/21/2018.
+//
+
+#ifndef AIRHOCKEYROBOT_VIEWFINDER_H
+#define AIRHOCKEYROBOT_VIEWFINDER_H
+
+
+class ViewFinder {
+
+};
+
+
+#endif //AIRHOCKEYROBOT_VIEWFINDER_H
