@@ -10,6 +10,8 @@
 #include "Puck.h"
 #include "Camera.h"
 
+//BUILDING: do this, steps 1-9: https://stackoverflow.com/questions/35984678/use-opencv-with-clion-ide-on-windows
+//For step 3, use C:\opencv\mingw instead of C:\opencv\mingw-build
 
 
 void cameraProcessInit(Table& table) {
