@@ -16,17 +16,17 @@ private:
     ThresholdImage thresholdImage = ThresholdImage(threshold_s());
 
 public:
-    int lastX = -1;
-    int lastY = -1;
-    int x = 0;
-    int y = 0;
+    double lastX = -1;
+    double lastY = -1;
+    double x = 0;
+    double y = 0;
 
     //int puckCoordX;
     //int puckCoordY;
     //int oldCoordX;
     //int oldCoordY;
-    int speedX;
-    int speedY;
+    double speedX;
+    double speedY;
     float speed;         // mm/sec
     float direction;     // radians
 

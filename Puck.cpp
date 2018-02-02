@@ -19,9 +19,9 @@ void Puck::setupTrackbars() {
 
     cv::namedWindow(name, 1);
 
-    cv::createTrackbar(TrackbarName1, name, &minArea, slidermax, NULL);
-    cv::createTrackbar(TrackbarName2, name, &maxArea, slidermax, NULL);
-    cv::createTrackbar(TrackbarName3, name, &minRoundness, slidermax, NULL);
+    cv::createTrackbar(TrackbarName1, name, &minArea, slidermax, nullptr);
+    cv::createTrackbar(TrackbarName2, name, &maxArea, slidermax, nullptr);
+    cv::createTrackbar(TrackbarName3, name, &minRoundness, slidermax, nullptr);
     thresholdImage.setupTrackbars();
 }
 
@@ -60,8 +60,7 @@ Puck::Puck() {
     thresholdImage = ThresholdImage(puckLimits);
 }
 
-Puck::~Puck() {
-}
+Puck::~Puck() = default;
 
 void Puck::find(cv::Mat in, Table table) {
     double area = 0;
@@ -77,8 +76,8 @@ void Puck::find(cv::Mat in, Table table) {
     //CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
 
     // Position initialization
-    int posX = 0;
-    int posY = 0;
+    double posX = 0;
+    double posY = 0;
     int localLastX = x;
     int localLastY = y;
     num = 0;
@@ -103,14 +102,14 @@ void Puck::find(cv::Mat in, Table table) {
                 area = moments.m00;
                 // Calculate object center
                 // We are using 320x240 pix but we are going to output the 640x480 equivalent (*2)
-                posX = floor(moment10 * 2 / (double)area + 0.5); // round
-                posY = floor(moment01 * 2 / (double)area + 0.5);
+                posX = floor(moment10 * 2 / area + 0.5); // round
+                posY = floor(moment01 * 2 / area + 0.5);
 
                 // limit the region of interest to the table
-                if ((posX > table.table_pix_maxx * 2) ||
-                    (posX < table.table_pix_minx * 2) ||
-                    (posY > table.table_pix_maxy * 2) ||
-                    (posY < table.table_pix_miny * 2)) {
+                if ((posX > table.max.x * 2) ||
+                    (posX < table.min.x * 2) ||
+                    (posY > table.max.y * 2) ||
+                    (posY < table.min.y * 2)) {
                     posX = 0;
                     posY = 0;
                     //contours = contours->h_next;
@@ -138,3 +137,5 @@ void Puck::find(cv::Mat in, Table table) {
         }
     }
 }
+
+

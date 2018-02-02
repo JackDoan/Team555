@@ -5,22 +5,24 @@
 #ifndef AIRHOCKEYROBOT_CAMERA_H
 #define AIRHOCKEYROBOT_CAMERA_H
 
-//todo fix camera distortion
+
+#include <opencv2/videoio.hpp>
+#include "helpers.h"
 
 class Camera {
     // Camera variables
     cv::VideoCapture capture;
     //float cam_pix_to_mm = CAM_PIX_TO_MM; //todo replace this with an expression
-    float cam_rotation = 0.0;  //Camera rotation in radians
     // application parameters
-    int cameraX = 1280;
-    int cameraY = 960;
+
+    Coordinate dimensions;
+
     int preview = 1;
     cv::Mat currentView;
 
 public:
     Camera(int nwidth, int nheight);
-    std::vector<int> getCameraCenter();
+    Coordinate getCenter();
     ~Camera();
     cv::Mat getFrame();
 };
