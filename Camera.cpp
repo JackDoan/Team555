@@ -9,18 +9,19 @@
 #include "Camera.h"
 
 Camera::Camera(int nwidth, int nheight) {
-    //double src [3][3] = {{1, 0, 1}, {0, 1, 1}, {0, 0, 1}};
-    //double src [3][3] = {{6.6679e+002, 0, 6.3720e+002}, {0, 6.6679e+002, 4.7674e+002}, {0, 0, 1}};
-    //double src [3][3] = {{6.6679e+002, 0, 6.3720e+002}, {0, 6.6679e+002, 4.7674e+002}, {0, 0, 1}};
-    //double dest [5] = {-3.3227e-001, 1.3129e-001, 2.3326e-004, 2.0624e-004, -2.7547e-002};
 
-
-    cameraMatrix = (cv::Mat_<double>(3,3) << 6.6679383028483210e+002, 0., 6.3719671275509222e+002, 0., 6.6679383028483210e+002, 4.7673899365172701e+002, 0., 0., 1. );//cv::Mat(3,3, CV_64F, src);
-    distCoeffs = (cv::Mat_<double>(5,1) << -3.2269615280392588e-001, 1.3129405244706957e-001, 2.3325702456177653e-004, -2.0624376196568662e-004, -2.7547310468566403e-002);
-    //distCoeffs = cv::Mat(5,1, CV_64F, dest);
+    cameraMatrix = (cv::Mat_<double>(3,3)
+            << 6.6679383028483210e+002, 0., 6.3719671275509222e+002,
+            0., 6.6679383028483210e+002, 4.7673899365172701e+002,
+            0., 0., 1. );
+    distCoeffs = (cv::Mat_<double>(1,5)
+            << -3.2269615280392588e-001, 1.3129405244706957e-001, 2.3325702456177653e-004,
+            -2.0624376196568662e-004, -2.7547310468566403e-002);
 
     dimensions = Coordinate(nwidth,nheight);
+
     capture.open(0);
+
     if (!capture.isOpened()) {
         printf("OPENCV Capture failure!\n");
         exit(-123);
@@ -29,6 +30,11 @@ Camera::Camera(int nwidth, int nheight) {
 
     capture.set(CV_CAP_PROP_FRAME_WIDTH, nwidth);
     capture.set(CV_CAP_PROP_FRAME_HEIGHT, nheight);
+
+    //capture.read(currentView);
+    cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(),
+                                cameraMatrix, cv::Size(nwidth,nheight), CV_32FC1,map1, map2);
+
     //capture.set(CV_CAP_PROP_FPS, table.fps);
     //capture.set(CV_CAP_PROP_EXPOSURE, 2);
 
@@ -46,16 +52,9 @@ Coordinate Camera::getCenter() {
 cv::Mat Camera::getFrame() {
     capture.read(currentView);
     //undistortedFrame = currentView.clone();
-    auto temp = currentView.clone();
+    //cv::Mat undistortedFrame;// = currentView.clone();
     //bitwise_not(currentView, currentView);
-   /* cv::Mat newCameraMatrix, map1, map2;
-    cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(),
-    newCameraMatrix, cv::Size(1280,720), CV_32FC1,map1, map2);
-    remap(currentView, temp, map1, map2, cv::INTER_LINEAR);*/
-    cv::undistort(currentView, temp, cameraMatrix, distCoeffs);
-    //cv::undistort(currentView, undistortedFrame, cameraMatrix, distCoeffs);
-    //cv::imshow("in", currentView);
-    //cv::imshow("out", temp);
-    return temp;
-    //return undistortedFrame;
+    remap(currentView, undistortedFrame, map1, map2, cv::INTER_LINEAR);
+    return undistortedFrame;
+    //return currentView;
 }

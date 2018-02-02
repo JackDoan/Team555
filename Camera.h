@@ -20,7 +20,7 @@ class Camera {
     int preview = 1;
     cv::Mat currentView;
     cv::Mat undistortedFrame;
-
+    cv::Mat newCameraMatrix, map1, map2;
     cv::Mat cameraMatrix;
     cv::Mat distCoeffs;
     public:
