@@ -4,9 +4,11 @@
 
 #include <opencv2/videoio.hpp>
 #include <opencv2/videoio/videoio_c.h>
+#include <opencv2/imgproc.hpp>
 #include "Camera.h"
 
 Camera::Camera(int nwidth, int nheight) {
+
 
 
     dimensions = Coordinate(nwidth,nheight);
@@ -35,5 +37,6 @@ Coordinate Camera::getCenter() {
 
 cv::Mat Camera::getFrame() {
     capture.read(currentView);
-    return currentView;
+    cv::undistort(currentView, undistortedFrame, cameraMatrix, distCoeffs, cameraMatrix);
+    return undistortedFrame;
 }
