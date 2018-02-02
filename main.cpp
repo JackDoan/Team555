@@ -4,6 +4,7 @@
 #include <opencv2/core/opengl.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv/cv.hpp>
+#include <opencv2/imgproc.hpp>
 #include <sysinfoapi.h>
 
 #include "Table.h"
@@ -214,6 +215,10 @@ int main(int argc, char* argv[]) {
     cv::Mat imgHSV;
     cv::Mat imgThresh;
     cv::VideoWriter record;
+   // std::vector<cv::Point2f> src = {{666.7938, 0, 637.1967}, {0, 667.9383, 476.73899}, {0, 0, 1}};
+    //double src [3][3] = {{666.7938, 0, 637.1967}, {0, 667.9383, 476.73899}, {0, 0, 1}};
+    double src [3][3] = {{6.6679e+002, 0, 6.3720e+002}, {0, 6.6679e+002, 4.7674e+002}, {0, 0, 1}};
+    double dst [5] = {-3.3227e-001, 1.3129e-001, 2.3326e-004, 2.0624e-004, -2.7547e-002};
     FILE* logFile;
     int log_output = 1;
     time_t start = 0;
