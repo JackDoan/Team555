@@ -16,10 +16,11 @@ private:
     ThresholdImage thresholdImage = ThresholdImage(threshold_s());
 
 public:
-    double lastX = -1;
-    double lastY = -1;
-    double x = 0;
-    double y = 0;
+    //double lastX = -1;
+    // lastY = -1;
+    //double x = 0;
+    //double y = 0;
+    Coordinate location, lastLocation;
 
     //int puckCoordX;
     //int puckCoordY;

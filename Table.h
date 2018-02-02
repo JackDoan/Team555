@@ -18,7 +18,6 @@
 class Table {
 public:
 
-
     int fps = 60; //used to define the FPS frames are saved at
     int robot_table_length = 1930; //mm
     int robot_table_width = 1200; //mm
@@ -26,20 +25,12 @@ public:
     int robot_table_center_y = robot_table_width /2;
     int puckSize = 0;  // Puck size (radio) estimation. it depends on table size (width)
 
-
     int defense_position;
     int predict_x;    // X position at impact (mm)
     int predict_y;
     int predict_x_old;
     int predict_y_old;
     int predict_time;   // time to impact in ms
-
-
-    // variables to draw the table
-    //int table_pix_minx;
-    //int table_pix_miny;
-    //int table_pix_maxx;
-    //int table_pix_maxy;
 
     Coordinate max, min;
 

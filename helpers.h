@@ -22,9 +22,9 @@ public:
         std::pair<T,T>(mx,my);
     }*/
 
-    int x;
-    int y;
-    Coordinate(int mx, int my) {
+    double x;
+    double y;
+    Coordinate(double mx, double my) {
         x = mx;
         y = my;
     }

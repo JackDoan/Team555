@@ -31,13 +31,12 @@ void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
 
 
     // First we convert image coordinates to center of image
-    //todo establish order of operations here
-    coordX = table.robot_table_center_x - (puck.x - table.cam_center_x) * table.cam_pix_to_mm;
-    coordY = table.robot_table_center_y - (puck.y - table.cam_center_y) * table.cam_pix_to_mm;
+    coordX = table.robot_table_center_x - (puck.location.x - table.cam_center_x) * table.cam_pix_to_mm;
+    coordY = table.robot_table_center_y - (puck.location.y - table.cam_center_y) * table.cam_pix_to_mm;
 
     // Calculate speed and angle
-    vectorX = (coordX - puck.x);
-    vectorY = (coordY - puck.y);
+    vectorX = (coordX - puck.location.x);
+    vectorY = (coordY - puck.location.y);
 
     puck.speedX = vectorX * 100 / time;  // speed in dm/ms (
     puck.speedY = vectorY * 100 / time;
@@ -78,7 +77,7 @@ void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
             bounce_y = (bounce_x - coordX)*slope + coordY;
             bounce_pixX = table.cam_center_x - (bounce_x - table.robot_table_center_x) / table.cam_pix_to_mm;
             bounce_pixY = table.cam_center_y - (bounce_y - table.robot_table_center_y) / table.cam_pix_to_mm;
-            table.predict_time = (bounce_x - puck.x) * 100 / puck.speedX;  // time until bouce
+            table.predict_time = (bounce_x - puck.location.x) * 100 / puck.speedX;  // time until bouce
             // bounce prediction
             // Slope change
             slope = -slope;
@@ -99,7 +98,7 @@ void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
                 if (table.predict_x_old != -1)
                     table.predict_x = (table.predict_x_old + table.predict_x) >> 1;
                 table.predict_x_old = table.predict_x;
-                table.predict_time = table.predict_time + (table.predict_y - puck.y) * 100 / puck.speedY;  // in ms
+                table.predict_time = table.predict_time + (table.predict_y - puck.location.y) * 100 / puck.speedY;  // in ms
                 //sprintf(puckDataString2, "%d t%d", table.predict_x, table.predict_time);
                 predict_pixX = table.cam_center_x - (table.predict_x - table.robot_table_center_x) / table.cam_pix_to_mm;
                 predict_pixY = table.cam_center_y - (table.predict_y - table.robot_table_center_y) / table.cam_pix_to_mm;
@@ -116,7 +115,7 @@ void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
                 table.predict_x = (table.predict_x_old + table.predict_x) >> 1;
             table.predict_x_old = table.predict_x;
 
-            table.predict_time = (table.predict_y - puck.y) * 100 / puck.speedY;  // in ms
+            table.predict_time = (table.predict_y - puck.location.y) * 100 / puck.speedY;  // in ms
             //sprintf(puckDataString2, "%d t%d", predict_x, predict_time);
             // Convert impact prediction position to pixels (to show on image)
             predict_pixX = table.cam_center_x - (table.predict_x - table.robot_table_center_x) / table.cam_pix_to_mm;
@@ -200,7 +199,7 @@ int main(int argc, char* argv[]) {
 
         if (table.preview == 1) {
             // Put text over image
-            sprintf(tempStr, "%f %ld %d,%d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.x, puck.y, puck.speedY);
+            sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.speedY);
             cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
             //cv::putText(grabbed, table.puckDataString2, cvPoint(170, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
             // Draw Table borders
