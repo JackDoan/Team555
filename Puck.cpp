@@ -19,9 +19,9 @@ void Puck::setupTrackbars() {
 
     cv::namedWindow(name, 1);
 
-    cv::createTrackbar(TrackbarName1, name, &minArea, slidermax, NULL);
-    cv::createTrackbar(TrackbarName2, name, &maxArea, slidermax, NULL);
-    cv::createTrackbar(TrackbarName3, name, &minRoundness, slidermax, NULL);
+    cv::createTrackbar(TrackbarName1, name, &minArea, slidermax, nullptr);
+    cv::createTrackbar(TrackbarName2, name, &maxArea, slidermax, nullptr);
+    cv::createTrackbar(TrackbarName3, name, &minRoundness, slidermax, nullptr);
     thresholdImage.setupTrackbars();
 }
 
@@ -60,8 +60,7 @@ Puck::Puck() {
     thresholdImage = ThresholdImage(puckLimits);
 }
 
-Puck::~Puck() {
-}
+Puck::~Puck() = default;
 
 void Puck::find(cv::Mat in, Table table) {
     double area = 0;
@@ -77,10 +76,12 @@ void Puck::find(cv::Mat in, Table table) {
     //CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
 
     // Position initialization
-    int posX = 0;
-    int posY = 0;
-    int localLastX = x;
-    int localLastY = y;
+    //double posX = 0;
+    //double posY = 0;
+    Coordinate pos = Coordinate(0.0,0);
+    Coordinate lastPos = Coordinate(0,0);
+   // double localLastX = x;
+    //double localLastY = y;
     num = 0;
 
     cv::InputArray thisone = imgThresh;
@@ -102,39 +103,40 @@ void Puck::find(cv::Mat in, Table table) {
                 double moment01 = moments.m01;
                 area = moments.m00;
                 // Calculate object center
-                // We are using 320x240 pix but we are going to output the 640x480 equivalent (*2)
-                posX = floor(moment10 * 2 / (double)area + 0.5); // round
-                posY = floor(moment01 * 2 / (double)area + 0.5);
+                pos.x = moment10*2 / area;
+                pos.y = moment01*2 / area;
+
+                //pos.x = floor(moments.m10 * 2 / area + 0.5); // round
+                //pos.y = floor(moments.m01 * 2 / area + 0.5);
 
                 // limit the region of interest to the table
-                if ((posX > table.table_pix_maxx * 2) ||
-                    (posX < table.table_pix_minx * 2) ||
-                    (posY > table.table_pix_maxy * 2) ||
-                    (posY < table.table_pix_miny * 2)) {
-                    posX = 0;
-                    posY = 0;
+                if ((pos.x > table.max.x * 2) ||
+                    (pos.x < table.min.x * 2) ||
+                    (pos.y > table.max.y * 2) ||
+                    (pos.y < table.min.y * 2)) {
+                    pos.x = 0;
+                    pos.y = 0;
                     //contours = contours->h_next;
                     continue;  // continue with other contour... (this is outside the table)
                 }
                 else {
-                    x = posX;
-                    y = posY;
-                    lastX = localLastX;
-                    lastY = localLastY;
+                    location = pos;
+                    lastLocation = lastPos;
                 }
 
                 // Draw contour
                 if (table.preview == 1)
                     cv::drawContours(in, contours, i, cv::Scalar(255, 0, 0), 1, 8);
-                if (lastX >= 0 && lastY >= 0) {
+                if (lastLocation.x >= 0 && lastLocation.y >= 0) {
                     if (table.preview == 1) { // Draw a line from the previous point to the current point
-                        cv::line(in, cvPoint(posX / 2, posY / 2), cvPoint(lastX / 2, lastY / 2), cvScalar(255, 255, 0), 4);
+                        cv::line(in, cvPoint((int)pos.x/ 2, (int)pos.y / 2), cvPoint((int)lastLocation.x / 2, (int)lastLocation.y / 2), cvScalar(255, 255, 0), 4);
                     }
                 }
-                lastX = posX;
-                lastY = posY;
+                lastLocation = location;
                 break;
             }
         }
     }
 }
+
+
