@@ -42,21 +42,28 @@ double Puck::getMinRoundness()
 
 Puck::Puck() {
     struct threshold_s puckLimits;
-   /* for green
-    puckLimits.minH = 26;
-    puckLimits.maxH = 128;
-    puckLimits.minS = 150;
-    puckLimits.maxS = 236;
-    puckLimits.minV = 59;
-    puckLimits.maxV = 227; */
+    //for green
+
+    puckLimits.minH = 43;
+    puckLimits.maxH = 110;
+    puckLimits.minS = 70;
+    puckLimits.maxS = 155;
+    puckLimits.minV = 20;
+    puckLimits.maxV = 67;
+
+
+
 
     //for orange
+    /*
     puckLimits.minH = 39;
     puckLimits.maxH = 103;
     puckLimits.minS = 90;
     puckLimits.maxS = 149;
     puckLimits.minV = 121;
     puckLimits.maxV = 212;
+     */
+
     thresholdImage = ThresholdImage(puckLimits);
 }
 
@@ -67,6 +74,10 @@ void Puck::find(cv::Mat in, Table table) {
     double perimeter = 0;
     double roundness = 0;
     int num;
+
+
+
+
     cv::Mat imgThresh = thresholdImage.get(in);
     cv::Mat imgThreshSmall;
     cv::resize(imgThresh,imgThreshSmall, cv::Size(), 0.25, 0.25);
@@ -80,7 +91,7 @@ void Puck::find(cv::Mat in, Table table) {
     //double posY = 0;
     Coordinate pos = Coordinate(0.0,0);
     Coordinate lastPos = Coordinate(0,0);
-   // double localLastX = x;
+    //double localLastX = x;
     //double localLastY = y;
     num = 0;
 
@@ -121,22 +132,46 @@ void Puck::find(cv::Mat in, Table table) {
                 }
                 else {
                     location = pos;
-                    lastLocation = lastPos;
                 }
 
                 // Draw contour
                 if (table.preview == 1)
                     cv::drawContours(in, contours, i, cv::Scalar(255, 0, 0), 1, 8);
-                if (lastLocation.x >= 0 && lastLocation.y >= 0) {
-                    if (table.preview == 1) { // Draw a line from the previous point to the current point
-                        cv::line(in, cvPoint((int)pos.x/ 2, (int)pos.y / 2), cvPoint((int)lastLocation.x / 2, (int)lastLocation.y / 2), cvScalar(255, 255, 0), 4);
-                    }
-                }
+
+                getCoords(table);
+                getVector(in);
                 lastLocation = location;
                 break;
             }
         }
     }
+
+    //puck.speedX = vectorX * 100 / time;  // speed in dm/ms (
+    //puck.speedY = vectorY * 100 / time;
 }
 
+void Puck::getCoords(Table table) {
+    coordX = location.x/2 - table.cam_center_x;
+    coordY = location.y/2 - table.cam_center_y;
+
+    lastCoordX = lastLocation.x/2 - table.cam_center_x;
+    lastCoordY = lastLocation.y/2 - table.cam_center_y;
+}
+
+void Puck::getVector(cv::Mat in) {
+    // Calculate speed and angle
+    vectorX = (coordX - lastCoordX);
+    vectorY = (coordY - lastCoordY);
+
+    if (vectorX != 0 && vectorY != 0) {
+        printf("vectorX: %d\n", vectorX);
+        printf("vectorY: %d\n", vectorY);
+        cv::line(in, cvPoint((int)location.x/2, (int)location.y/2), cvPoint((int)location.x/2 + vectorX*10, (int)location.y/2 + vectorY*10), cvScalar(255, 0, 255), 4);
+    } else {
+        printf("coordX: %d\n", coordX);
+        printf("lastCoordX %d\n", lastCoordX);
+        printf("coordY: %d\n", coordY);
+        printf("lastCoordY %d\n", lastCoordY);
+    }
+}
 

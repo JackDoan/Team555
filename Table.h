@@ -34,8 +34,9 @@ public:
 
     Coordinate max, min;
 
-    int cam_center_x;
-    int cam_center_y;
+    int cam_center_x = CAM_PIX_WIDTH/2;
+    int cam_center_y = CAM_PIX_HEIGHT/2;
+
     float cam_pix_to_mm = CAM_PIX_TO_MM; //todo replace this with an expression
     int preview = 1;
 

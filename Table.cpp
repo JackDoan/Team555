@@ -21,8 +21,10 @@ Table::Table(Camera camera) {
     puckSize = robot_table_width / 20;  // puck size (radio) estimation
     defense_position = 60 + puckSize;  // Pusher defense position (for predictions)
 
-    max = Coordinate((int)(0.9*camera.getCenter().x), (int)(0.9* camera.getCenter().y));
-    min = Coordinate((int)(0.1*camera.getCenter().x), (int)(0.1*camera.getCenter().y));
+    max = Coordinate((int)(0.97*camera.getCenter().x), (int)(0.97* camera.getCenter().y));
+    //max = Coordinate((int)(1*camera.getCenter().x), (int)(1* camera.getCenter().y));
+    min = Coordinate((int)(0.03*camera.getCenter().x), (int)(0.03*camera.getCenter().y));
+    //min = Coordinate((int)(0*camera.getCenter().x), (int)(0*camera.getCenter().y));
     //table_pix_maxx =(int)((robot_table_center_y) / cam_pix_to_mm + cam_center_y) / 2;
     //table_pix_maxy = (int)((robot_table_center_x) / cam_pix_to_mm + cam_center_x) / 2;
     //table_pix_minx = (int)((robot_table_center_y - robot_table_length) / cam_pix_to_mm + cam_center_y) / 2;

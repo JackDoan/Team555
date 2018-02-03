@@ -30,6 +30,12 @@ public:
     double speedY;
     float speed;         // mm/sec
     float direction;     // radians
+    int coordX;
+    int coordY;
+    int lastCoordX;
+    int lastCoordY;
+    int vectorX;
+    int vectorY;
 
 
     Puck();
@@ -39,6 +45,8 @@ public:
     double getMaxArea();
     double getMinRoundness();
     void find(cv::Mat in, Table table);
+    void getVector(cv::Mat in);
+    void getCoords(Table table);
 
 
 };

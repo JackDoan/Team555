@@ -17,10 +17,12 @@
 // and generate trajectory prediction and visualization
 // Xu = (Xd)/(1+param*dist2)  dist2 = distancia al cuadrado del pixel al centro
 void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
-    int coordX;
-    int coordY;
-    int vectorX;
-    int vectorY;
+//    int coordX;
+//    int coordY;
+//    int lastCoordX;
+//    int lastCoordY;
+//    int vectorX;
+//    int vectorY;
     double slope;
 
     int bounce_x;
@@ -32,15 +34,31 @@ void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
 
 
     // First we convert image coordinates to center of image
-    coordX = table.robot_table_center_x - (puck.location.x - table.cam_center_x) * table.cam_pix_to_mm;
-    coordY = table.robot_table_center_y - (puck.location.y - table.cam_center_y) * table.cam_pix_to_mm;
+    //coordX = table.robot_table_center_x - (puck.location.x - table.cam_center_x) * table.cam_pix_to_mm;
+    //coordY = table.robot_table_center_y - (puck.location.y - table.cam_center_y) * table.cam_pix_to_mm;
+//    coordX = puck.location.x/2 - table.cam_center_x;
+//    coordY = puck.location.y/2 - table.cam_center_y;
+//
+//    lastCoordX = puck.lastLocation.x/2 - table.cam_center_x;
+//    lastCoordY = puck.lastLocation.y/2 - table.cam_center_y;
+//
+//
+//    // Calculate speed and angle
+//    vectorX = (coordX - lastCoordX);
+//    vectorY = (coordY - lastCoordY);
+//
+//    if (vectorX != 0 && vectorY != 0) {
+//        printf("vectorX: %d\n", vectorX);
+//        printf("vectorY: %d\n", vectorY);
+//    } else {
+//        printf("coordX: %d\n", coordX);
+//        printf("lastCoordX %d\n", lastCoordX);
+//        printf("coordY: %d\n", coordY);
+//        printf("lastCoordY %d\n", lastCoordY);
+//    }
 
-    // Calculate speed and angle
-    vectorX = (coordX - puck.location.x);
-    vectorY = (coordY - puck.location.y);
-
-    puck.speedX = vectorX * 100 / time;  // speed in dm/ms (
-    puck.speedY = vectorY * 100 / time;
+//    puck.speedX = vectorX * 100 / time;  // speed in dm/ms (
+//    puck.speedY = vectorY * 100 / time;
     //puckSpeed = sqrt(vectorX*vectorX + vectorY*vectorY)*1000.0/time;
     //puckDirection = atan2(vectorY,vectorX);
 
@@ -50,86 +68,88 @@ void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
         return;
     } */
 
-    // Its time to predict...
-    // Based on actual position, speed and angle we need to know the future...
-    // Possible impact?
-    if ((puck.speedY<-35)) {
-        // Puck is coming...
-        // We need to predict the puck position when it reaches our goal Y=0
-        // slope formula: m = (y2-y1)/(x2-x1)
-        if (vectorX == 0)  // To avoid division by 0
-            slope = 9999999;
-        else
-            slope = (float)vectorY / (float)vectorX;
-        // x = (y2-y1)/m + x1
-        table.predict_y = table.defense_position;
-        table.predict_x = (table.predict_y - coordY) / slope + coordX;
+    // old trajectory prediction
 
-        // puck has a bounce with side wall?
-        if (( table.predict_y< table.puckSize) || ( table.predict_y > (table.robot_table_width - table.puckSize))) {
-            // We start a new prediction
-            // Which side?
-            if (table.predict_y<table.puckSize) {
-                bounce_x = table.puckSize; //Left side. We calculate the impact point
-            }
-            else {
-                bounce_x = (table.robot_table_length - table.puckSize); //Right side. We calculate the impact point
-            }
-            bounce_y = (bounce_x - coordX)*slope + coordY;
-            bounce_pixX = table.cam_center_x - (bounce_x - table.robot_table_center_x) / table.cam_pix_to_mm;
-            bounce_pixY = table.cam_center_y - (bounce_y - table.robot_table_center_y) / table.cam_pix_to_mm;
-            table.predict_time = (bounce_x - puck.location.x) * 100 / puck.speedX;  // time until bouce
-            // bounce prediction
-            // Slope change
-            slope = -slope;
-            table.predict_y = table.defense_position;
-            table.predict_x = (table.predict_y - bounce_y) / slope + bounce_x;
-
-            if ((table.predict_y<table.puckSize) || (table.predict_y>(table.robot_table_width - table.puckSize))) {
-                // New bounce??
-                // We do nothing then...
-                //sprintf(puckDataString2, "2B %d %d", bounce_x, bounce_y);
-                table.predict_x_old = -1;
-            }
-            else {
-                // draw line
-                if (table.preview == 1)
-                    cv::line(frameGrabbed, cvPoint(coordX / 2, coordY / 2), cvPoint(bounce_pixX / 2, bounce_pixY / 2), cvScalar(255, 0, 0), 2);
-                // result average
-                if (table.predict_x_old != -1)
-                    table.predict_x = (table.predict_x_old + table.predict_x) >> 1;
-                table.predict_x_old = table.predict_x;
-                table.predict_time = table.predict_time + (table.predict_y - puck.location.y) * 100 / puck.speedY;  // in ms
-                //sprintf(puckDataString2, "%d t%d", table.predict_x, table.predict_time);
-                predict_pixX = table.cam_center_x - (table.predict_x - table.robot_table_center_x) / table.cam_pix_to_mm;
-                predict_pixY = table.cam_center_y - (table.predict_y - table.robot_table_center_y) / table.cam_pix_to_mm;
-                // draw line
-                if (table.preview == 1) {
-                    cv::line(frameGrabbed, cvPoint(bounce_pixX / 2, bounce_pixY / 2), cvPoint(predict_pixX / 2, predict_pixY / 2), cvScalar(0, 255, 0), 2);
-                }
-
-            }
-        }
-        else {  // No bounce, direct impact
-            // result average
-            if (table.predict_x_old != -1)
-                table.predict_x = (table.predict_x_old + table.predict_x) >> 1;
-            table.predict_x_old = table.predict_x;
-
-            table.predict_time = (table.predict_y - puck.location.y) * 100 / puck.speedY;  // in ms
-            //sprintf(puckDataString2, "%d t%d", predict_x, predict_time);
-            // Convert impact prediction position to pixels (to show on image)
-            predict_pixX = table.cam_center_x - (table.predict_x - table.robot_table_center_x) / table.cam_pix_to_mm;
-            predict_pixY = table.cam_center_y - (table.predict_y - table.robot_table_center_y) / table.cam_pix_to_mm;
-            // draw line
-            if (table.preview == 1)
-                cv::line(frameGrabbed, cvPoint(coordX / 2, coordY / 2), cvPoint(predict_pixX / 2, predict_pixY / 2), cvScalar(0, 255, 0), 2);
-        }
-    }
-    else { // Puck is moving slowly or to the other side
-        //printf(puckDataString2, "", coordX, coordY, puckSpeedY);
-        table.predict_x_old = -1;
-    }
+//    // Its time to predict...
+//    // Based on actual position, speed and angle we need to know the future...
+//    // Possible impact?
+//    if ((puck.speedY<-35)) {
+//        // Puck is coming...
+//        // We need to predict the puck position when it reaches our goal Y=0
+//        // slope formula: m = (y2-y1)/(x2-x1)
+//        if (vectorX == 0)  // To avoid division by 0
+//            slope = 9999999;
+//        else
+//            slope = (float)vectorY / (float)vectorX;
+//        // x = (y2-y1)/m + x1
+//        table.predict_y = table.defense_position;
+//        table.predict_x = (table.predict_y - coordY) / slope + coordX;
+//
+//        // puck has a bounce with side wall?
+//        if (( table.predict_y< table.puckSize) || ( table.predict_y > (table.robot_table_width - table.puckSize))) {
+//            // We start a new prediction
+//            // Which side?
+//            if (table.predict_y<table.puckSize) {
+//                bounce_x = table.puckSize; //Left side. We calculate the impact point
+//            }
+//            else {
+//                bounce_x = (table.robot_table_length - table.puckSize); //Right side. We calculate the impact point
+//            }
+//            bounce_y = (bounce_x - coordX)*slope + coordY;
+//            bounce_pixX = table.cam_center_x - (bounce_x - table.robot_table_center_x) / table.cam_pix_to_mm;
+//            bounce_pixY = table.cam_center_y - (bounce_y - table.robot_table_center_y) / table.cam_pix_to_mm;
+//            table.predict_time = (bounce_x - puck.location.x) * 100 / puck.speedX;  // time until bouce
+//            // bounce prediction
+//            // Slope change
+//            slope = -slope;
+//            table.predict_y = table.defense_position;
+//            table.predict_x = (table.predict_y - bounce_y) / slope + bounce_x;
+//
+//            if ((table.predict_y<table.puckSize) || (table.predict_y>(table.robot_table_width - table.puckSize))) {
+//                // New bounce??
+//                // We do nothing then...
+//                //sprintf(puckDataString2, "2B %d %d", bounce_x, bounce_y);
+//                table.predict_x_old = -1;
+//            }
+//            else {
+//                // draw line
+//                if (table.preview == 1)
+//                    cv::line(frameGrabbed, cvPoint(coordX / 2, coordY / 2), cvPoint(bounce_pixX / 2, bounce_pixY / 2), cvScalar(255, 0, 0), 2);
+//                // result average
+//                if (table.predict_x_old != -1)
+//                    table.predict_x = (table.predict_x_old + table.predict_x) >> 1;
+//                table.predict_x_old = table.predict_x;
+//                table.predict_time = table.predict_time + (table.predict_y - puck.location.y) * 100 / puck.speedY;  // in ms
+//                //sprintf(puckDataString2, "%d t%d", table.predict_x, table.predict_time);
+//                predict_pixX = table.cam_center_x - (table.predict_x - table.robot_table_center_x) / table.cam_pix_to_mm;
+//                predict_pixY = table.cam_center_y - (table.predict_y - table.robot_table_center_y) / table.cam_pix_to_mm;
+//                // draw line
+//                if (table.preview == 1) {
+//                    cv::line(frameGrabbed, cvPoint(bounce_pixX / 2, bounce_pixY / 2), cvPoint(predict_pixX / 2, predict_pixY / 2), cvScalar(0, 255, 0), 2);
+//                }
+//
+//            }
+//        }
+//        else {  // No bounce, direct impact
+//            // result average
+//            if (table.predict_x_old != -1)
+//                table.predict_x = (table.predict_x_old + table.predict_x) >> 1;
+//            table.predict_x_old = table.predict_x;
+//
+//            table.predict_time = (table.predict_y - puck.location.y) * 100 / puck.speedY;  // in ms
+//            //sprintf(puckDataString2, "%d t%d", predict_x, predict_time);
+//            // Convert impact prediction position to pixels (to show on image)
+//            predict_pixX = table.cam_center_x - (table.predict_x - table.robot_table_center_x) / table.cam_pix_to_mm;
+//            predict_pixY = table.cam_center_y - (table.predict_y - table.robot_table_center_y) / table.cam_pix_to_mm;
+//            // draw line
+//            if (table.preview == 1)
+//                cv::line(frameGrabbed, cvPoint(coordX / 2, coordY / 2), cvPoint(predict_pixX / 2, predict_pixY / 2), cvScalar(0, 255, 0), 2);
+//        }
+//    }
+//    else { // Puck is moving slowly or to the other side
+//        //printf(puckDataString2, "", coordX, coordY, puckSpeedY);
+//        table.predict_x_old = -1;
+//    }
 }
 
 // Robot process, convert robot position to coordinates
@@ -199,6 +219,7 @@ int main(int argc, char* argv[]) {
         cameraProcess(grabbed, puck, 1000 / table.fps, table); // CAMERA PROCESS (puck coordinates, trajectory...)
 
         if (table.preview == 1) {
+        //if (true) {
             // Put text over image
             sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.speedY);
             cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
