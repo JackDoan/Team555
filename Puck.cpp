@@ -5,6 +5,7 @@
 #include "Puck.h"
 #include "ThresholdImage.h"
 #include "Table.h"
+#include "helpers.h"
 
 void Puck::setupTrackbars() {
     char TrackbarName1[50];
@@ -69,13 +70,12 @@ Puck::Puck() {
 
 Puck::~Puck() = default;
 
-void Puck::find(cv::Mat in, Table table) {
+//void Puck::find(cv::Mat in, Table table) {
+Coordinate Puck::find(cv::Mat in, Table table) {
     double area = 0;
     double perimeter = 0;
     double roundness = 0;
     int num;
-
-
 
 
     cv::Mat imgThresh = thresholdImage.get(in);
@@ -136,10 +136,10 @@ void Puck::find(cv::Mat in, Table table) {
 
                 // Draw contour
                 if (table.preview == 1)
-                    cv::drawContours(in, contours, i, cv::Scalar(255, 0, 0), 1, 8);
+                    cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
 
-                getCoords(table);
-                getVector(in);
+                //getCoords(table);
+                //getVector(in);
                 lastLocation = location;
                 break;
             }
@@ -148,30 +148,38 @@ void Puck::find(cv::Mat in, Table table) {
 
     //puck.speedX = vectorX * 100 / time;  // speed in dm/ms (
     //puck.speedY = vectorY * 100 / time;
+
+    //CoordsDouble = Coordinate(location.x/2 - table.cam_center_x, location.y/2 - table.cam_center_y);
+    CoordsDouble = Coordinate(location.x/2, location.y/2);
+
+return CoordsDouble;
 }
 
-void Puck::getCoords(Table table) {
-    coordX = location.x/2 - table.cam_center_x;
-    coordY = location.y/2 - table.cam_center_y;
+Vector Puck::getVector(cv::Mat in, Coordinate location, Coordinate lastLocation) {
+   // Calculate speed and angle
+    Vector VectorXY;
+    vectorX = (location.x - lastLocation.x);
+    vectorY = (location.y - lastLocation.y);
+//test
+        if (location.x >= 1.001 * lastLocation.x || location.x <= 0.999 * lastLocation.x) {
+            //printf("coordx,y: %f, %f\t\t lastcoordx,y: %f, %f\n", location.x, location.y, lastLocation.x, lastLocation.y);
+            printf("vectorx,y: %f, %f\n", vectorX, vectorY);
+        }
+//   if (vectorX != 0 && vectorY != 0)
+   if (vectorX != 0 || vectorY != 0)
+  {
+       //printf("vectorX: %d\n", vectorX);
+       //printf("vectorY: %d\n", vectorY);
+        cv::line(in, cvPoint((int)lastLocation.x, (int)lastLocation.y), cvPoint((int)location.x + vectorX*10, (int)location.y + vectorY*10), cvScalar(255, 0, 255), 4);
 
-    lastCoordX = lastLocation.x/2 - table.cam_center_x;
-    lastCoordY = lastLocation.y/2 - table.cam_center_y;
-}
 
-void Puck::getVector(cv::Mat in) {
-    // Calculate speed and angle
-    vectorX = (coordX - lastCoordX);
-    vectorY = (coordY - lastCoordY);
-
-    if (vectorX != 0 && vectorY != 0) {
-        printf("vectorX: %d\n", vectorX);
-        printf("vectorY: %d\n", vectorY);
-        cv::line(in, cvPoint((int)location.x/2, (int)location.y/2), cvPoint((int)location.x/2 + vectorX*10, (int)location.y/2 + vectorY*10), cvScalar(255, 0, 255), 4);
-    } else {
-        printf("coordX: %d\n", coordX);
-        printf("lastCoordX %d\n", lastCoordX);
-        printf("coordY: %d\n", coordY);
-        printf("lastCoordY %d\n", lastCoordY);
+  } else {
+//        printf("coord: %f\n", location.x);
+//        printf("lastCoord %f\n", lastLocation.x);
+        //printf("coordY: %f\n", location.y);
+        //printf("lastCoordY %f\n", lastLocation.y);
     }
+    VectorXY = Vector(vectorX, vectorY);
+    return VectorXY;
 }
 

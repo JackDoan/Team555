@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "helpers.h"
 
+
 #define CAM_PIX_WIDTH 1280
 #define CAM_PIX_HEIGHT 720
 #define CAM_PIX_TO_MM 1  // Default camera distante (this is rewrited on the configuration)
@@ -36,6 +37,9 @@ public:
 
     int cam_center_x = CAM_PIX_WIDTH/2;
     int cam_center_y = CAM_PIX_HEIGHT/2;
+
+    //int cam_center_x = CAM_PIX_WIDTH/2;
+    //int cam_center_y = CAM_PIX_HEIGHT/2;
 
     float cam_pix_to_mm = CAM_PIX_TO_MM; //todo replace this with an expression
     int preview = 1;

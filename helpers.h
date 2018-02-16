@@ -35,8 +35,20 @@ public:
 
 };
 
+class Vector {
 
-
+public:
+    double dx;
+    double dy;
+    Vector(double vx, double vy){
+        dx = vx;
+        dy = vy;
+    }
+    Vector(){
+        dx = 0;
+        dy = 0;
+    }
+};
 
 
 

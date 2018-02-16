@@ -21,6 +21,13 @@ public:
     //double x = 0;
     //double y = 0;
     Coordinate location, lastLocation;
+    Coordinate CoordsDouble;
+
+    //jshit
+//    double coordX;
+//    double coordY;
+//    double lastCoordX;
+//    double lastCoordY;
 
     //int puckCoordX;
     //int puckCoordY;
@@ -30,12 +37,9 @@ public:
     double speedY;
     float speed;         // mm/sec
     float direction;     // radians
-    int coordX;
-    int coordY;
-    int lastCoordX;
-    int lastCoordY;
-    int vectorX;
-    int vectorY;
+
+    double vectorX;
+    double vectorY;
 
 
     Puck();
@@ -44,10 +48,12 @@ public:
     double getMinArea();
     double getMaxArea();
     double getMinRoundness();
-    void find(cv::Mat in, Table table);
-    void getVector(cv::Mat in);
-    void getCoords(Table table);
+    Coordinate find(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
 
+    Vector getVector(cv::Mat in, Coordinate location, Coordinate lastLocation);
+    //Vector getVector(cv::Mat in);
+    //void getCoords(Table table);
+    //Coordinate getCoords(Table table);
 
 };
 

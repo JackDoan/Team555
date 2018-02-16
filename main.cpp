@@ -190,6 +190,11 @@ int main(int argc, char* argv[]) {
     double frameRate = 0;
     int execs = 0;
 
+    Coordinate location;        //Added
+    Coordinate lastLocation;    //Added
+
+    Vector VectorXY;
+
     Puck puck = Puck();
 
     Camera camera = Camera(1280,720);
@@ -215,7 +220,16 @@ int main(int argc, char* argv[]) {
 
         frameTimestamp = (long)GetTickCount(); // Get timestamp (not too much resolution)
 
-        puck.find(grabbed, table);
+        lastLocation = location;
+        location = puck.find(grabbed, table);
+        //puck.getCoords(table);
+
+        //puck.getVector(grabbed);
+
+        VectorXY = puck.getVector(grabbed, location, lastLocation);
+
+        printf("\nVectorXY: %f\n", VectorXY);
+
         cameraProcess(grabbed, puck, 1000 / table.fps, table); // CAMERA PROCESS (puck coordinates, trajectory...)
 
         if (table.preview == 1) {
