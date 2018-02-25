@@ -78,6 +78,7 @@ std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
     double roundness = 0;
     int num;
     std::vector<cv::Point_<int>> pointVec;
+//    pointVec.reserve(4);
 
 
     cv::Mat imgThresh = thresholdImage.get(in);
@@ -122,36 +123,38 @@ std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
                 //pos.y = floor(moments.m01 * 2 / area + 0.5);
 
                 // limit the region of interest to the table
-                if ((pos.x > table.max.x * 2) ||
-                    (pos.x < table.min.x * 2) ||
-                    (pos.y > table.max.y * 2) ||
-                    (pos.y < table.min.y * 2)) {
-                    pos.x = 0;
-                    pos.y = 0;
-                    //contours = contours->h_next;
-                    continue;  // continue with other contour... (this is outside the table)
-                }
-                else {
+//                if ((pos.x > table.max.x * 2) ||
+//                    (pos.x < table.min.x * 2) ||
+//                    (pos.y > table.max.y * 2) ||
+//                    (pos.y < table.min.y * 2)) {
+//                    pos.x = 0;
+//                    pos.y = 0;
+//                    //contours = contours->h_next;
+//                    continue;  // continue with other contour... (this is outside the table)
+//                }
+//                else {
                     //location = pos;
-                    pointVec.emplace_back((int)round(pos.x), (int)round(pos.y));
-                }
+
+//                if (pointVec.size() > 0) {
+//                    printf("%15d, %15d,\t", (int)round(pos.x/2), (int)round(pos.y/2));
+//                }
+                pointVec.emplace_back((int)round(pos.x/2), (int)round(pos.y/2));
+/*                for (int j = 0; j < pointVec.size(); j++) {
+                    if (pointVec.size() == 4)
+                        printf("Number: %d: x: %15d,\ty: %15d\n",j , pointVec[j].x, pointVec[j].y);
+                }*/
+//                if (pointVec.size() > 0) {
+//                    printf("%15d, %15d,\t %15d\n", pointVec[pointVec.size()].x, pointVec[pointVec.size()].y, i);
+//                }
+//                }
 
                 // Draw contour
-                if (table.preview == 1)
+                if (table.preview == 1) {
                     cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
-
-                //getCoords(table);
-                //getVector(in);
-                //break;
+                }
             }
         }
     }
-
-    //puck.speedX = vectorX * 100 / time;  // speed in dm/ms (
-    //puck.speedY = vectorY * 100 / time;
-
-    //CoordsDouble = Coordinate(location.x/2 - table.cam_center_x, location.y/2 - table.cam_center_y);
-    //CoordsDouble = Coordinate(location.x/2, location.y/2);
 
     return pointVec;
 }
@@ -224,6 +227,8 @@ cv::Point_<int> Puck::find(cv::Mat in, Table table) {
                     puckPoint.y = (int)round(pos.y);
                 }
 
+
+
                 // Draw contour
                 if (table.preview == 1)
                     cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
@@ -254,8 +259,8 @@ Vector Puck::getVector(cv::Mat in, cv::Point_<int> location, cv::Point_<int> las
 
 //test
         if (location.x >= 1.001 * lastLocation.x || location.x <= 0.999 * lastLocation.x) {
-            printf("coordx,y: %f, %f\t\t lastcoordx,y: %f, %f\n", location.x, location.y, lastLocation.x, lastLocation.y);
-            printf("vectorx,y: %f, %f\n", vectorX, vectorY);
+            //printf("coordx,y: %f, %f\t\t lastcoordx,y: %f, %f\n", location.x, location.y, lastLocation.x, lastLocation.y);
+            //printf("vectorx,y: %f, %f\n", vectorX, vectorY);
         }
 //   if (vectorX != 0 && vectorY != 0)
    if (vectorX != 0 || vectorY != 0)

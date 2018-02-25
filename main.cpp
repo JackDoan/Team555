@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
     long frameTimestamp = 0;
     long firstTimestamp = 0;
 
-    bool undistort = false;
+    bool undistort = true;
 
     cv::Mat grabbed;
     cv::Mat frame;
@@ -136,27 +136,42 @@ int main(int argc, char* argv[]) {
             cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
             //cv::putText(grabbed, table.puckDataString2, cvPoint(170, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
             // Draw Table borders
-            if (corners.size() == 4) {
-                cv::line(grabbed, corners[0], corners[1], cv::Scalar(0, 255, 0), 4);
-                cv::line(grabbed, corners[1], corners[2], cv::Scalar(0, 255, 0), 4);
-                cv::line(grabbed, corners[2], corners[3], cv::Scalar(0, 255, 0), 4);
-                cv::line(grabbed, corners[3], corners[0], cv::Scalar(0, 255, 0), 4);
-            }
+
             table.annotate(grabbed);
 
 
             cv::Mat previewSmall;
             cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);
-
+/*            if (corners.size() >= 3) {
+                //printf("%d: \t %d,%d \t %d,%d \t %d,%d \t %d,%d\n", corners.size(), corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y, corners[3].x, corners[3].y);
+            }*/
+            if (corners.size() == 4) {
+                corners[3].x -= 40; corners[3].y -= 40;
+                corners[2].x += 40; corners[2].y -= 40;
+                corners[1].x -= 40; corners[1].y += 40;
+                corners[0].x += 40; corners[0].y += 40;
+                cv::line(previewSmall, corners[0]/2, corners[1]/2, cv::Scalar(0, 255, 0), 4);
+                cv::line(previewSmall, corners[1]/2, corners[3]/2, cv::Scalar(0, 255, 0), 4);
+                cv::line(previewSmall, corners[3]/2, corners[2]/2, cv::Scalar(0, 255, 0), 4);
+                cv::line(previewSmall, corners[2]/2, corners[0]/2, cv::Scalar(0, 255, 0), 4);
+                /*cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                            2.8, cv::Scalar(0,255,0), 2, cv::LINE_8, false);
+                cv::putText(previewSmall, "2", corners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                            2.8, cv::Scalar(0,255,0), 2, cv::LINE_8, false);
+                cv::putText(previewSmall, "3", corners[2]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                            2.8, cv::Scalar(0,255,0), 2, cv::LINE_8, false);
+                cv::putText(previewSmall, "4", corners[3]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                            2.8, cv::Scalar(0,255,0), 2, cv::LINE_8, false);*/
+            }
             //james test start//////////////////////////////
             //rect
-            rectangle(previewSmall, cvPoint(50,50), cvPoint(300,300), cvScalar(255,0,0), 2, 8);
+            //rectangle(previewSmall, cvPoint(50,50), cvPoint(300,300), cvScalar(255,0,0), 2, 8);
             //clipline
             //CvPoint pt1 = cvPoint((int)lastLocation.x,(int)lastLocation.y);
             //CvPoint pt2 = cvPoint((int)location.x + (location.x - lastLocation.x)*10, (int)location.y + (location.y - lastLocation.y)*10);
             //cvClipLine((50,50,300,300), &pt1, &pt2);
             //take vector
-
+/*
             double tempvx = (location.x - lastLocation.x);
             double tempvy = (location.y - lastLocation.y);
             double tempvx2 = 10*(location.x - lastLocation.x);
@@ -188,7 +203,7 @@ int main(int argc, char* argv[]) {
             //look into cvFitLine
 
             //j test end//////////////////////////////////////
-
+*/
             imshow("Video", previewSmall);
         }
 
