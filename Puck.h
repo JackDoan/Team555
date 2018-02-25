@@ -7,6 +7,8 @@
 #include <opencv2/opencv.hpp>
 #include "ThresholdImage.h"
 #include "Table.h"
+#include <vector>
+#include <math.h>
 
 class Puck {
 private:
@@ -48,9 +50,10 @@ public:
     double getMinArea();
     double getMaxArea();
     double getMinRoundness();
-    Coordinate find(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
+    std::vector<cv::Point_<int>> findPucks(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
+    cv::Point_<int> find(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
 
-    Vector getVector(cv::Mat in, Coordinate location, Coordinate lastLocation);
+    Vector getVector(cv::Mat in, cv::Point_<int> location, cv::Point_<int> lastLocation);
     //Vector getVector(cv::Mat in);
     //void getCoords(Table table);
     //Coordinate getCoords(Table table);

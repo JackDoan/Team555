@@ -27,6 +27,7 @@ class Camera {
     Camera(int nwidth, int nheight);
     Coordinate getCenter();
     ~Camera();
+    cv::Mat getUndistortedFrame();
     cv::Mat getFrame();
 };
 
