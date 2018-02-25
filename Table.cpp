@@ -29,6 +29,8 @@ Table::Table(Camera camera) {
     //table_pix_maxy = (int)((robot_table_center_x) / cam_pix_to_mm + cam_center_x) / 2;
     //table_pix_minx = (int)((robot_table_center_y - robot_table_length) / cam_pix_to_mm + cam_center_y) / 2;
     //table_pix_miny = (int)((robot_table_center_x - robot_table_width) / cam_pix_to_mm + cam_center_x) / 2;
+
+
 }
 
 void Table::annotate(cv::Mat frameGrabbed) {

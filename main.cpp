@@ -10,7 +10,7 @@
 #include "Table.h"
 #include "Puck.h"
 #include "Camera.h"
-
+#include "motors/MotorComm.h"
 
 
 // Camera process, convert puck position to coordinates
@@ -202,9 +202,13 @@ int main(int argc, char* argv[]) {
     firstTimestamp = (long)GetTickCount();
 
 
+
     puck.setupTrackbars();
 
+    HANDLE xMotorCmd = createPipe(0);
+
     while (true) {
+        testMessage(xMotorCmd);
         if (execs >= 100) {
             time(&end);
             frameRate = 100 / difftime(end, start);
@@ -228,7 +232,7 @@ int main(int argc, char* argv[]) {
 
         VectorXY = puck.getVector(grabbed, location, lastLocation);
 
-        printf("\nVectorXY: %f\n", VectorXY);
+        //printf("\nVectorXY: %f\n", VectorXY);
 
         cameraProcess(grabbed, puck, 1000 / table.fps, table); // CAMERA PROCESS (puck coordinates, trajectory...)
 
@@ -243,6 +247,48 @@ int main(int argc, char* argv[]) {
 
             cv::Mat previewSmall;
             cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);
+
+            //james test start//////////////////////////////
+            //rect
+            rectangle(previewSmall, cvPoint(50,50), cvPoint(300,300), cvScalar(255,0,0), 2, 8);
+            //clipline
+            //CvPoint pt1 = cvPoint((int)lastLocation.x,(int)lastLocation.y);
+            //CvPoint pt2 = cvPoint((int)location.x + (location.x - lastLocation.x)*10, (int)location.y + (location.y - lastLocation.y)*10);
+            //cvClipLine((50,50,300,300), &pt1, &pt2);
+            //take vector
+
+            double tempvx = (location.x - lastLocation.x);
+            double tempvy = (location.y - lastLocation.y);
+            double tempvx2 = 10*(location.x - lastLocation.x);
+            double tempvy2 = 10*(location.y - lastLocation.y);
+
+            if (tempvx != 0 || tempvy != 0) {
+                double magv = sqrt(tempvx * tempvx + tempvy * tempvy);
+
+                tempvx = tempvx / magv;
+                tempvy = tempvy / magv;
+
+                double tempholdv = tempvx;
+                tempvx = -tempvy;
+                tempvy = tempholdv;
+
+                double def1x = location.x + tempvx * 10;
+                double def1y = location.y + tempvy * 10;
+
+                double def2x = location.x + tempvx * (-10);
+                double def2y = location.y + tempvy * (-10);
+
+                cv::line(previewSmall, cvPoint(location.x + tempvx2, location.y + tempvy2), cvPoint(def1x, def1y), cvScalar(0, 0, 255), 4);
+                //cv::line(previewSmall, cvPoint(tempvx2, tempvy2), cvPoint(def1x, def1y), cvScalar(0, 0, 255), 4);
+
+               // cv::line(previewSmall, cvPoint(location.x + tempvx2, location.y + tempvy2), cvPoint(def2x, def2y), cvScalar(0, 255, 0), 4);
+                //cv::line(previewSmall, cvPoint(tempvx2, tempvy2), cvPoint(def2x, def2y), cvScalar(0, 255, 0), 4);
+
+            }
+            //look into cvFitLine
+
+            //j test end//////////////////////////////////////
+
             imshow("Video", previewSmall);
         }
 

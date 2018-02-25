@@ -23,7 +23,6 @@ public:
     Coordinate location, lastLocation;
     Coordinate CoordsDouble;
 
-    //jshit
 //    double coordX;
 //    double coordY;
 //    double lastCoordX;
@@ -54,6 +53,8 @@ public:
     //Vector getVector(cv::Mat in);
     //void getCoords(Table table);
     //Coordinate getCoords(Table table);
+
+
 
 };
 

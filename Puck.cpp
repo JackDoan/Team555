@@ -160,9 +160,11 @@ Vector Puck::getVector(cv::Mat in, Coordinate location, Coordinate lastLocation)
     Vector VectorXY;
     vectorX = (location.x - lastLocation.x);
     vectorY = (location.y - lastLocation.y);
+
+
 //test
         if (location.x >= 1.001 * lastLocation.x || location.x <= 0.999 * lastLocation.x) {
-            //printf("coordx,y: %f, %f\t\t lastcoordx,y: %f, %f\n", location.x, location.y, lastLocation.x, lastLocation.y);
+            printf("coordx,y: %f, %f\t\t lastcoordx,y: %f, %f\n", location.x, location.y, lastLocation.x, lastLocation.y);
             printf("vectorx,y: %f, %f\n", vectorX, vectorY);
         }
 //   if (vectorX != 0 && vectorY != 0)
@@ -171,6 +173,7 @@ Vector Puck::getVector(cv::Mat in, Coordinate location, Coordinate lastLocation)
        //printf("vectorX: %d\n", vectorX);
        //printf("vectorY: %d\n", vectorY);
         cv::line(in, cvPoint((int)lastLocation.x, (int)lastLocation.y), cvPoint((int)location.x + vectorX*10, (int)location.y + vectorY*10), cvScalar(255, 0, 255), 4);
+
 
 
   } else {
@@ -182,4 +185,5 @@ Vector Puck::getVector(cv::Mat in, Coordinate location, Coordinate lastLocation)
     VectorXY = Vector(vectorX, vectorY);
     return VectorXY;
 }
+
 
