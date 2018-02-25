@@ -49,12 +49,18 @@ Coordinate Camera::getCenter() {
     return dimensions;
 }
 
-cv::Mat Camera::getFrame() {
+cv::Mat Camera::getUndistortedFrame() {
     capture.read(currentView);
     //undistortedFrame = currentView.clone();
     //cv::Mat undistortedFrame;// = currentView.clone();
     //bitwise_not(currentView, currentView);
     remap(currentView, undistortedFrame, map1, map2, cv::INTER_LINEAR);
     return undistortedFrame;
+    //return currentView;
+}
+
+cv::Mat Camera::getFrame() {
+    capture.read(currentView);
+    return currentView;
     //return currentView;
 }

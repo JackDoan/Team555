@@ -6,6 +6,8 @@
 #include "ThresholdImage.h"
 #include "Table.h"
 #include "helpers.h"
+#include <vector>
+#include <math.h>
 
 void Puck::setupTrackbars() {
     char TrackbarName1[50];
@@ -70,12 +72,98 @@ Puck::Puck() {
 
 Puck::~Puck() = default;
 
-//void Puck::find(cv::Mat in, Table table) {
-Coordinate Puck::find(cv::Mat in, Table table) {
+std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
     double area = 0;
     double perimeter = 0;
     double roundness = 0;
     int num;
+    std::vector<cv::Point_<int>> pointVec;
+
+
+    cv::Mat imgThresh = thresholdImage.get(in);
+    cv::Mat imgThreshSmall;
+    cv::resize(imgThresh,imgThreshSmall, cv::Size(), 0.25, 0.25);
+    imshow("Puck", imgThreshSmall);
+    std::vector< std::vector<cv::Point> > contours;  //hold the pointer to a contour in the memory block
+    CvSeq* result;   //hold sequence of points of a contour
+    //CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
+
+    // Position initialization
+    //double posX = 0;
+    //double posY = 0;
+    Coordinate pos = Coordinate(0.0,0);
+    //double localLastX = x;
+    //double localLastY = y;
+    num = 0;
+
+    cv::InputArray thisone = imgThresh;
+    cv::findContours(imgThresh, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+
+    for (int i = 0; i< contours.size(); i++) {
+        //todo: shrink the image to the table area, THEN search for contours.
+        num++;
+        area = cv::contourArea(contours[i]);
+        //printf("%s %.2f %.2f", logStr, area, roundness);
+        //sprintf(logStr,"%s;%d %.2f", logStr,num, area);
+        if ((area>getMinArea()) && (area<getMaxArea())) {  // Min and Max size of object
+            //Detecting roundness   roundness = perimeter^2 / (2*pi*area)
+            perimeter = cv::arcLength(contours[i], true);
+            roundness = (perimeter*perimeter) / (6.28*area);
+            if (roundness < getMinRoundness()) {
+                cv::Moments moments = cv::moments(contours[i], true);
+                double moment10 = moments.m10;
+                double moment01 = moments.m01;
+                area = moments.m00;
+                // Calculate object center
+                pos.x = moment10*2 / area;
+                pos.y = moment01*2 / area;
+
+                //pos.x = floor(moments.m10 * 2 / area + 0.5); // round
+                //pos.y = floor(moments.m01 * 2 / area + 0.5);
+
+                // limit the region of interest to the table
+                if ((pos.x > table.max.x * 2) ||
+                    (pos.x < table.min.x * 2) ||
+                    (pos.y > table.max.y * 2) ||
+                    (pos.y < table.min.y * 2)) {
+                    pos.x = 0;
+                    pos.y = 0;
+                    //contours = contours->h_next;
+                    continue;  // continue with other contour... (this is outside the table)
+                }
+                else {
+                    //location = pos;
+                    pointVec.emplace_back((int)round(pos.x), (int)round(pos.y));
+                }
+
+                // Draw contour
+                if (table.preview == 1)
+                    cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
+
+                //getCoords(table);
+                //getVector(in);
+                //break;
+            }
+        }
+    }
+
+    //puck.speedX = vectorX * 100 / time;  // speed in dm/ms (
+    //puck.speedY = vectorY * 100 / time;
+
+    //CoordsDouble = Coordinate(location.x/2 - table.cam_center_x, location.y/2 - table.cam_center_y);
+    //CoordsDouble = Coordinate(location.x/2, location.y/2);
+
+    return pointVec;
+}
+
+//void Puck::find(cv::Mat in, Table table) {
+cv::Point_<int> Puck::find(cv::Mat in, Table table) {
+    double area = 0;
+    double perimeter = 0;
+    double roundness = 0;
+    int num;
+
+    cv::Point_<int> puckPoint;
 
 
     cv::Mat imgThresh = thresholdImage.get(in);
@@ -132,6 +220,8 @@ Coordinate Puck::find(cv::Mat in, Table table) {
                 }
                 else {
                     location = pos;
+                    puckPoint.x = (int)round(pos.x);
+                    puckPoint.y = (int)round(pos.y);
                 }
 
                 // Draw contour
@@ -150,12 +240,12 @@ Coordinate Puck::find(cv::Mat in, Table table) {
     //puck.speedY = vectorY * 100 / time;
 
     //CoordsDouble = Coordinate(location.x/2 - table.cam_center_x, location.y/2 - table.cam_center_y);
-    CoordsDouble = Coordinate(location.x/2, location.y/2);
+    //CoordsDouble = Coordinate(location.x/2, location.y/2);
 
-return CoordsDouble;
+return puckPoint;
 }
 
-Vector Puck::getVector(cv::Mat in, Coordinate location, Coordinate lastLocation) {
+Vector Puck::getVector(cv::Mat in, cv::Point_<int> location, cv::Point_<int> lastLocation) {
    // Calculate speed and angle
     Vector VectorXY;
     vectorX = (location.x - lastLocation.x);
@@ -172,7 +262,7 @@ Vector Puck::getVector(cv::Mat in, Coordinate location, Coordinate lastLocation)
   {
        //printf("vectorX: %d\n", vectorX);
        //printf("vectorY: %d\n", vectorY);
-        cv::line(in, cvPoint((int)lastLocation.x, (int)lastLocation.y), cvPoint((int)location.x + vectorX*10, (int)location.y + vectorY*10), cvScalar(255, 0, 255), 4);
+        cv::line(in, cvPoint(lastLocation.x, lastLocation.y), cvPoint(location.x + vectorX*10, location.y + vectorY*10), cvScalar(255, 0, 255), 4);
 
 
 
