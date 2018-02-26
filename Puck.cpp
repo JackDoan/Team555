@@ -4,10 +4,12 @@
 
 #include "Puck.h"
 #include "ThresholdImage.h"
+#include "TableCalibrate.h
 #include "Table.h"
 #include "helpers.h"
 #include <vector>
 #include <math.h>
+
 
 void Puck::setupTrackbars() {
     char TrackbarName1[50];
@@ -26,6 +28,7 @@ void Puck::setupTrackbars() {
     cv::createTrackbar(TrackbarName2, name, &maxArea, slidermax, nullptr);
     cv::createTrackbar(TrackbarName3, name, &minRoundness, slidermax, nullptr);
     thresholdImage.setupTrackbars();
+    //TableCalibrate.setupTrackbars();
 }
 
 double Puck::getMinArea()
@@ -176,6 +179,9 @@ cv::Point_<int> Puck::find(cv::Mat in, Table table) {
     std::vector< std::vector<cv::Point> > contours;  //hold the pointer to a contour in the memory block
     CvSeq* result;   //hold sequence of points of a contour
     //CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
+
+    //cv::Mat imgCorners = TableCalibrate.get(in);
+    //mshow("Corners", imgCorners);
 
     // Position initialization
     //double posX = 0;
