@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "helpers.h"
 #include "puck.h"
+#include "Table.h"
 
 #include <opencv2/opencv.hpp>
 #include <vector>
@@ -26,7 +27,7 @@ public:
     std::vector<cv::Point_<int>> getCorners();
     void setOffsets(std::vector<cv::Point_<int>>);
     std::vector<cv::Point_<int>> getOffsets();
-
+    static void calibrateCorners(cv::Mat frame, cv::Mat previewSmall, Table table);
 };
 
 #endif //TEAM555_CORNERS_H

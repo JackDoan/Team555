@@ -2,11 +2,22 @@
 // Created by mikel on 2/23/2018.
 //
 #include "Corners.h"
+#include "Camera.h"
+#include "Table.h"
+#include "puck.h"
 
 //std::vector<cv::Point_<int>> corners;
 
+
+
 void setupGUI() {
 
+}
+
+static void Corners::calibrateCorners(cv::Mat in, cv::Mat previewSmall, Table table) {
+    std::vector<cv::Point_<int>> corners;
+    std::vector<cv::Point_<int>> offsets;
+    corners = Puck::findPucks(in, table);
 }
 /* TODO: need some sort of calibrate process that gets called when the user pressed the calibrate corner button on the debug GUI
     Needs to call puck.findpucks and set the corners vector to findpucks' return value

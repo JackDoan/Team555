@@ -11,6 +11,7 @@
 #include "Puck.h"
 #include "Camera.h"
 #include "motors/MotorComm.h"
+#include "Corners.h"
 
 
 // Camera process, convert puck position to coordinates
@@ -119,7 +120,7 @@ int main(int argc, char* argv[]) {
 
         lastLocation = location;
         location = puck.find(grabbed, table);
-        corners = puck.findPucks(grabbed, table);
+        //corners = puck.findPucks(grabbed, table);
         //puck.getCoords(table);
 
         //puck.getVector(grabbed);
@@ -147,7 +148,8 @@ int main(int argc, char* argv[]) {
                 //printf("%d: \t %d,%d \t %d,%d \t %d,%d \t %d,%d\n", corners.size(), corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y, corners[3].x, corners[3].y);
             }*/
             if (calibrateCorners) {
-                if (corners.size() == 4) {
+                corners = Corners::calibrateCorners(grabbed, table);
+               /* if (corners.size() == 4) {
                     corners[3].x -= 40;
                     corners[3].y -= 40;
                     corners[2].x += 40;
@@ -171,7 +173,7 @@ int main(int argc, char* argv[]) {
                 } else {
                     printf("See %d pucks! Need 4!", corners.size());
                     //cv::putText(previewSmall, "Need 4 pucks in corners", preview, )
-                }
+                }*/
             }
             //james test start//////////////////////////////
             //rect
