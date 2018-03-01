@@ -9,7 +9,7 @@ find_package( OpenCV REQUIRED opencv_core opencv_imgproc opencv_highgui opencv_i
         PATHS ${OpenCV_PREFIX}
         NO_DEFAULT_PATH) # For some reason CMake uses its defaults before the above paths.)
 INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS} )
-add_executable(AirHockeyRobot main.cpp Puck.cpp Puck.h Table.cpp Table.h Camera.cpp Camera.h ThresholdImage.cpp ThresholdImage.h ViewFinder.cpp ViewFinder.h helpers.h  motors/MotorComm.cpp motors/MotorComm.h corners.cpp corners.h)
+add_executable(AirHockeyRobot main.cpp Puck.cpp Puck.h Table.cpp Table.h Camera.cpp Camera.h ThresholdImage.cpp ThresholdImage.h ViewFinder.cpp ViewFinder.h helpers.h  motors/MotorComm.cpp motors/MotorComm.h Corners.cpp Corners.h)
 link_directories(${OpenCV_LIB_DIR})
 target_link_libraries( AirHockeyRobot ${OpenCV_LIBS} )
 

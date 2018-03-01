@@ -149,9 +149,20 @@ std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
 //                }
 
                 // Draw contour
-                if (table.preview == 1) {
+                if (table.preview == 1)
                     cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
-                }
+//                   { switch (i) {
+//                        case 1:
+//                            cv::drawContours(in, contours, i, cv::Scalar(255, 0, 255), 5, 8);
+//                        case 2:
+//                            cv::drawContours(in, contours, i, cv::Scalar(255, 0, 0), 5, 8);
+//                        case 3:
+//                            cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
+//                        case 4:
+//                            cv::drawContours(in, contours, i, cv::Scalar(0, 0, 255), 5, 8);
+//                    }
+//                }
+
             }
         }
     }
