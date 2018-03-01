@@ -10,35 +10,67 @@
 
 
 
-void setupGUI() {
+
+
+Corners::Corners() {
 
 }
 
-static void Corners::calibrateCorners(cv::Mat in, cv::Mat previewSmall, Table table) {
-    std::vector<cv::Point_<int>> corners;
-    std::vector<cv::Point_<int>> offsets;
-    corners = Puck::findPucks(in, table);
-}
-/* TODO: need some sort of calibrate process that gets called when the user pressed the calibrate corner button on the debug GUI
-    Needs to call puck.findpucks and set the corners vector to findpucks' return value
-    Then pop up with the little GUI and show the border to be used with the defualt
-    offset values (defined in the header file 40px outware for each square)
-    then update the square drawn after resetting the offsets with setOffsets
-    every time the user changes one of the settings in the little prompt
+Corners::~Corners() = default;
 
-    Needs to do a final call to setOffsets after user clicks the 'finalize' button
- */
-void drawSquare(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector) {
+
+// TODO: set the offsets from a config file, right now it defaults to 40px out from each corner in each dimension as defined in the header file
+void Corners::calibrateCorners(cv::Mat in, cv::Mat previewSmall, Table table, Puck puck) {
+    tempCorners = puck.findPucks(in, table);
+    //printf("tempCorners size: %d\n", tempCorners.size());
+    if (tempCorners.size() == 4) {
+        setCorners(tempCorners);
+        drawSquare(previewSmall, getCorners(), getOffsets());
+        drawLabels(previewSmall, corners);
+    } else {
+        drawLabels(previewSmall, corners);
+    }
+}
+
+void Corners::drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector) {
+    for (int i = 0; i < cornersVector.size(); i++) {
+        switch(i) {
+            case 1 : cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
+                printf("Drawing labels: 1\n");
+            case 2 : cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
+                     cv::putText(previewSmall, "2", corners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
+                printf("Drawing labels: 1 2\n");
+            case 3 : cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
+                     cv::putText(previewSmall, "2", corners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
+                     cv::putText(previewSmall, "3", corners[2]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(0, 255, 0), 2, cv::LINE_8, false);
+                printf("Drawing labels: 1 2 3\n");
+            case 4 : cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
+                     cv::putText(previewSmall, "2", corners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
+                     cv::putText(previewSmall, "3", corners[2]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(0, 255, 0), 2, cv::LINE_8, false);
+                     cv::putText(previewSmall, "4", corners[3]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(0, 0, 255), 2, cv::LINE_8, false);
+                printf("Drawing labels: 1 2 3 4\n");
+            default: cv::putText(previewSmall, "4", corners[3]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                 2.8, cv::Scalar(255, 255, 255), 2, cv::LINE_8, false);
+                printf("defaulted\n");
+        }
+    }
+}
+
+void Corners::drawSquare(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector) {
     cv::Point_<int> zero; zero.x = cornersVector[0].x + offsetsVector[0].x; zero.y = cornersVector[0].y + offsetsVector[0].y;
     cv::Point_<int> one; one.x = cornersVector[1].x + offsetsVector[1].x; one.y = cornersVector[1].y + offsetsVector[1].y;
     cv::Point_<int> two; two.x = cornersVector[2].x + offsetsVector[2].x; two.y = cornersVector[2].y + offsetsVector[2].y;
     cv::Point_<int> three; three.x = cornersVector[3].x + offsetsVector[3].x; three.y = cornersVector[3].y +offsetsVector[3].y;
-
-
-    /*cv::line(previewSmall, cornersVector[0] / 2, cornersVector[1] / 2, cv::Scalar(255, 255, 255), 4);
-    cv::line(previewSmall, cornersVector[1] / 2, cornersVector[3] / 2, cv::Scalar(255, 255, 255), 4);
-    cv::line(previewSmall, cornersVector[3] / 2, cornersVector[2] / 2, cv::Scalar(255, 255, 255), 4);
-    cv::line(previewSmall, cornersVector[2] / 2, cornersVector[0] / 2, cv::Scalar(255, 255, 255), 4);*/
 
     cv::line(previewSmall, zero / 2, one / 2, cv::Scalar(255, 255, 255), 4);
     cv::line(previewSmall, one / 2, three / 2, cv::Scalar(255, 255, 255), 4);
@@ -47,9 +79,9 @@ void drawSquare(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector
 
 }
 
-void Corners::setCorners(std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector) {
+void Corners::setCorners(std::vector<cv::Point_<int>> cornersVector) {
     for (int i = 0; i <= 3; i++) {
-        corners[i] = cornersVector[i] + offsetsVector[i];
+        corners[i] = cornersVector[i];
     }
 }
 

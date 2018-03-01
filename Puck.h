@@ -49,7 +49,7 @@ public:
     double getMinArea();
     double getMaxArea();
     double getMinRoundness();
-    static std::vector<cv::Point_<int>> findPucks(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
+    std::vector<cv::Point_<int>> findPucks(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
     cv::Point_<int> find(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
 
     Vector getVector(cv::Mat in, cv::Point_<int> location, cv::Point_<int> lastLocation);

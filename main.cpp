@@ -65,6 +65,8 @@ int main(int argc, char* argv[]) {
     long firstTimestamp = 0;
 
     bool undistort = true;
+
+    // TODO: make calibrate an input argument to the whole program and read the offsets and corner values from a file in the Corners class
     bool calibrateCorners = true;
 
     cv::Mat grabbed;
@@ -73,7 +75,6 @@ int main(int argc, char* argv[]) {
     cv::Mat imgThresh;
     cv::VideoWriter record;
 
-    std::vector<cv::Point_<int>> corners;
 
     time_t start = 0;
     time_t end = 0;
@@ -86,6 +87,7 @@ int main(int argc, char* argv[]) {
     Vector VectorXY;
 
     Puck puck = Puck();
+    Corners corners = Corners();
 
     Camera camera = Camera(1280,720);
     Table table = Table(camera);
@@ -116,31 +118,36 @@ int main(int argc, char* argv[]) {
             break;
         }
 
-        frameTimestamp = (long)GetTickCount(); // Get timestamp (not too much resolution)
+        frameTimestamp = (long) GetTickCount(); // Get timestamp (not too much resolution)
 
-        lastLocation = location;
-        location = puck.find(grabbed, table);
-        //corners = puck.findPucks(grabbed, table);
-        //puck.getCoords(table);
+        if (!calibrateCorners) {
+            lastLocation = location;
+            location = puck.find(grabbed, table);
 
-        //puck.getVector(grabbed);
+            //corners = puck.findPucks(grabbed, table);
+            //puck.getCoords(table);
 
-        VectorXY = puck.getVector(grabbed, location, lastLocation);
+            //puck.getVector(grabbed);
 
-        //printf("\nVectorXY: %f\n", VectorXY);
+            VectorXY = puck.getVector(grabbed, location, lastLocation);
 
+            //printf("\nVectorXY: %f\n", VectorXY);
+        }
 //        cameraProcess(grabbed, puck, 1000 / table.fps, table); // CAMERA PROCESS (puck coordinates, trajectory...)
 
         if (table.preview == 1) {
-        //if (true) {
+            //if (true) {
             // Put text over image
-            sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.speedY);
+            if (!calibrateCorners){
+                sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x,
+                        puck.location.y, puck.speedY);
             cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
+
             //cv::putText(grabbed, table.puckDataString2, cvPoint(170, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
             // Draw Table borders
 
             table.annotate(grabbed);
-
+            }
 
             cv::Mat previewSmall;
             cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);
@@ -148,7 +155,7 @@ int main(int argc, char* argv[]) {
                 //printf("%d: \t %d,%d \t %d,%d \t %d,%d \t %d,%d\n", corners.size(), corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y, corners[3].x, corners[3].y);
             }*/
             if (calibrateCorners) {
-                corners = Corners::calibrateCorners(grabbed, table);
+                corners.calibrateCorners(grabbed, previewSmall, table, puck);
                /* if (corners.size() == 4) {
                     corners[3].x -= 40;
                     corners[3].y -= 40;
@@ -175,14 +182,14 @@ int main(int argc, char* argv[]) {
                     //cv::putText(previewSmall, "Need 4 pucks in corners", preview, )
                 }*/
             }
-            //james test start//////////////////////////////
+/*            //james test start//////////////////////////////
             //rect
             //rectangle(previewSmall, cvPoint(50,50), cvPoint(300,300), cvScalar(255,0,0), 2, 8);
             //clipline
             //CvPoint pt1 = cvPoint((int)lastLocation.x,(int)lastLocation.y);
             //CvPoint pt2 = cvPoint((int)location.x + (location.x - lastLocation.x)*10, (int)location.y + (location.y - lastLocation.y)*10);
             //cvClipLine((50,50,300,300), &pt1, &pt2);
-            //take vector
+            //take vector*/
 /*
             double tempvx = (location.x - lastLocation.x);
             double tempvy = (location.y - lastLocation.y);

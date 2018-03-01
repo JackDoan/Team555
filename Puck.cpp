@@ -4,7 +4,6 @@
 
 #include "Puck.h"
 #include "ThresholdImage.h"
-#include "TableCalibrate.h
 #include "Table.h"
 #include "helpers.h"
 #include <vector>
@@ -75,7 +74,7 @@ Puck::Puck() {
 
 Puck::~Puck() = default;
 
-static std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
+std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
     double area = 0;
     double perimeter = 0;
     double roundness = 0;

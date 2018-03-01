@@ -19,15 +19,18 @@
 
 class Corners {
     std::vector<cv::Point_<int>> corners;
+    std::vector<cv::Point_<int>> tempCorners;
     std::vector<cv::Point_<int>> offsets{ {40, 40}, {-40, 40}, {40, -40}, {-40, -40}};
 public:
-    void setupGUI();
     void drawSquare(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector);
-    void setCorners(std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector);
+    void drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector);
+    void setCorners(std::vector<cv::Point_<int>> cornersVector);
     std::vector<cv::Point_<int>> getCorners();
     void setOffsets(std::vector<cv::Point_<int>>);
     std::vector<cv::Point_<int>> getOffsets();
-    static void calibrateCorners(cv::Mat frame, cv::Mat previewSmall, Table table);
+    void calibrateCorners(cv::Mat frame, cv::Mat previewSmall, Table table, Puck puck);
+    Corners();
+    ~Corners();
 };
 
 #endif //TEAM555_CORNERS_H
