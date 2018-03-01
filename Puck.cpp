@@ -75,7 +75,7 @@ Puck::Puck() {
 
 Puck::~Puck() = default;
 
-std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
+static std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
     double area = 0;
     double perimeter = 0;
     double roundness = 0;
@@ -88,7 +88,7 @@ std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
     cv::Mat imgThreshSmall;
     cv::resize(imgThresh,imgThreshSmall, cv::Size(), 0.25, 0.25);
     imshow("Puck", imgThreshSmall);
-    std::vector< std::vector<cv::Point> > contours;  //hold the pointer to a contour in the memory block
+    std::vector<std::vector<cv::Point> > contours;  //hold the pointer to a contour in the memory block
     CvSeq* result;   //hold sequence of points of a contour
     //CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
 
@@ -152,9 +152,20 @@ std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
 //                }
 
                 // Draw contour
-                if (table.preview == 1) {
+                if (table.preview == 1)
                     cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
-                }
+//                   { switch (i) {
+//                        case 1:
+//                            cv::drawContours(in, contours, i, cv::Scalar(255, 0, 255), 5, 8);
+//                        case 2:
+//                            cv::drawContours(in, contours, i, cv::Scalar(255, 0, 0), 5, 8);
+//                        case 3:
+//                            cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
+//                        case 4:
+//                            cv::drawContours(in, contours, i, cv::Scalar(0, 0, 255), 5, 8);
+//                    }
+//                }
+
             }
         }
     }

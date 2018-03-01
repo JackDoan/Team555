@@ -11,6 +11,7 @@
 #include "Puck.h"
 #include "Camera.h"
 #include "motors/MotorComm.h"
+#include "Corners.h"
 
 
 // Camera process, convert puck position to coordinates
@@ -64,6 +65,7 @@ int main(int argc, char* argv[]) {
     long firstTimestamp = 0;
 
     bool undistort = true;
+    bool calibrateCorners = true;
 
     cv::Mat grabbed;
     cv::Mat frame;
@@ -118,7 +120,7 @@ int main(int argc, char* argv[]) {
 
         lastLocation = location;
         location = puck.find(grabbed, table);
-        corners = puck.findPucks(grabbed, table);
+        //corners = puck.findPucks(grabbed, table);
         //puck.getCoords(table);
 
         //puck.getVector(grabbed);
@@ -145,23 +147,33 @@ int main(int argc, char* argv[]) {
 /*            if (corners.size() >= 3) {
                 //printf("%d: \t %d,%d \t %d,%d \t %d,%d \t %d,%d\n", corners.size(), corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y, corners[3].x, corners[3].y);
             }*/
-            if (corners.size() == 4) {
-                corners[3].x -= 40; corners[3].y -= 40;
-                corners[2].x += 40; corners[2].y -= 40;
-                corners[1].x -= 40; corners[1].y += 40;
-                corners[0].x += 40; corners[0].y += 40;
-                cv::line(previewSmall, corners[0]/2, corners[1]/2, cv::Scalar(0, 255, 0), 4);
-                cv::line(previewSmall, corners[1]/2, corners[3]/2, cv::Scalar(0, 255, 0), 4);
-                cv::line(previewSmall, corners[3]/2, corners[2]/2, cv::Scalar(0, 255, 0), 4);
-                cv::line(previewSmall, corners[2]/2, corners[0]/2, cv::Scalar(0, 255, 0), 4);
-                /*cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                            2.8, cv::Scalar(0,255,0), 2, cv::LINE_8, false);
-                cv::putText(previewSmall, "2", corners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                            2.8, cv::Scalar(0,255,0), 2, cv::LINE_8, false);
-                cv::putText(previewSmall, "3", corners[2]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                            2.8, cv::Scalar(0,255,0), 2, cv::LINE_8, false);
-                cv::putText(previewSmall, "4", corners[3]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                            2.8, cv::Scalar(0,255,0), 2, cv::LINE_8, false);*/
+            if (calibrateCorners) {
+                corners = Corners::calibrateCorners(grabbed, table);
+               /* if (corners.size() == 4) {
+                    corners[3].x -= 40;
+                    corners[3].y -= 40;
+                    corners[2].x += 40;
+                    corners[2].y -= 40;
+                    corners[1].x -= 40;
+                    corners[1].y += 40;
+                    corners[0].x += 40;
+                    corners[0].y += 40;
+                    cv::line(previewSmall, corners[0] / 2, corners[1] / 2, cv::Scalar(255, 255, 255), 4);
+                    cv::line(previewSmall, corners[1] / 2, corners[3] / 2, cv::Scalar(255, 255, 255), 4);
+                    cv::line(previewSmall, corners[3] / 2, corners[2] / 2, cv::Scalar(255, 255, 255), 4);
+                    cv::line(previewSmall, corners[2] / 2, corners[0] / 2, cv::Scalar(255, 255, 255), 4);
+                    cv::putText(previewSmall, "1", corners[0] / 2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
+                    cv::putText(previewSmall, "2", corners[1] / 2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
+                    cv::putText(previewSmall, "3", corners[2] / 2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                2.8, cv::Scalar(0, 255, 0), 2, cv::LINE_8, false);
+                    cv::putText(previewSmall, "4", corners[3] / 2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                                2.8, cv::Scalar(0, 0, 255), 2, cv::LINE_8, false);
+                } else {
+                    printf("See %d pucks! Need 4!", corners.size());
+                    //cv::putText(previewSmall, "Need 4 pucks in corners", preview, )
+                }*/
             }
             //james test start//////////////////////////////
             //rect
