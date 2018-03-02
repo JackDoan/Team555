@@ -24,46 +24,60 @@ void Corners::calibrateCorners(cv::Mat in, cv::Mat previewSmall, Table table, Pu
     tempCorners = puck.findPucks(in, table);
     //printf("tempCorners size: %d\n", tempCorners.size());
     if (tempCorners.size() == 4) {
+        drawSquare(previewSmall, tempCorners, getOffsets());
+//        drawSquare(previewSmall, tempCorners, getOffsets());
+        drawLabels(previewSmall, tempCorners);
         setCorners(tempCorners);
-        drawSquare(previewSmall, getCorners(), getOffsets());
-        drawLabels(previewSmall, corners);
+        printf("4 Corners Identified!\n1: (%d, %d)\n2: (%d, %d)\n3: (%d, %d)\n4: (%d, %d)\n",
+               corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y,
+               corners[3].x, corners[3].y);
+        // printf("Enter Y to save these values, enter N to continue, enter X to exit");
+        // TODO: save values when user enters Y, continue if N and exit program if X
     } else {
-        drawLabels(previewSmall, corners);
+        if (tempCorners.size() != 0) {
+            drawLabels(previewSmall, tempCorners);
+        } else {
+            printf("CALIBRATE MODE - NO PUCKS DETECTED!\n");
+        }
+
     }
 }
 
 void Corners::drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector) {
-    for (int i = 0; i < cornersVector.size(); i++) {
-        switch(i) {
-            case 1 : cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
-                printf("Drawing labels: 1\n");
-            case 2 : cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
-                     cv::putText(previewSmall, "2", corners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
-                printf("Drawing labels: 1 2\n");
-            case 3 : cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
-                     cv::putText(previewSmall, "2", corners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
-                     cv::putText(previewSmall, "3", corners[2]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(0, 255, 0), 2, cv::LINE_8, false);
-                printf("Drawing labels: 1 2 3\n");
-            case 4 : cv::putText(previewSmall, "1", corners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
-                     cv::putText(previewSmall, "2", corners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
-                     cv::putText(previewSmall, "3", corners[2]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(0, 255, 0), 2, cv::LINE_8, false);
-                     cv::putText(previewSmall, "4", corners[3]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(0, 0, 255), 2, cv::LINE_8, false);
-                printf("Drawing labels: 1 2 3 4\n");
-            default: cv::putText(previewSmall, "4", corners[3]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                 2.8, cv::Scalar(255, 255, 255), 2, cv::LINE_8, false);
-                printf("defaulted\n");
-        }
+    switch(tempCorners.size()) {
+        case 1 : cv::putText(previewSmall, "1", tempCorners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
+            //printf("Drawing labels: 1: (%d, %d)\n", tempCorners[0].x, tempCorners[0].y);
+            break;
+        case 2 : cv::putText(previewSmall, "1", tempCorners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
+                 cv::putText(previewSmall, "2", tempCorners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
+            //printf("Drawing labels: 1 2: (%d, %d), (%d, %d)\n", tempCorners[0].x, tempCorners[0].y, tempCorners[1].x, tempCorners[1].y);
+            break;
+        case 3 : cv::putText(previewSmall, "1", tempCorners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
+                 cv::putText(previewSmall, "2", tempCorners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
+                 cv::putText(previewSmall, "3", tempCorners[2]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(0, 255, 0), 2, cv::LINE_8, false);
+            //printf("Drawing labels: 1 2 3: (%d, %d), (%d, %d), (%d, %d)\n", tempCorners[0].x, tempCorners[0].y, tempCorners[1].x, tempCorners[1].y, tempCorners[2].x, tempCorners[2].y);
+            break;
+        case 4 : cv::putText(previewSmall, "1", tempCorners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
+                 cv::putText(previewSmall, "2", tempCorners[1]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
+                 cv::putText(previewSmall, "3", tempCorners[2]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(0, 255, 0), 2, cv::LINE_8, false);
+                 cv::putText(previewSmall, "4", tempCorners[3]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
+                             2.8, cv::Scalar(0, 0, 255), 2, cv::LINE_8, false);
+            //printf("Drawing labels: 1 2 3 4: (%d, %d), (%d, %d), (%d, %d), (%d, %d)\n", tempCorners[0].x, tempCorners[0].y, tempCorners[1].x, tempCorners[1].y, tempCorners[2].x, tempCorners[2].y, tempCorners[3].x, tempCorners[3].y);
+            break;
+        default:
+            //printf("Can't see 1-4 pucks! I see %d pucks!\n", tempCorners.size());
+            break;
     }
+
 }
 
 void Corners::drawSquare(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector) {
@@ -80,9 +94,10 @@ void Corners::drawSquare(cv::Mat previewSmall, std::vector<cv::Point_<int>> corn
 }
 
 void Corners::setCorners(std::vector<cv::Point_<int>> cornersVector) {
-    for (int i = 0; i <= 3; i++) {
+    /*for (int i = 0; i <= 3; i++) {
         corners[i] = cornersVector[i];
-    }
+    }*/
+    corners = cornersVector;
 }
 
 std::vector<cv::Point_<int>> Corners::getCorners() {
@@ -90,9 +105,10 @@ std::vector<cv::Point_<int>> Corners::getCorners() {
 }
 
 void Corners::setOffsets(std::vector<cv::Point_<int>> offsetsVector) {
-    for (int i = 0; i <= 3; i++) {
+    /*for (int i = 0; i <= 3; i++) {
         offsets[i] = offsetsVector[i];
-    }
+    }*/
+    offsets = offsetsVector;
 }
 
 std::vector<cv::Point_<int>> Corners::getOffsets() {

@@ -47,6 +47,7 @@ double Puck::getMinRoundness()
 
 Puck::Puck() {
     struct threshold_s puckLimits;
+    struct threshold_s puckLimitsCalib;
     //for green
 
     puckLimits.minH = 43;
@@ -56,6 +57,12 @@ Puck::Puck() {
     puckLimits.minV = 20;
     puckLimits.maxV = 67;
 
+    puckLimitsCalib.minH = 43;
+    puckLimitsCalib.maxH = 110;
+    puckLimitsCalib.minS = 70;
+    puckLimitsCalib.maxS = 155;
+    puckLimitsCalib.minV = 20;
+    puckLimitsCalib.maxV = 70;
 
 
 
@@ -70,6 +77,7 @@ Puck::Puck() {
      */
 
     thresholdImage = ThresholdImage(puckLimits);
+    thresholdImageCalib = ThresholdImage(puckLimitsCalib);
 }
 
 Puck::~Puck() = default;
@@ -83,7 +91,7 @@ std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
 //    pointVec.reserve(4);
 
 
-    cv::Mat imgThresh = thresholdImage.get(in);
+    cv::Mat imgThresh = thresholdImageCalib.get(in);
     cv::Mat imgThreshSmall;
     cv::resize(imgThresh,imgThreshSmall, cv::Size(), 0.25, 0.25);
     imshow("Puck", imgThreshSmall);
@@ -108,11 +116,12 @@ std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
         area = cv::contourArea(contours[i]);
         //printf("%s %.2f %.2f", logStr, area, roundness);
         //sprintf(logStr,"%s;%d %.2f", logStr,num, area);
-        if ((area>getMinArea()) && (area<getMaxArea())) {  // Min and Max size of object
+//        if ((area>getMinArea()) && (area<getMaxArea())) {  // Min and Max size of object
+        if ((area>(double)minAreaCalib) && (area<(double)maxAreaCalib)) {
             //Detecting roundness   roundness = perimeter^2 / (2*pi*area)
             perimeter = cv::arcLength(contours[i], true);
             roundness = (perimeter*perimeter) / (6.28*area);
-            if (roundness < getMinRoundness()) {
+            if (roundness < (double)minRoundnessCalib) {
                 cv::Moments moments = cv::moments(contours[i], true);
                 double moment10 = moments.m10;
                 double moment01 = moments.m01;
@@ -151,8 +160,10 @@ std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
 //                }
 
                 // Draw contour
-                if (table.preview == 1)
-                    cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
+                if (table.preview == 1) {
+                    cv::drawContours(in, contours, i, cv::Scalar(255, 255, 255 ), 5, 8);
+                    //printf("I GOT TO THE CONTOURS PRINTING THING!!\n\nYAY!!\n");
+                }
 //                   { switch (i) {
 //                        case 1:
 //                            cv::drawContours(in, contours, i, cv::Scalar(255, 0, 255), 5, 8);
@@ -247,7 +258,7 @@ cv::Point_<int> Puck::find(cv::Mat in, Table table) {
 
                 // Draw contour
                 if (table.preview == 1)
-                    cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 8);
+                    cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 4);
 
                 //getCoords(table);
                 //getVector(in);

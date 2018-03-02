@@ -15,7 +15,12 @@ private:
     int minArea = 1200;
     int maxArea = 3600;
     int minRoundness = 445;
+    int minAreaCalib = 800;
+    int maxAreaCalib = 4000;
+    int minRoundnessCalib = 320;
     ThresholdImage thresholdImage = ThresholdImage(threshold_s());
+    ThresholdImage thresholdImageCalib = ThresholdImage(threshold_s());
+
 
 public:
     //double lastX = -1;
