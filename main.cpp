@@ -6,13 +6,15 @@
 #include <opencv/cv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <sysinfoapi.h>
+#include <string>
 
 #include "Table.h"
 #include "Puck.h"
 #include "Camera.h"
 #include "motors/MotorComm.h"
 #include "Corners.h"
-#include "Config.h"
+#include "Serial.h"
+#include "MotorDriver.h"
 
 
 // Camera process, convert puck position to coordinates
@@ -64,17 +66,15 @@ int main(int argc, char* argv[]) {
     char tempStr[80];
     long frameTimestamp = 0;
     long firstTimestamp = 0;
-
     bool undistort = true;
 
     // TODO: make calibrate an input argument to the whole program and read the offsets and corner values from a file in the Corners class
-    bool calibrateCorners = false;
+    bool calibrateCorners = true;
 
     cv::Mat grabbed;
     cv::Mat frame;
     cv::Mat imgHSV;
     cv::Mat imgThresh;
-    cv::Mat H_img;  //Homography
     cv::VideoWriter record;
 
 
@@ -90,26 +90,16 @@ int main(int argc, char* argv[]) {
 
     Puck puck = Puck();
     Corners corners = Corners();
+    MotorDriver motorDriver = MotorDriver();
+    bool blahtest = motorDriver.initComPort('3', 'x');
+
 
 
     Camera camera = Camera(1280,720);
     Table table = Table(camera);
     firstTimestamp = (long)GetTickCount();
 
-//    std::vector<cv::Point_<int>> c1 = corners.getCorners();
-//    std::vector<cv::Point_<int>> c1_cali = corners.getCalibratedCorners();
-//    cv::Mat h_transform = camera.getHomography(c1,c1_cali);
-//    //imshow("Video", previewSmall);
-//    //run with undistort = false;
-//    std::vector<cv::Point_<int>> c1 = corners.getCorners();
-//    std::vector<cv::Point_<int>> c1_cali = corners.getCalibratedCorners();
-//    cv::Mat h_transform = camera.getHomography(c1,c1_cali);
-//    //cv::Mat Corners::getCalibratedCorners();
-//    //grabbed = Camera.getFrame;            //switch to Preview small
-//    warpPerspective(previewSmall, H_img, h_transform, H_img.size());
-//    imshow("H_Video", H_img);
-    Config config = Config();
-    config.WriteToFile();
+
 
     puck.setupTrackbars();
 
@@ -238,10 +228,9 @@ int main(int argc, char* argv[]) {
             //look into cvFitLine
 
             //j test end//////////////////////////////////////
-*/      imshow("Video", previewSmall);
-
+*/
+            imshow("Video", previewSmall);
         }
-
 
         if (cv::waitKey(1) >= 0)
             break;
