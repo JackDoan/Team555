@@ -4,23 +4,25 @@
 
 #ifndef TEAM555_DRIVERINTERFACE_H
 #define TEAM555_DRIVERINTERFACE_H
-#include "SerialClass.h"
+#include "Serial.h"
 
-class MotorDrivers {
+class MotorDriver {
 private:
 
 public:
+//    Serial* SPx = new Serial("\\\\.\\COM4");
+//    Serial* SPy = new Serial("\\\\.\\COM5");
     Serial* SPx;
-    short xCom = 4;
     Serial* SPy;
-    short yCom = 5;
     char incomingData[256];
     int dataLength = 255;
     int readResult;
     bool writeResult;
+    int parsed;
 
-    MotorDrivers();
-    ~MotorDrivers();
+    MotorDriver();
+    ~MotorDriver();
+    bool initComPort(char comPort, char axis);
     int getSteps(char axis);
     bool moveSteps(int steps, char axis);
 };

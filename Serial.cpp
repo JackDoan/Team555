@@ -6,7 +6,7 @@
 // Created by mdl150330 on 3/6/2018.
 //
 
-#include "SerialClass.h"
+#include "Serial.h"
 
 Serial::Serial(const char *portName)
 {
@@ -78,7 +78,10 @@ Serial::Serial(const char *portName)
 
 }
 
-Serial::~Serial()
+
+// TODO: this should not be commented out, but it doesn't build otherwise
+// -Mike : too dumb to fix this, fuck UTD they don't teach us enough programming
+/*Serial::~Serial() = default
 {
     //Check if we are connected before trying to disconnect
     if(this->connected)
@@ -88,7 +91,7 @@ Serial::~Serial()
         //Close the serial handler
         CloseHandle(this->hSerial);
     }
-}
+}*/
 
 int Serial::ReadData(char *buffer, unsigned int nbChar)
 {

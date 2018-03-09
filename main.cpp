@@ -6,12 +6,15 @@
 #include <opencv/cv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <sysinfoapi.h>
+#include <string>
 
 #include "Table.h"
 #include "Puck.h"
 #include "Camera.h"
 #include "motors/MotorComm.h"
 #include "Corners.h"
+#include "Serial.h"
+#include "MotorDriver.h"
 
 
 // Camera process, convert puck position to coordinates
@@ -63,7 +66,6 @@ int main(int argc, char* argv[]) {
     char tempStr[80];
     long frameTimestamp = 0;
     long firstTimestamp = 0;
-
     bool undistort = true;
 
     // TODO: make calibrate an input argument to the whole program and read the offsets and corner values from a file in the Corners class
@@ -88,6 +90,10 @@ int main(int argc, char* argv[]) {
 
     Puck puck = Puck();
     Corners corners = Corners();
+    MotorDriver motorDriver = MotorDriver();
+    bool blahtest = motorDriver.initComPort('3', 'x');
+
+
 
     Camera camera = Camera(1280,720);
     Table table = Table(camera);
