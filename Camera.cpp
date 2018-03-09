@@ -64,3 +64,21 @@ cv::Mat Camera::getFrame() {
     return currentView;
     //return currentView;
 }
+cv::Mat Camera::getHomography(std::vector<cv::Point_<int>> corners,
+                               std::vector<cv::Point_<int>> Calibrated_corners){
+    std::vector<cv::Point_<int>> pts_src;
+    pts_src.emplace_back(cv::Point(corners[3].x,corners[3].y));
+    pts_src.emplace_back(cv::Point(corners[2].x,corners[2].y));
+    pts_src.emplace_back(cv::Point(corners[0].x,corners[0].y));
+    pts_src.emplace_back(cv::Point(corners[1].x,corners[1].y));
+
+    std::vector<cv::Point_<int>> pts_dst;
+    pts_dst.emplace_back(cv::Point(Calibrated_corners[3].x,Calibrated_corners[3].y));
+    pts_dst.emplace_back(cv::Point(Calibrated_corners[2].x,Calibrated_corners[2].y));
+    pts_dst.emplace_back(cv::Point(Calibrated_corners[0].x,Calibrated_corners[0].y));
+    pts_dst.emplace_back(cv::Point(Calibrated_corners[1].x,Calibrated_corners[1].y));
+
+    cv::Mat h_transform = cv::findHomography(pts_src, pts_dst);
+
+    return h_transform;
+}
