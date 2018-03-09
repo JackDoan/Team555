@@ -7,15 +7,17 @@
 #include <string.h>
 #include "stdio.h"
 
+// TODO: test this
+
 MotorDriver::MotorDriver() {
 
 }
 MotorDriver::~MotorDriver() = default;
 
 bool MotorDriver::initComPort(char comPort, char axis) {
-    char temp[12] = "\\\\.\\COM0";
+    char temp[] = "\\\\.\\COM0";
     if (axis == 'x') {
-        temp[11] = comPort;
+        temp[sizeof(temp) - 2] = comPort;
         SPx = new Serial(temp);
         if (SPx->IsConnected()) {
             printf("ComPort: %c, axis %c, has connected\n", comPort, axis);
@@ -25,7 +27,7 @@ bool MotorDriver::initComPort(char comPort, char axis) {
             return false;
         }
     } else if (axis == 'y') {
-        temp[11] = comPort;
+        temp[sizeof(temp) - 2] = comPort;
         SPy = new Serial(temp);
         if (SPy ->IsConnected()) {
             printf("ComPort: %c, axis %c, has connected\n", comPort, axis);
@@ -60,7 +62,7 @@ bool MotorDriver::initComPort(char comPort, char axis) {
 
 int MotorDriver::getSteps(char axis) {
     if (axis == 'x') {
-        writeResult = SPx->WriteData("???", sizeof("???"));
+        writeResult = SPx->WriteData("?", sizeof("???"));
         if (!writeResult) {
             printf("Error writing to axis: %c\n", axis);
             return -2147483648;
@@ -73,7 +75,7 @@ int MotorDriver::getSteps(char axis) {
             //TODO: parse incoming 'string' data to an int and return it
         }
     } else if (axis == 'y') {
-        writeResult = SPy->WriteData("???", sizeof("???"));
+        writeResult = SPy->WriteData("?", sizeof("???"));
         if (!writeResult) {
             printf("Error writing to axis: %c\n", axis);
             return -2147483648;
@@ -92,10 +94,49 @@ int MotorDriver::getSteps(char axis) {
 }
 
 bool MotorDriver::moveSteps(int steps, char axis) {
+    char bytes[4];
+    bytes[0] = (steps >> 24) & 0xFF;
+    bytes[1] = (steps >> 16) & 0xFF;
+    bytes[2] = (steps >> 8) & 0xFF;
+    bytes[3] = (steps) & 0xFF;
     if (axis == 'x') {
-        //TODO: xCom port 'move' command with steps appended to the end and parse result and return as an int
+        writeResult = SPx->WriteData(bytes, sizeof(bytes));
+        if (!writeResult) {
+            printf("Error writing steps: %d, to axis %c\n", steps, axis);
+            return false;
+        }
+        readResult = SPx->ReadData(incomingData, dataLength);
+        if (!readResult) {
+            printf("Error reading steps: %d, from axis %c\n", steps, axis);
+            return false;
+        } else {
+            if (incomingData == bytes) {
+                return true;
+            } else {
+                printf("Error, returned value in loopback did not match sent value\n");
+                return false;
+            }
+        }
+
+
     } else if (axis == 'y') {
-        //TODO: yCom port 'steps?' command and parse result and return as an int
+        writeResult = SPy->WriteData(bytes, sizeof(bytes));
+        if (!writeResult) {
+            printf("Error writing steps: %d, to axis %c\n", steps, axis);
+            return false;
+        }
+        readResult = SPy->ReadData(incomingData, dataLength);
+        if (!readResult) {
+            printf("Error reading steps: %d, from axis %c\n", steps, axis);
+            return false;
+        } else {
+            if (incomingData == bytes) {
+                return true;
+            } else {
+                printf("Error, returned value in loopback did not match sent value\n");
+                return false;
+            }
+        }
     } else {
         printf("Inavlid Axis identifier in MotorDrivers\n");
         return false;

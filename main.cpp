@@ -67,9 +67,14 @@ int main(int argc, char* argv[]) {
     long frameTimestamp = 0;
     long firstTimestamp = 0;
     bool undistort = true;
+    bool calibrateCorners;
+    if (argc == 1 && argv[1] == "calibrate") {
+        calibrateCorners = true;
+    } else {
+        calibrateCorners = false;
+    }
 
     // TODO: make calibrate an input argument to the whole program and read the offsets and corner values from a file in the Corners class
-    bool calibrateCorners = true;
 
     cv::Mat grabbed;
     cv::Mat frame;
@@ -103,16 +108,16 @@ int main(int argc, char* argv[]) {
 
     puck.setupTrackbars();
 
-    HANDLE xMotorCmd = createPipe(0);
+    //HANDLE xMotorCmd = createPipe(0);
 
     while (true) {
-        testMessage(xMotorCmd);
-        if (execs >= 100) {
-            time(&end);
-            frameRate = 100 / difftime(end, start);
-            time(&start);
-            execs = 0;
-        }
+//        testMessage(xMotorCmd);
+//        if (execs >= 100) {
+//            time(&end);
+//            frameRate = 100 / difftime(end, start);
+//            time(&start);
+//            execs = 0;
+//        }
 
         if (!undistort) {
             grabbed = camera.getFrame();
