@@ -109,6 +109,113 @@ void Corners::setCorners(std::vector<cv::Point_<int>> cornersVector) {
     /*for (int i = 0; i <= 3; i++) {
         corners[i] = cornersVector[i];
     }*/
+    const int size = 4;
+    //std::vector<cv::Point_<int>> fcorners[size];
+        //fcorners:     Top Left:       1 (0)       //need to double check
+        //              Top Right:      3 (2)       //BL actually
+        //              Bottom Left:    1 (0)
+        //              Bottom Right:   2 (1)
+
+    //std::vector<cv::Point_<int>> hold
+//    for (int i = 0; i < 4; i++) {
+//        tempXa[i].x = corners[i].x;
+//        tempYa[i] = corners[i];
+//    }
+//    int T1_flag = 0;    //highest
+//    int T2_flag = 0;    //2nd highest
+//    int B1_flag = 0;    //2nd Lowest
+//    int B2_flag = 0;    //Lowest
+//
+//    std::sort(tempXa.begin(),tempXa.end());     //can switch to quicksort() if we need efficiency
+//    std::sort(tempYa.begin(),tempYa.end());
+//                                                    //Assuming Top(+) Left(+) and Bottom(-) Right(-)
+//    for (int l = 0; l < 4; l++){                    //l=0:Left_far, l=1:Left_short, l=2:Right_short, 1=3:Right_far
+//        for (int t = 0; t < 4; t++){                //l=0:Top_far, l=1:Top_short, l=2:Bottom_short, 1=3:Bottom_far
+//            if(tempXa[l].x == corners[t].x){
+//                switch(l){
+//                    case 0  :       //Highest t
+//                        fcorners[l].x = tempXa[0].x;        //zeros can be replaced with l & vice versa
+//                        if(corners[t].y == tempYa[0].y) {        //Furthest Left and Highest
+//                            fcorners[0].y = tempYa[0].y;
+//                            T1_flag = 1;
+//                        }
+//                        else if(corners[t].y == tempYa[1].y) {   //Furthest Left and second highest etc..
+//                            fcorners[0].y = tempYa[1].y;
+//                            T2_flag = 1;
+//                        }
+//                        else if(corners[t].y == tempYa[2].y) {
+//                            fcorners[0].y = tempYa[2].y;
+//                            B1_flag = 1;
+//                        }
+//                        else if(corners[t].y == tempYa[3].y) {
+//                            fcorners[0].y = tempYa[3].y;
+//                            B2_flag = 1;
+//                        }
+//                        break;
+//                    case 1  :
+//                        fcorners[l].x = tempXa[1].x;
+//                        if(T1_flag == 0 && corners[t].y == tempYa[0].y) {        //Furthest Left and Highest
+//                            fcorners[0].y = tempYa[0].y;
+//                            T1_flag = 1;
+//                        }
+//                        else if(T2_flag == 0 && corners[t].y == tempYa[1].y) {   //Furthest Left and second highest etc..
+//                            fcorners[0].y = tempYa[1].y;
+//                            T2_flag = 1;
+//                        }
+//                        else if(B1_flag == 0 && corners[t].y == tempYa[2].y) {
+//                            fcorners[0].y = tempYa[2].y;
+//                            B1_flag = 1;
+//                        }
+//                        else if(B2_flag == 0 && corners[t].y == tempYa[3].y) {
+//                            fcorners[0].y = tempYa[3].y;
+//                            B2_flag = 1;
+//                        }
+//                        break;
+//                    case 2  :
+//                        fcorners[l].x = tempXa[2].x;
+//                        if(T1_flag == 0 && corners[t].y == tempYa[0].y) {        //Furthest Left and Highest
+//                            fcorners[0].y = tempYa[0].y;
+//                            T1_flag = 1;
+//                        }
+//                        else if(T2_flag == 0 && corners[t].y == tempYa[1].y) {   //Furthest Left and second highest etc..
+//                            fcorners[0].y = tempYa[1].y;
+//                            T2_flag = 1;
+//                        }
+//                        else if(B1_flag == 0 && corners[t].y == tempYa[2].y) {
+//                            fcorners[0].y = tempYa[2].y;
+//                            B1_flag = 1;
+//                        }
+//                        else if(B2_flag == 0 && corners[t].y == tempYa[3].y) {
+//                            fcorners[0].y = tempYa[3].y;
+//                            B2_flag = 1;
+//                        }
+//                        break;
+//                    case 3  :
+//                        fcorners[l].x = tempXa[3].x;
+//                        if(T1_flag == 0 && corners[t].y == tempYa[0].y) {        //Furthest Left and Highest
+//                            fcorners[0].y = tempYa[0].y;
+//                            T1_flag = 1;
+//                        }
+//                        else if(T2_flag == 0 && corners[t].y == tempYa[1].y) {   //Furthest Left and second highest etc..
+//                            fcorners[0].y = tempYa[1].y;
+//                            T2_flag = 1;
+//                        }
+//                        else if(B1_flag == 0 && corners[t].y == tempYa[2].y) {
+//                            fcorners[0].y = tempYa[2].y;
+//                            B1_flag = 1;
+//                        }
+//                        else if(B2_flag == 0 && corners[t].y == tempYa[3].y) {
+//                            fcorners[0].y = tempYa[3].y;
+//                            B2_flag = 1;
+//                        }
+//                    break;
+//                }
+//            }
+//        }
+//
+//    }
+//    corners = fcorners;
+//
     corners = cornersVector;
 }
 
@@ -173,3 +280,4 @@ std::vector<cv::Point_<int>> Corners::getCalibratedCorners() {
 
     return CalibratedCorners;
 }
+

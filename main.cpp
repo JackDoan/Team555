@@ -15,6 +15,7 @@
 #include "Corners.h"
 #include "Serial.h"
 #include "MotorDriver.h"
+#include "Idle.h"
 
 
 // Camera process, convert puck position to coordinates
@@ -77,6 +78,11 @@ int main(int argc, char* argv[]) {
     cv::Mat imgThresh;
     cv::VideoWriter record;
 
+    bool RunIdle = false;       //Idle Process to show video.
+    if(RunIdle) {
+        Idle::Idle_Process();
+        std::exit(0);
+    }
 
     time_t start = 0;
     time_t end = 0;

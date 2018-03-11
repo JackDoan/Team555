@@ -22,6 +22,12 @@ class Corners {
     std::vector<cv::Point_<int>> tempCorners;
     std::vector<cv::Point_<int>> CalibratedCorners;
     std::vector<cv::Point_<int>> offsets{ {40, 40}, {-40, 40}, {40, -40}, {-40, -40}};
+
+    std::vector<cv::Point_<int>> tempXa;
+    std::vector<cv::Point_<int>> tempYa;
+    std::vector<cv::Point_<int>> fcorners;
+
+
 public:
     void drawSquare(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector);
     void drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector);
