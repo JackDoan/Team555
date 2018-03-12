@@ -45,7 +45,7 @@ double Puck::getMinRoundness()
     return (double)(minRoundness);
 }
 
-Puck::Puck() {
+Puck::Puck(Table table) {
     struct threshold_s puckLimits;
     struct threshold_s puckLimitsCalib;
     //for green
@@ -78,6 +78,13 @@ Puck::Puck() {
 
     thresholdImage = ThresholdImage(puckLimits);
     thresholdImageCalib = ThresholdImage(puckLimitsCalib);
+    location = {0,0};
+    lastLocation = {0,0};
+    vectorXY = {0,0};
+    predictedLocation = {0,0};
+    bouncex = false;
+    bouncey = false;
+
 }
 
 Puck::~Puck() = default;
@@ -184,7 +191,7 @@ std::vector<cv::Point_<int>> Puck::findPucks(cv::Mat in, Table table) {
 }
 
 //void Puck::find(cv::Mat in, Table table) {
-cv::Point_<int> Puck::find(cv::Mat in, Table table) {
+void Puck::findPuck(cv::Mat in, Table table) {
     double area = 0;
     double perimeter = 0;
     double roundness = 0;
@@ -207,7 +214,8 @@ cv::Point_<int> Puck::find(cv::Mat in, Table table) {
     // Position initialization
     //double posX = 0;
     //double posY = 0;
-    Coordinate pos = Coordinate(0.0,0);
+//    Coordinate pos = Coordinate(0.0,0);
+    cv::Point_<int> pos = {0,0};
     Coordinate lastPos = Coordinate(0,0);
     //double localLastX = x;
     //double localLastY = y;
@@ -217,23 +225,24 @@ cv::Point_<int> Puck::find(cv::Mat in, Table table) {
     cv::findContours(imgThresh, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
     for (int i = 0; i< contours.size(); i++) {
+        lastLocation = location;
         //todo: shrink the image to the table area, THEN search for contours.
         num++;
         area = cv::contourArea(contours[i]);
         //printf("%s %.2f %.2f", logStr, area, roundness);
         //sprintf(logStr,"%s;%d %.2f", logStr,num, area);
-        if ((area>getMinArea()) && (area<getMaxArea())) {  // Min and Max size of object
+        if ((area > getMinArea()) && (area < getMaxArea())) {  // Min and Max size of object
             //Detecting roundness   roundness = perimeter^2 / (2*pi*area)
             perimeter = cv::arcLength(contours[i], true);
-            roundness = (perimeter*perimeter) / (6.28*area);
+            roundness = (perimeter * perimeter) / (6.28 * area);
             if (roundness < getMinRoundness()) {
                 cv::Moments moments = cv::moments(contours[i], true);
                 double moment10 = moments.m10;
                 double moment01 = moments.m01;
                 area = moments.m00;
                 // Calculate object center
-                pos.x = moment10*2 / area;
-                pos.y = moment01*2 / area;
+                pos.x = moment10 * 2 / area;
+                pos.y = moment01 * 2 / area;
 
                 //pos.x = floor(moments.m10 * 2 / area + 0.5); // round
                 //pos.y = floor(moments.m01 * 2 / area + 0.5);
@@ -247,65 +256,173 @@ cv::Point_<int> Puck::find(cv::Mat in, Table table) {
                     pos.y = 0;
                     //contours = contours->h_next;
                     continue;  // continue with other contour... (this is outside the table)
+                } else {
+                    location = pos/2;
+                    puckPoint.x = (int) round(pos.x);
+                    puckPoint.y = (int) round(pos.y);
+//                }
+//                    printf("puckPoint: %d, %d\n", (int) round(pos.x), (int) round(pos.y));
+//                    printf("location: %d, %d\n", location.x, location.y);
+
+
+                    // Draw contour
+                    if (table.preview == 1)
+                        cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 4);
+                    //lastLocation = location;
+                    //getCoords(table);
+                    //getVector(in);
+                    break;
                 }
-                else {
-                    location = pos;
-                    puckPoint.x = (int)round(pos.x);
-                    puckPoint.y = (int)round(pos.y);
-                }
-
-
-
-                // Draw contour
-                if (table.preview == 1)
-                    cv::drawContours(in, contours, i, cv::Scalar(0, 255, 0), 5, 4);
-
-                //getCoords(table);
-                //getVector(in);
-                lastLocation = location;
-                break;
             }
         }
     }
-
     //puck.speedX = vectorX * 100 / time;  // speed in dm/ms (
     //puck.speedY = vectorY * 100 / time;
 
     //CoordsDouble = Coordinate(location.x/2 - table.cam_center_x, location.y/2 - table.cam_center_y);
     //CoordsDouble = Coordinate(location.x/2, location.y/2);
 
-return puckPoint;
+    calcVector(in);
+    calcTraj(table);
+    drawVector(in);
+
 }
 
-Vector Puck::getVector(cv::Mat in, cv::Point_<int> location, cv::Point_<int> lastLocation) {
+void Puck::calcVector(cv::Mat in) {
    // Calculate speed and angle
-    Vector VectorXY;
-    vectorX = (location.x - lastLocation.x);
-    vectorY = (location.y - lastLocation.y);
+//    Vector VectorXY;
+    vectorXY.x = (location.x - lastLocation.x);
+    vectorXY.y = (location.y - lastLocation.y);
 
 
 //test
-        if (location.x >= 1.001 * lastLocation.x || location.x <= 0.999 * lastLocation.x) {
-            //printf("coordx,y: %f, %f\t\t lastcoordx,y: %f, %f\n", location.x, location.y, lastLocation.x, lastLocation.y);
-            //printf("vectorx,y: %f, %f\n", vectorX, vectorY);
-        }
+//    if (location.x >= 1.001 * lastLocation.x || location.x <= 0.999 * lastLocation.x) {
+//                printf("coordx,y: %d, %d\t\t lastcoordx,y: %d, %d\n", location.x,
+//                          location.y, lastLocation.x, lastLocation.y);
+//                printf("vectorx,y: %d, %d\n", vectorXY.x, vectorXY.y);
+//    }
 //   if (vectorX != 0 && vectorY != 0)
-   if (vectorX != 0 || vectorY != 0)
-  {
-       //printf("vectorX: %d\n", vectorX);
-       //printf("vectorY: %d\n", vectorY);
-        cv::line(in, cvPoint(lastLocation.x, lastLocation.y), cvPoint(location.x + vectorX*10, location.y + vectorY*10), cvScalar(255, 0, 255), 4);
+//    if (vectorXY.x != 0 || vectorXY.y != 0) {
+////       printf("vectorX: %d\n", vectorX);
+////       printf("vectorY: %d\n", vectorY);
+////        cv::line(in, cvPoint(lastLocation.x/2, lastLocation.y/2), cvPoint(location.x/2 + vectorXY.x*vectorMult/2,
+////                                                                      location.y/2 + vectorXY.y*vectorMult/2),
+////                                                                       cvScalar(255, 0, 255), 4);
+//        cv::line(in, location, (location+vectorXY*vectorMult), cvScalar(255, 0, 255), 4);
+//
+//
+//
+//    } else {
+//    //        printf("coord: %f\n", location.x);
+//    //        printf("lastCoord %f\n", lastLocation.x);
+//        //printf("coordY: %f\n", location.y);
+//        //printf("lastCoordY %f\n", lastLocation.y);
+//    }
+//    //    VectorXY = Vector(vectorX, vectorY);
 
-
-
-  } else {
-//        printf("coord: %f\n", location.x);
-//        printf("lastCoord %f\n", lastLocation.x);
-        //printf("coordY: %f\n", location.y);
-        //printf("lastCoordY %f\n", lastLocation.y);
-    }
-    VectorXY = Vector(vectorX, vectorY);
-    return VectorXY;
 }
 
+void Puck::drawVector(cv::Mat in) {
+            if (bouncex || bouncey) {
+//                printf("Bounce was true! and intersect\n");
+                cv::line(in, location, intersect, cvScalar(255, 0, 255), 4);
+                if (bouncex) {
+                    cv::line(in, intersect, cvPoint(intersect.x - vectorXY.x*vectorMult, intersect.y + vectorXY.y*vectorMult), cvScalar(255, 225, 0), 4);
+                }
+                if (bouncey) {
+                    cv::line(in, intersect, cvPoint(intersect.x +vectorXY.x*vectorMult, intersect.y - vectorXY.y*vectorMult), cvScalar(255, 225, 0), 4);
+                }
+
+            } else {
+                cv::line(in, location, (location+vectorXY*vectorMult), cvScalar(255, 0, 255), 4);
+            }
+
+}
+
+void Puck::calcTraj(Table table) {
+    predictedLocation = location + vectorXY*vectorMult;
+    predicted[0] = predictedLocation.y - location.y;    //A
+    predicted[1] = location.x - predictedLocation.x;    //B
+    predicted[2] = predicted[0]*location.x + predicted[1]*location.y;   //C
+    // TODO: find intersection point and redraw vector, starting from there to the current vector
+    // before the bounce but with inverted x value
+    // also clip
+    if (predictedLocation.x > table.max.x) {
+        bouncex = true;
+        // third wall
+        det = predicted[0] * walls[2][1] - walls[2][0] * predicted[1];
+        if (det == 0) {
+//            printf("Error lines are parallel?\n");
+        } else {
+            intersect.x = (walls[2][1] * predicted[2] - predicted[1] * walls[2][2])/det;
+            intersect.y = (predicted[0] * walls[2][2] - walls[2][0] * predicted[2])/det;
+//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
+        }
+    } else if (predictedLocation.x < table.min.x) {
+        bouncex = true;
+        // first wall
+        det = predicted[0] * walls[0][1] - walls[0][0] * predicted[1];
+        if (det == 0) {
+//            printf("Error lines are parallel?\n");
+        } else {
+            intersect.x = (walls[0][1] * predicted[2] - predicted[1] * walls[0][2])/det;
+            intersect.y = (predicted[0] * walls[0][2] - walls[0][0] * predicted[2])/det;
+//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
+        }
+    } else if (predictedLocation.y > table.max.y) {
+        bouncey = true;
+        // second wall
+        det = predicted[0] * walls[1][1] - walls[1][0] * predicted[1];
+        if (det == 0) {
+//            printf("Error lines are parallel?\n");
+        } else {
+            intersect.x = (walls[1][1] * predicted[2] - predicted[1] * walls[1][2])/det;
+            intersect.y = (predicted[0] * walls[1][2] - walls[1][0] * predicted[2])/det;
+//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
+        }
+    } else if (predictedLocation.y < table.min.y) {
+        bouncey = true;
+        // fourth wall
+        det = predicted[0] * walls[3][1] - walls[3][0] * predicted[1];
+        if (det == 0) {
+//            printf("Error lines are parallel?\n");
+        } else {
+            intersect.x = (walls[3][1] * predicted[2] - predicted[1] * walls[3][2])/det;
+            intersect.y = (predicted[0] * walls[3][2] - walls[3][0] * predicted[2])/det;
+//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
+        }
+    } else {
+        bouncex = false;
+        bouncey = false;
+    }
+
+}
+
+
+void Puck::setWalls(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY) {
+   /*
+    * This calculates the Ax + By = C line equations for the walls of the table
+    * A = y2-y1, B = x1-x2, C = A*x1 + B*y1
+    */
+
+    // Calculate the left (first) wall with the two minimum x corners
+    walls[0][0] = sortedX[1].y - sortedX[0].y;
+    walls[0][1] = sortedX[0].x - sortedX[1].x;
+    walls[0][2] = walls[0][0]*sortedX[0].x + walls[0][1]*sortedX[0].y;
+
+    // Calculate the bottom (second) wall with the two maximum y corners
+    walls[1][0] = sortedY[3].y - sortedY[2].y;
+    walls[1][1] = sortedY[2].x - sortedY[3].x;
+    walls[1][2] = walls[1][0]*sortedY[2].x + walls[1][1]*sortedY[2].y;
+
+    // Calculate the right (third) wall with the wto maximum x corners
+    walls[2][0] = sortedX[3].y - sortedX[2].y;
+    walls[2][1] = sortedX[2].x - sortedX[3].x;
+    walls[2][2] = walls[2][0]*sortedX[2].x + walls[2][1]*sortedX[2].y;
+
+    // Calculate the top (fourth) wall with the two minimum y corners
+    walls[3][0] = sortedY[1].y - sortedY[0].y;
+    walls[3][1] = sortedY[0].x - sortedY[1].x;
+    walls[3][2] = walls[3][0]*sortedY[0].x + walls[3][1]*sortedY[0].y;
+}
 

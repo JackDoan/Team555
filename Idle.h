@@ -5,7 +5,6 @@
 #ifndef TEAM555_IDLE_H
 #define TEAM555_IDLE_H
 
-#include "Idle.h"
 #include <opencv2/core.hpp>
 #include <opencv2/core/opengl.hpp>
 #include <opencv2/highgui.hpp>

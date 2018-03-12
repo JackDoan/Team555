@@ -17,11 +17,21 @@ Idle::Idle(){
 void Idle::Idle_Process(){
     //Idle Process running.
         //cv::VideoCapture cap(0); // open the default camera
-    cv::VideoCapture cap("C:/AirHockeyRobot/drop.avi"); // open the video file
-        if(!cap.isOpened())  // check if we succeeded
+    //cv::VideoCapture cap("C:/AirHockeyRobot/bars_100.avi"); // open the video file
+    //open last recorded video
+    cv::VideoCapture cap("C:/AirHockeyRobot/cmake-build-debug/output.avi"); // open the video file
+
+    if(!cap.isOpened())  // check if we succeeded
             printf("Nope!");
 
-        else cv::namedWindow("Video",1);
+        else {
+            //TODO: Currently crashes after a minute of running. 
+            cv::namedWindow("Video", CV_WINDOW_NORMAL);
+            cv::setWindowProperty("Video", CV_WND_PROP_FULLSCREEN, 1);
+
+            //cv::namedWindow("Video", 1);                  //NOT FULLSCREEN BUT NOT SHIT RES.
+            //cv::setWindowProperty("Video", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
+        }
         for(;;)
         {
             cv::Mat frame;

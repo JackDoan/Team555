@@ -10,17 +10,6 @@
 #include "Corners.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
-
-class Config {
-
-public:
-    void WriteToFile();
-//    Config();
-//    ~Config();
-
-    bool writeValues(Corners corners);
-    bool readValues(Corners corners);
-};
-
+    bool writeConfigValues(Corners corners);
 
 #endif //TEAM555_CONFIG_H

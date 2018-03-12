@@ -10,6 +10,7 @@
 #include <vector>
 #include <math.h>
 
+
 class Puck {
 private:
     int minArea = 1200;
@@ -27,8 +28,10 @@ public:
     // lastY = -1;
     //double x = 0;
     //double y = 0;
-    Coordinate location, lastLocation;
+    cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
     Coordinate CoordsDouble;
+    int vectorMult = 10;
+
 
 //    double coordX;
 //    double coordY;
@@ -39,30 +42,38 @@ public:
     //int puckCoordY;
     //int oldCoordX;
     //int oldCoordY;
+    int walls[4][3];
+    int predicted[3];
+    double det;
+    cv::Point_<double> intersect;
     double speedX;
     double speedY;
     float speed;         // mm/sec
     float direction;     // radians
+    bool bouncex;
+    bool bouncey;
 
-    double vectorX;
-    double vectorY;
+//    double vectorX;
+//    double vectorY;
 
 
-    Puck();
+
+    Puck(Table table);
     ~Puck();
     void setupTrackbars();
     double getMinArea();
     double getMaxArea();
     double getMinRoundness();
     std::vector<cv::Point_<int>> findPucks(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
-    cv::Point_<int> find(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
+    void findPuck(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
 
-    Vector getVector(cv::Mat in, cv::Point_<int> location, cv::Point_<int> lastLocation);
+    void calcVector(cv::Mat in);
+    void drawVector(cv::Mat in);
     //Vector getVector(cv::Mat in);
     //void getCoords(Table table);
     //Coordinate getCoords(Table table);
-
-
+    void calcTraj(Table table);
+    void setWalls(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY);
 
 };
 

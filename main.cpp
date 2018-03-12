@@ -16,6 +16,7 @@
 #include "Serial.h"
 #include "MotorDriver.h"
 #include "Idle.h"
+#include "Config.h"
 
 
 // Camera process, convert puck position to coordinates
@@ -63,17 +64,31 @@ void robotProcess() {
 
 
 int main(int argc, char* argv[]) {
-    bool video_output = false;
+    bool video_output = true;   //can be shown through Idle Process
     char tempStr[80];
     long frameTimestamp = 0;
     long firstTimestamp = 0;
     bool undistort = true;
     bool calibrateCorners;
-    if (argc == 1 && argv[1] == "calibrate") {
-        calibrateCorners = true;
-    } else {
-        calibrateCorners = false;
+    printf("%d\n", argc);
+    if (argc > 1) {
+        for (int i = 1; i < argc; i++) {
+            if (std::string(argv[i]) == "-calibrate") {
+                calibrateCorners = true;
+                printf("calibrateCorners set to true!\n");
+            } else {
+                calibrateCorners = false;
+                printf("calibrateCorners set to false!\n");
+            }
+        }
+//        printf("%s\n", std::string(argv[2]));
     }
+//    if (argv[1] == "calibrate") {
+//        calibrateCorners = true;
+//    } else {
+//        calibrateCorners = false;
+//    }
+
 
     // TODO: make calibrate an input argument to the whole program and read the offsets and corner values from a file in the Corners class
 
@@ -83,6 +98,8 @@ int main(int argc, char* argv[]) {
     cv::Mat imgThresh;
     cv::VideoWriter record;
 
+
+    // path to video: C:\AirHockeyRobot\cmake-build-debug
     bool RunIdle = false;       //Idle Process to show video.
     if(RunIdle) {
         Idle::Idle_Process();
@@ -97,10 +114,10 @@ int main(int argc, char* argv[]) {
     cv::Point_<int> location;        //Added
     cv::Point_<int> lastLocation;    //Added
 
-    Vector VectorXY;
+    cv::Point_<int> vectorXY;
 
-    Puck puck = Puck();
-    Corners corners = Corners();
+
+    //printf("this is a test: %d, %d\n", fuck[1].x, fuck[1].y);
     MotorDriver motorDriver = MotorDriver();
     bool blahtest = motorDriver.initComPort('3', 'x');
 
@@ -109,12 +126,22 @@ int main(int argc, char* argv[]) {
     Camera camera = Camera(1280,720);
     Table table = Table(camera);
     firstTimestamp = (long)GetTickCount();
-
+    Puck puck = Puck(table);
+    Corners corners = Corners(calibrateCorners);
+//    readValues(corners);
+    std::vector<cv::Point_<int>> fuck;
+    fuck = corners.getCalibratedCorners();
+    table.setLimits(corners.sortedX, corners.sortedY);
+    puck.setWalls(corners.sortedX, corners.sortedY);
 
 
     puck.setupTrackbars();
 
     //HANDLE xMotorCmd = createPipe(0);
+    cv::Size blahhhh = {640, 360};
+
+
+    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, blahhhh);
 
     while (true) {
 //        testMessage(xMotorCmd);
@@ -139,74 +166,72 @@ int main(int argc, char* argv[]) {
 
         if (!calibrateCorners) {
             lastLocation = location;
-            location = puck.find(grabbed, table);
+            puck.findPuck(grabbed, table);
 
             //corners = puck.findPucks(grabbed, table);
             //puck.getCoords(table);
 
             //puck.getVector(grabbed);
 
-            VectorXY = puck.getVector(grabbed, location, lastLocation);
+            //puck.getVector(grabbed);
 
             //printf("\nVectorXY: %f\n", VectorXY);
         }
 //        cameraProcess(grabbed, puck, 1000 / table.fps, table); // CAMERA PROCESS (puck coordinates, trajectory...)
 
         if (table.preview == 1) {
-            //if (true) {
-            // Put text over image
-            if (!calibrateCorners){
-                sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x,
-                        puck.location.y, puck.speedY);
+            sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x,
+                    puck.location.y, puck.speedY);
             cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
-
-            //cv::putText(grabbed, table.puckDataString2, cvPoint(170, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
-            // Draw Table borders
-
             table.annotate(grabbed);
-            }
-
             cv::Mat previewSmall;
             cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);
+
+            if (!calibrateCorners) {
+                // Draw Table borders
+                corners.drawSquareNew(previewSmall, corners.getCalibratedCorners());
+            }
+
+
 /*            if (corners.size() >= 3) {
                 //printf("%d: \t %d,%d \t %d,%d \t %d,%d \t %d,%d\n", corners.size(), corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y, corners[3].x, corners[3].y);
             }*/
             if (calibrateCorners) {
                 corners.calibrateCorners(grabbed, previewSmall, table, puck);
-               /* if (corners.size() == 4) {
-                    corners[3].x -= 40;
-                    corners[3].y -= 40;
-                    corners[2].x += 40;
-                    corners[2].y -= 40;
-                    corners[1].x -= 40;
-                    corners[1].y += 40;
-                    corners[0].x += 40;
-                    corners[0].y += 40;
-                    cv::line(previewSmall, corners[0] / 2, corners[1] / 2, cv::Scalar(255, 255, 255), 4);
-                    cv::line(previewSmall, corners[1] / 2, corners[3] / 2, cv::Scalar(255, 255, 255), 4);
-                    cv::line(previewSmall, corners[3] / 2, corners[2] / 2, cv::Scalar(255, 255, 255), 4);
-                    cv::line(previewSmall, corners[2] / 2, corners[0] / 2, cv::Scalar(255, 255, 255), 4);
-                    cv::putText(previewSmall, "1", corners[0] / 2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
-                    cv::putText(previewSmall, "2", corners[1] / 2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                2.8, cv::Scalar(255, 0, 0), 2, cv::LINE_8, false);
-                    cv::putText(previewSmall, "3", corners[2] / 2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                2.8, cv::Scalar(0, 255, 0), 2, cv::LINE_8, false);
-                    cv::putText(previewSmall, "4", corners[3] / 2, cv::FONT_HERSHEY_COMPLEX_SMALL,
-                                2.8, cv::Scalar(0, 0, 255), 2, cv::LINE_8, false);
-                } else {
-                    printf("See %d pucks! Need 4!", corners.size());
-                    //cv::putText(previewSmall, "Need 4 pucks in corners", preview, )
-                }*/
+                writeConfigValues(corners);
+
             }
-/*            //james test start//////////////////////////////
-            //rect
-            //rectangle(previewSmall, cvPoint(50,50), cvPoint(300,300), cvScalar(255,0,0), 2, 8);
+            //james test start//////////////////////////////
+            //puck: pos1 -> pos2,      prediction: pre1 -> pre2
+            //bool intersect variable
+            //if intersect = true, check predicted points and cap values at edges of table.
+            //      >> new predicted points (Capped)
+            //
+            //Check if X or Y got capped
+            //      if X capped:
+            //          pre1 = pos2(capped)
+            //          pre2 = (pos1.x, - (+/- pos1.y));
+            //          draw line (pre1, pre2)
+            //              cap prediction line
+            //
+            //      if Y capped:
+            //          pre1 = pos2(capped)
+            //          pre2 = ( - (+/- pos1.x), pos1.y);
+            //          draw line (pre1, pre2)
+            //              cap prediction line
+
+
+            /*
             //clipline
-            //CvPoint pt1 = cvPoint((int)lastLocation.x,(int)lastLocation.y);
+            //cv::Point pt1 = puck.location;
+            //cv::Point pt2 = puck.getVector(grabbed) + puck.location;
+            //cv::line(previewSmall, pt1, pt2, cvScalar(0,255,255),4);
+
+            //bool clipped;
+
             //CvPoint pt2 = cvPoint((int)location.x + (location.x - lastLocation.x)*10, (int)location.y + (location.y - lastLocation.y)*10);
-            //cvClipLine((50,50,300,300), &pt1, &pt2);
-            //take vector*/
+            //clippled = cvClipLine((50,50,300,300), CvPoint &pt1, Point &pt2);
+            //take vector
 /*
             double tempvx = (location.x - lastLocation.x);
             double tempvy = (location.y - lastLocation.y);
@@ -236,10 +261,19 @@ int main(int argc, char* argv[]) {
                 //cv::line(previewSmall, cvPoint(tempvx2, tempvy2), cvPoint(def2x, def2y), cvScalar(0, 255, 0), 4);
 
             }
+             */
+
+            //GOAL check
+            //find midpoints of Y lines being drawn with drawSquareNew
+            //      manually add offset in (while drawing lines to check) to find goal zone.
+
+
             //look into cvFitLine
 
             //j test end//////////////////////////////////////
-*/
+            //(previewSmall);
+//            corners.drawSquare(previewSmall, corners.getCorners(), corners.getOffsets());
+            video.write(previewSmall);
             imshow("Video", previewSmall);
         }
 

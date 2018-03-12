@@ -11,7 +11,6 @@
 #include "Camera.h"
 #include "helpers.h"
 
-
 #define CAM_PIX_WIDTH 1280
 #define CAM_PIX_HEIGHT 720
 #define CAM_PIX_TO_MM 1  // Default camera distante (this is rewrited on the configuration)
@@ -26,6 +25,7 @@ public:
     int robot_table_center_y = robot_table_width /2;
     int puckSize = 0;  // Puck size (radio) estimation. it depends on table size (width)
 
+
     int defense_position;
     int predict_x;    // X position at impact (mm)
     int predict_y;
@@ -33,7 +33,8 @@ public:
     int predict_y_old;
     int predict_time;   // time to impact in ms
 
-    Coordinate max, min;
+//    Coordinate max, min;
+    cv::Point_<int> max, min;
 
     int cam_center_x = CAM_PIX_WIDTH/2;
     int cam_center_y = CAM_PIX_HEIGHT/2;
@@ -42,6 +43,7 @@ public:
     //int cam_center_y = CAM_PIX_HEIGHT/2;
 
     float cam_pix_to_mm = CAM_PIX_TO_MM; //todo replace this with an expression
+    void setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY);
     int preview = 1;
 
     void annotate(cv::Mat);
