@@ -6,8 +6,10 @@
 #define TEAM555_CONFIG_H
 
 
-#include"helpers.h"
 
+#include "Corners.h"
+#include <opencv2/opencv.hpp>
+#include <vector>
 
 class Config {
 
@@ -16,6 +18,8 @@ public:
 //    Config();
 //    ~Config();
 
+    bool writeValues(Corners corners);
+    bool readValues(Corners corners);
 };
 
 

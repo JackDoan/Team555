@@ -1,11 +1,62 @@
 //
 // Created by jes130330 on 3/8/2018.
 //
-
+#include "Corners.h"
 #include "Config.h"
+#include <opencv2/opencv.hpp>
+#include <vector>
 #include<iostream>
 #include<fstream>
 
+
+bool Config::writeValues(Corners corners) {
+    std::fstream configFile;
+    char buffer[50];
+    std::vector<cv::Point_<int>> cornersVector = corners.getCorners();
+    std::vector<cv::Point_<int>> offsetsVector = corners.getOffsets();
+    configFile.open("C:/Users/mikel/blah.txt");
+    if (configFile.is_open()) {
+        printf("File Opened Succesfully");
+        for (int i = 0; i <= 3; i++) {
+            std::sprintf(buffer, "Calibrated %d: %d, %d\n", i+1, cornersVector[i].x + offsetsVector[i].x, cornersVector[i].y + offsetsVector[i].y);
+            configFile << buffer;
+        }
+        for (int i = 0; i <= 3; i++) {
+            std::sprintf(buffer, "Corner %d: %d, %d\n", i+1, cornersVector[i].x, cornersVector[i].y);
+            configFile << buffer;
+        }
+        for (int i = 0; i <=3; i++) {
+            std::sprintf(buffer, "Offset %d: %d, %d\n", i + 1, offsetsVector[i].x, offsetsVector[i].y);
+            configFile << buffer;
+        }
+        printf("Wrote values to config file successfully\n");
+        configFile.close();
+        return true;
+    } else {
+        printf("Could not open config file\n");
+        return false;
+    }
+
+}
+
+bool Config::readValues(Corners corners) {
+    std::fstream configFile;
+    char buffer[500];
+    std::vector<cv::Point_<int>> cornersVector;
+    std::vector<cv::Point_<int>> offsetsVector;
+    configFile.open("C:/Users/mikel/blah.txt");
+    if (configFile.is_open()) {
+        printf("File Opened Succesfully");
+        while (!configFile.eof()) {
+            configFile >> buffer;
+        }
+        configFile.close();
+
+        //TODO: parse results, call setcorners setoffsets and setcalibrated coerners on the parsed results that get put into cornersvector and offsetsvector
+    } else {
+        printf("Could not open config file\n");
+    }
+}
 
 void Config::WriteToFile(){
 
