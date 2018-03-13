@@ -14,6 +14,13 @@ struct threshold_s {
     int maxS = 138;
     int minV = 59;
     int maxV = 172;
+
+//    int minH = 16;
+//    int maxH = 121;
+//    int minS = 23;
+//    int maxS = 154;
+//    int minV = 0;
+//    int maxV = 0;
 };
 
 class ThresholdImage

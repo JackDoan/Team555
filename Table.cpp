@@ -9,7 +9,7 @@
 #include <vector>
 
 
-using namespace cv;
+//using namespace cv;
 
 
 Table::Table(Camera camera) {

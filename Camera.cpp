@@ -8,6 +8,8 @@
 #include <opencv/cv.hpp>
 #include "Camera.h"
 
+#include <time.h>
+
 Camera::Camera(int nwidth, int nheight) {
 
     cameraMatrix = (cv::Mat_<double>(3,3)
@@ -21,6 +23,8 @@ Camera::Camera(int nwidth, int nheight) {
     dimensions = Coordinate(nwidth,nheight);
 
     capture.open(0);
+    printf("Exposure: %f\n", capture.get(CV_CAP_PROP_EXPOSURE));
+    printf("Gain: %f\n", capture.get(CV_CAP_PROP_GAIN));
 
     if (!capture.isOpened()) {
         printf("OPENCV Capture failure!\n");
@@ -79,6 +83,7 @@ cv::Mat Camera::getHomography(std::vector<cv::Point_<int>> corners,
     pts_dst.emplace_back(cv::Point(Calibrated_corners[1].x,Calibrated_corners[1].y));
 
     cv::Mat h_transform = cv::findHomography(pts_src, pts_dst);
+    //use with warpPerspective(intput img, output img, h_transform, output.size());
 
     return h_transform;
 }

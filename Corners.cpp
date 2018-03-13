@@ -101,7 +101,7 @@ Corners::Corners(bool calibrate) {
                 offsetsVector.emplace_back(atoi(xnumber), atoi(ynumber));
             }
         }
-        printf("File Opened Succesfully");
+        printf("File Opened Succesfully\n");
         setCalibratedCorners(calibratedCornersVector);
         if (!calibrate) {
             setCorners(cornersVector);

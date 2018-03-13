@@ -72,7 +72,7 @@ int MotorDriver::getSteps(char axis) {
             printf("Error reading from axis: %c\n", axis);
             return -2147483648;
         } else {
-            //TODO: parse incoming 'string' data to an int and return it
+            return atoi(incomingData);
         }
     } else if (axis == 'y') {
         writeResult = SPy->WriteData("?", sizeof("???"));
@@ -85,7 +85,7 @@ int MotorDriver::getSteps(char axis) {
             printf("Error reading from axis: %c\n", axis);
             return -2147483648;
         } else {
-            //TODO: parse incoming 'string' data to an int and return it
+            return atoi(incomingData);
         }
     } else {
         printf("Inavlid Axis identifier in MotorDrivers\n");
@@ -94,11 +94,12 @@ int MotorDriver::getSteps(char axis) {
 }
 
 bool MotorDriver::moveSteps(int steps, char axis) {
-    char bytes[4];
+    char bytes[5];
     bytes[0] = (steps >> 24) & 0xFF;
     bytes[1] = (steps >> 16) & 0xFF;
     bytes[2] = (steps >> 8) & 0xFF;
     bytes[3] = (steps) & 0xFF;
+    bytes[4] = 'm';
     if (axis == 'x') {
         writeResult = SPx->WriteData(bytes, sizeof(bytes));
         if (!writeResult) {

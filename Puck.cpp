@@ -50,12 +50,18 @@ Puck::Puck(Table table) {
     struct threshold_s puckLimitsCalib;
     //for green
 
-    puckLimits.minH = 43;
-    puckLimits.maxH = 110;
-    puckLimits.minS = 70;
-    puckLimits.maxS = 155;
-    puckLimits.minV = 20;
-    puckLimits.maxV = 67;
+//    puckLimits.minH = 43;
+//    puckLimits.maxH = 110;
+//    puckLimits.minS = 70;
+//    puckLimits.maxS = 155;
+//    puckLimits.minV = 20;
+//    puckLimits.maxV = 67;
+    puckLimits.minH = 16;
+    puckLimits.maxH = 121;
+    puckLimits.minS = 23;
+    puckLimits.maxS = 154;
+    puckLimits.minV = 0;
+    puckLimits.maxV = 0;
 
     puckLimitsCalib.minH = 43;
     puckLimitsCalib.maxH = 110;

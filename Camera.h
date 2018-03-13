@@ -29,6 +29,7 @@ class Camera {
     ~Camera();
     cv::Mat getUndistortedFrame();
     cv::Mat getFrame();
+    double calcFPS(int counter, bool active);
     cv::Mat getHomography(std::vector<cv::Point_<int>> corners,
                           std::vector<cv::Point_<int>> Calibrated_corners);
 };

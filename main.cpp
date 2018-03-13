@@ -18,6 +18,8 @@
 #include "Idle.h"
 #include "Config.h"
 
+#include <time.h>
+
 
 // Camera process, convert puck position to coordinates
 // and generate trajectory prediction and visualization
@@ -109,6 +111,8 @@ int main(int argc, char* argv[]) {
     time_t start = 0;
     time_t end = 0;
     double frameRate = 0;
+    int FrameCounter = 0;
+    double sec;
     int execs = 0;
 
     cv::Point_<int> location;        //Added
@@ -138,11 +142,14 @@ int main(int argc, char* argv[]) {
     puck.setupTrackbars();
 
     //HANDLE xMotorCmd = createPipe(0);
+
     cv::Size blahhhh = {640, 360};
-
-
     cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, blahhhh);
 
+
+
+
+    time(&start);
     while (true) {
 //        testMessage(xMotorCmd);
 //        if (execs >= 100) {
@@ -154,8 +161,22 @@ int main(int argc, char* argv[]) {
 
         if (!undistort) {
             grabbed = camera.getFrame();
+
+            time(&end);
+            ++FrameCounter;
+            sec = difftime (end, start);
+            frameRate = FrameCounter / sec;
+            //printf("FPS = %.2f\n", frameRate);
+
         } else {
             grabbed = camera.getUndistortedFrame(); // Query a new frame
+
+            time(&end);
+            ++FrameCounter;
+            sec = difftime (end, start);
+            frameRate = FrameCounter / sec;
+            //printf("FPS = %.2f\n", frameRate);
+
         }
         if (grabbed.empty()) {
             printf("No frames!\n");
@@ -180,6 +201,7 @@ int main(int argc, char* argv[]) {
 //        cameraProcess(grabbed, puck, 1000 / table.fps, table); // CAMERA PROCESS (puck coordinates, trajectory...)
 
         if (table.preview == 1) {
+            //multiplying FPS by 1.2
             sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x,
                     puck.location.y, puck.speedY);
             cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
@@ -201,67 +223,6 @@ int main(int argc, char* argv[]) {
                 writeConfigValues(corners);
 
             }
-            //james test start//////////////////////////////
-            //puck: pos1 -> pos2,      prediction: pre1 -> pre2
-            //bool intersect variable
-            //if intersect = true, check predicted points and cap values at edges of table.
-            //      >> new predicted points (Capped)
-            //
-            //Check if X or Y got capped
-            //      if X capped:
-            //          pre1 = pos2(capped)
-            //          pre2 = (pos1.x, - (+/- pos1.y));
-            //          draw line (pre1, pre2)
-            //              cap prediction line
-            //
-            //      if Y capped:
-            //          pre1 = pos2(capped)
-            //          pre2 = ( - (+/- pos1.x), pos1.y);
-            //          draw line (pre1, pre2)
-            //              cap prediction line
-
-
-            /*
-            //clipline
-            //cv::Point pt1 = puck.location;
-            //cv::Point pt2 = puck.getVector(grabbed) + puck.location;
-            //cv::line(previewSmall, pt1, pt2, cvScalar(0,255,255),4);
-
-            //bool clipped;
-
-            //CvPoint pt2 = cvPoint((int)location.x + (location.x - lastLocation.x)*10, (int)location.y + (location.y - lastLocation.y)*10);
-            //clippled = cvClipLine((50,50,300,300), CvPoint &pt1, Point &pt2);
-            //take vector
-/*
-            double tempvx = (location.x - lastLocation.x);
-            double tempvy = (location.y - lastLocation.y);
-            double tempvx2 = 10*(location.x - lastLocation.x);
-            double tempvy2 = 10*(location.y - lastLocation.y);
-
-            if (tempvx != 0 || tempvy != 0) {
-                double magv = sqrt(tempvx * tempvx + tempvy * tempvy);
-
-                tempvx = tempvx / magv;
-                tempvy = tempvy / magv;
-
-                double tempholdv = tempvx;
-                tempvx = -tempvy;
-                tempvy = tempholdv;
-
-                double def1x = location.x + tempvx * 10;
-                double def1y = location.y + tempvy * 10;
-
-                double def2x = location.x + tempvx * (-10);
-                double def2y = location.y + tempvy * (-10);
-
-                cv::line(previewSmall, cvPoint(location.x + tempvx2, location.y + tempvy2), cvPoint(def1x, def1y), cvScalar(0, 0, 255), 4);
-                //cv::line(previewSmall, cvPoint(tempvx2, tempvy2), cvPoint(def1x, def1y), cvScalar(0, 0, 255), 4);
-
-               // cv::line(previewSmall, cvPoint(location.x + tempvx2, location.y + tempvy2), cvPoint(def2x, def2y), cvScalar(0, 255, 0), 4);
-                //cv::line(previewSmall, cvPoint(tempvx2, tempvy2), cvPoint(def2x, def2y), cvScalar(0, 255, 0), 4);
-
-            }
-             */
 
             //GOAL check
             //find midpoints of Y lines being drawn with drawSquareNew
