@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
             //multiplying FPS by 1.2
             sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x,
                     puck.location.y, puck.speedY);
-            cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
+//            cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
             table.annotate(grabbed);
             cv::Mat previewSmall;
             cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);

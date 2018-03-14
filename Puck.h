@@ -52,6 +52,8 @@ public:
     float direction;     // radians
     bool bouncex;
     bool bouncey;
+    bool puckFound;
+    int lostCnt;
 
 //    double vectorX;
 //    double vectorY;

@@ -30,6 +30,10 @@ void Puck::setupTrackbars() {
     //TableCalibrate.setupTrackbars();
 }
 
+// TODO: add logic to puck.findPuck that uses functions from camera, to adjust exposure and gain when puck isn't found for a long time
+// If speed is measured 'high' and puck is not found, turn up exposure and gain until it is found again
+// then once it is found again return it to its default setting
+
 double Puck::getMinArea()
 {
     return (double)minArea;
@@ -90,6 +94,8 @@ Puck::Puck(Table table) {
     predictedLocation = {0,0};
     bouncex = false;
     bouncey = false;
+    puckFound = false;
+    lostCnt = 0;
 
 }
 
@@ -203,7 +209,7 @@ void Puck::findPuck(cv::Mat in, Table table) {
     double roundness = 0;
     int num;
 
-    cv::Point_<int> puckPoint;
+//    cv::Point_<int> puckPoint;
 
 
     cv::Mat imgThresh = thresholdImage.get(in);
@@ -229,7 +235,7 @@ void Puck::findPuck(cv::Mat in, Table table) {
 
     cv::InputArray thisone = imgThresh;
     cv::findContours(imgThresh, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-
+    puckFound = false;
     for (int i = 0; i< contours.size(); i++) {
         lastLocation = location;
         //todo: shrink the image to the table area, THEN search for contours.
@@ -264,8 +270,8 @@ void Puck::findPuck(cv::Mat in, Table table) {
                     continue;  // continue with other contour... (this is outside the table)
                 } else {
                     location = pos/2;
-                    puckPoint.x = (int) round(pos.x);
-                    puckPoint.y = (int) round(pos.y);
+//                    puckPoint.x = (int) round(pos.x);
+//                    puckPoint.y = (int) round(pos.y);
 //                }
 //                    printf("puckPoint: %d, %d\n", (int) round(pos.x), (int) round(pos.y));
 //                    printf("location: %d, %d\n", location.x, location.y);
@@ -277,8 +283,10 @@ void Puck::findPuck(cv::Mat in, Table table) {
                     //lastLocation = location;
                     //getCoords(table);
                     //getVector(in);
+                    puckFound = true;
                     break;
                 }
+
             }
         }
     }
@@ -288,10 +296,30 @@ void Puck::findPuck(cv::Mat in, Table table) {
     //CoordsDouble = Coordinate(location.x/2 - table.cam_center_x, location.y/2 - table.cam_center_y);
     //CoordsDouble = Coordinate(location.x/2, location.y/2);
 
-    calcVector(in);
-    calcTraj(table);
-    drawVector(in);
+    if (!puckFound) {
+        lostCnt++;
+        if (lostCnt < 5) {
+            lastLocation = location;
+            location = location + vectorXY;
+        }
 
+    }
+
+    // TODO: need to make two separate paths in calcVector, calcTraj and drawVector
+    // One for when the puck is found and when the puck is not found
+    // when puck is found use location and last location
+    // when puck is not found use estimated location and estimated last location
+    // also need to make a counter for how many frames the puck is not found
+    // if it goes more than 5 frames without finding the puck then stop calculating
+    // and drawing the trajectories and vectors
+
+    if (!(puckFound && lostCnt > 0)) {
+        calcVector(in);
+        calcTraj(table);
+        drawVector(in);
+    } else {
+        lostCnt = 0;
+    }
 }
 
 void Puck::calcVector(cv::Mat in) {
@@ -329,19 +357,25 @@ void Puck::calcVector(cv::Mat in) {
 }
 
 void Puck::drawVector(cv::Mat in) {
-            if (bouncex || bouncey) {
-//                printf("Bounce was true! and intersect\n");
-                cv::line(in, location, intersect, cvScalar(255, 0, 255), 4);
-                if (bouncex) {
-                    cv::line(in, intersect, cvPoint(intersect.x - vectorXY.x*vectorMult, intersect.y + vectorXY.y*vectorMult), cvScalar(255, 225, 0), 4);
-                }
-                if (bouncey) {
-                    cv::line(in, intersect, cvPoint(intersect.x +vectorXY.x*vectorMult, intersect.y - vectorXY.y*vectorMult), cvScalar(255, 225, 0), 4);
-                }
 
-            } else {
-                cv::line(in, location, (location+vectorXY*vectorMult), cvScalar(255, 0, 255), 4);
-            }
+    if (bouncex || bouncey) {
+//                printf("Bounce was true! and intersect\n");
+        cv::line(in, location, intersect, cvScalar(255, 0, 255), 4);
+        if (bouncex) {
+            cv::line(in, intersect, cvPoint(intersect.x - vectorXY.x*vectorMult, intersect.y + vectorXY.y*vectorMult), cvScalar(255, 225, 0), 4);
+        }
+        if (bouncey) {
+            cv::line(in, intersect, cvPoint(intersect.x +vectorXY.x*vectorMult, intersect.y - vectorXY.y*vectorMult), cvScalar(255, 225, 0), 4);
+        }
+
+    } else {
+        cv::line(in, location, (location+vectorXY*vectorMult), cvScalar(255, 0, 255), 4);
+    }
+
+    // TODO: Plot where the intersect point is expected to be as a red cross on the video in order to debug bounce prediction issues with top left hand corner
+
+
+        //printf("No puck found!\n");
 
 }
 
@@ -350,9 +384,6 @@ void Puck::calcTraj(Table table) {
     predicted[0] = predictedLocation.y - location.y;    //A
     predicted[1] = location.x - predictedLocation.x;    //B
     predicted[2] = predicted[0]*location.x + predicted[1]*location.y;   //C
-    // TODO: find intersection point and redraw vector, starting from there to the current vector
-    // before the bounce but with inverted x value
-    // also clip
     if (predictedLocation.x > table.max.x) {
         bouncex = true;
         // third wall
@@ -401,6 +432,8 @@ void Puck::calcTraj(Table table) {
         bouncex = false;
         bouncey = false;
     }
+    // TODO: Calculate a final predicted location with a bounce
+
 
 }
 
@@ -421,7 +454,7 @@ void Puck::setWalls(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_
     walls[1][1] = sortedY[2].x - sortedY[3].x;
     walls[1][2] = walls[1][0]*sortedY[2].x + walls[1][1]*sortedY[2].y;
 
-    // Calculate the right (third) wall with the wto maximum x corners
+    // Calculate the right (third) wall with the two maximum x corners
     walls[2][0] = sortedX[3].y - sortedX[2].y;
     walls[2][1] = sortedX[2].x - sortedX[3].x;
     walls[2][2] = walls[2][0]*sortedX[2].x + walls[2][1]*sortedX[2].y;

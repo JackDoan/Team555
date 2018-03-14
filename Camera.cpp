@@ -54,6 +54,8 @@ Coordinate Camera::getCenter() {
 }
 
 cv::Mat Camera::getUndistortedFrame() {
+    // TODO: look at source code for capture.read and see if we can apply undistort to each pixel as its read from the camera to improve performance
+    // VideoCapture::read calls retrieve
     capture.read(currentView);
     //undistortedFrame = currentView.clone();
     //cv::Mat undistortedFrame;// = currentView.clone();
@@ -87,3 +89,6 @@ cv::Mat Camera::getHomography(std::vector<cv::Point_<int>> corners,
 
     return h_transform;
 }
+
+
+// TODO: Create functions that adjust gain and exposure
