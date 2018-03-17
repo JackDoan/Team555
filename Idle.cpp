@@ -2,7 +2,7 @@
 // Created by jes130330 on 3/9/2018.
 //
 
-#include "Idle.h"
+#include "inc/Idle.h"
 #include <opencv2/core.hpp>
 #include <opencv2/core/opengl.hpp>
 #include <opencv2/highgui.hpp>

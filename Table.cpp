@@ -4,8 +4,8 @@
 
 #include <opencv/cv.h>
 #include <opencv/cv.hpp>
-#include "Camera.h"
-#include "Table.h"
+#include "inc/Camera.h"
+#include "inc/Table.h"
 #include <vector>
 
 

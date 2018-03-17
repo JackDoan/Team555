@@ -2,4 +2,4 @@
 // Created by jad140230 on 1/21/2018.
 //
 
-#include "ViewFinder.h"
+#include "inc/ViewFinder.h"

@@ -10,17 +10,17 @@
 #include <thread>
 #include <ctime>
 
-#include "Table.h"
-#include "Puck.h"
-#include "Camera.h"
+#include "inc/Table.h"
+#include "inc/Puck.h"
+#include "inc/Camera.h"
 #include "motors/MotorComm.h"
-#include "Corners.h"
-#include "Serial.h"
-#include "MotorDriver.h"
-#include "Idle.h"
-#include "Config.h"
-#include "Mallet.h"
-#include "ImageProcess.h"
+#include "inc/Corners.h"
+#include "inc/Serial.h"
+#include "inc/MotorDriver.h"
+#include "inc/Idle.h"
+#include "inc/Config.h"
+#include "inc/Mallet.h"
+#include "inc/ImageProcess.h"
 
 #include <time.h>
 
@@ -48,13 +48,6 @@ void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
 
 int main(int argc, char* argv[]) {
     Settings settings;
-//    double pixelsToSteps;
-//    double stepsPerPixel = 35;
-//    bool video_output = false;   //can be shown through Idle Process
-//    char tempStr[80];
-//    bool undistort = true;
-    //bool calibrateCorners;
-//    long firstTimestamp = 0;
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
             // TODO: Calibrate mode is broken, threshold is not working properly, cant see the pucks
@@ -113,21 +106,18 @@ int main(int argc, char* argv[]) {
 
 
     MotorDriver motorDriver = MotorDriver();
-
-
-    Camera camera = Camera(1280, 720);
-    Table table = Table(camera);
-    Puck puck = Puck(table);
-    Mallet mallet = Mallet(table);
+    Camera& camera = Camera::getInstance();
+    Table table = Table();
+    Puck puck = Puck();
+    Mallet mallet = Mallet();
     Corners corners = Corners(settings.calibrateCorners);
     if (!settings.calibrateCorners) {
         table.setLimits(corners.sortedX, corners.sortedY);
         puck.setWalls(corners.sortedX, corners.sortedY);
     }
 
-    puck.setupTrackbars();
-    mallet.setupTrackbars();
-    ImageProcess imageProcess = ImageProcess(table, puck, mallet, corners, camera, settings);
+
+    ImageProcess imageProcess = ImageProcess();
 
 
     // TESTING STEPS TO PIXELS RATIO
@@ -135,7 +125,7 @@ int main(int argc, char* argv[]) {
     do{
     grabbed = camera.getUndistortedFrame(); // Query a new frame
     mallet.findMallet(grabbed, table);
-}while (!mallet.puckFound);
+}while (!mallet.found);
     imshow("Before", grabbed);
     motorDriver.moveSteps(5000, 'x');
     cv::waitKey(5000) >= 0;
@@ -143,12 +133,10 @@ do{
     grabbed = camera.getUndistortedFrame(); // Query a new frame
     mallet.findMallet(grabbed, table);
 
-}while (!mallet.puckFound);
+}while (!mallet.found);
     imshow("After", grabbed);
     cv::waitKey(1) >= 0;
 */
-
-    //HANDLE xMotorCmd = createPipe(0);
 
 //    cv::Size blahhhh = {640, 360};
 //    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, blahhhh);
@@ -197,7 +185,7 @@ do{
 
 
 //            stepsPerPixel = 35;
-//            if(puck.puckFound && mallet.puckFound) {
+//            if(puck.found && mallet.found) {
 //                if (abs(puck.location.y - mallet.location.y) <= 30) {
 //                    printf("Close enough\n");
 //                } else {

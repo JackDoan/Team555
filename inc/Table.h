@@ -47,7 +47,9 @@ public:
     int preview = 1;
 
     void annotate(cv::Mat);
-    Table(Camera camera);
+    Table() =default;
+
+    explicit Table(Camera camera);
     ~Table();
 };
 

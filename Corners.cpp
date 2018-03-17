@@ -1,11 +1,11 @@
 //
 // Created by mikel on 2/23/2018.
 //
-#include "Corners.h"
-#include "Camera.h"
-#include "Table.h"
-#include "puck.h"
-#include "Config.h"
+#include "inc/Corners.h"
+#include "inc/Camera.h"
+#include "inc/Table.h"
+#include "inc/Puck.h"
+#include "inc/Config.h"
 #include <fstream>
 #include <string>
 #include <iostream>
@@ -119,7 +119,7 @@ Corners::~Corners() = default;
 
  //TODO: set the offsets from a config file, right now it defaults to 40px out from each corner in each dimension as defined in the header file
 void Corners::calibrateCorners(cv::Mat in, cv::Mat previewSmall, Table table, Puck puck) {
-    tempCorners = puck.findPucks(in, table);
+    tempCorners = puck.find(in, table);
 
     //printf("tempCorners size: %d\n", tempCorners.size());
     if (tempCorners.size() == 4) {

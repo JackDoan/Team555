@@ -1,8 +1,8 @@
 //
 // Created by jes130330 on 3/8/2018.
 //
-#include "Corners.h"
-#include "Config.h"
+#include "inc/Corners.h"
+#include "inc/Config.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <iostream>

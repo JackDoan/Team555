@@ -9,66 +9,61 @@
 #include <opencv/cv.hpp>
 #include <string>
 
-#include "ImageProcess.h"
-#include "Table.h"
-#include "Mallet.h"
-#include "Puck.h"
-#include "Idle.h"
-#include "Config.h"
-#include "Corners.h"
-#include "Camera.h"
-#include "Settings.h"
+#include "inc/ImageProcess.h"
+#include "inc/Table.h"
+#include "inc/Mallet.h"
+#include "inc/Puck.h"
+#include "inc/Idle.h"
+#include "inc/Config.h"
+#include "inc/Corners.h"
+#include "inc/Camera.h"
+#include "inc/Settings.h"
 
-ImageProcess::ImageProcess(Table table, Puck puck, Mallet mallet, Corners corners, Camera camera, Settings settings){
 
-};
 
-ImageProcess::~ImageProcess() = default;
-
-void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corners, Camera camera, Settings settings) {
+void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corners, Camera& camera, Settings settings) {
     cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, blahhhh);
     int FrameCounter = 0;
     long frameTimestamp = 0;
-    time(&start);
+    time(&start); //todo does this fps calc ignores processing time
+    cv::namedWindow("Video");
     while (true) {
         if (!settings.undistort) {
             grabbed = camera.getFrame();
-            time(&end);
-            ++FrameCounter;
-            sec = difftime (end, start);
-            frameRate = FrameCounter / sec;
         } else {
             grabbed = camera.getUndistortedFrame(); // Query a new frame
-            time(&end);
-            ++FrameCounter;
-            sec = difftime (end, start);
-            frameRate = FrameCounter / sec;
         }
+        time(&end);
+        ++FrameCounter;
+        sec = difftime (end, start);
+        frameRate = FrameCounter / sec;
         if (grabbed.empty()) {
             printf("No frames!\n");
             break;
         }
         if (!settings.calibrateCorners) {
-/*            puck.lastLocation = puck.location;
-            puck.findPuck(grabbed, table);
-            mallet.findMallet(grabbed, table);*/
+           puck.lastLocation = puck.location;
+            //puck.findOld(grabbed, table);
+            //mallet.findOld(grabbed, table);
 
-
-            std::thread puckThread (&Puck::findPuck, std::ref(puck), grabbed, table);
-            std::thread malletThread (&Mallet::findMallet, std::ref(mallet), grabbed, table);
-
-
+            std::thread puckThread(&Puck::findOld, std::ref(puck), grabbed, table);
+            std::thread malletThread(&Mallet::findOld, std::ref(mallet), grabbed, table);
             puckThread.join();
             malletThread.join();
+
             if (table.preview == 1) {
                 sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x,
-                        puck.location.y, puck.speedY);
+                        puck.location.y, puck.vectorXY.y);
                 cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
                 table.annotate(grabbed);
                 cv::Mat previewSmall;
                 cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);
 
-                if (!settings.calibrateCorners) {
+                if (settings.calibrateCorners) {
+                    corners.calibrateCorners(grabbed, previewSmall, table, puck);
+                    writeConfigValues(corners);
+                }
+                else {
                     // Draw Table borders
                     corners.drawSquareNew(previewSmall, corners.getCalibratedCorners());
                 }
@@ -77,10 +72,6 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
 /*            if (corners.size() >= 3) {
                 //printf("%d: \t %d,%d \t %d,%d \t %d,%d \t %d,%d\n", corners.size(), corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y, corners[3].x, corners[3].y);
             }*/
-                if (settings.calibrateCorners) {
-                    corners.calibrateCorners(grabbed, previewSmall, table, puck);
-                    writeConfigValues(corners);
-                }
 
                 //GOAL check
                 //find midpoints of Y lines being drawn with drawSquareNew
@@ -102,18 +93,31 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
 //            clock_t end = clock();
 //            printf("elapsed: %f\n", double(end-begin)/CLOCKS_PER_SEC);
             }
-
-            if (cv::waitKey(1) >= 0)
-                break;
-
-
+            int key = cv::waitKey(1);
+            ///NOTE: do not wait for any additional input
+            ///you will cause the thread to hang
+            switch(key) {
+                case 27: //ESC
+                    //do something to exit the program
+                    break;
+                case 'p':
+                    puck.toggleDebugInfo();
+                    break;
+                case 'm':
+                    mallet.toggleDebugInfo();
+                    break;
+                default:
+                    if(key > 0)
+                        printf("Key: %d\n", key);
+                    break;
+            }
 
 /*            printf("lastLocation: %d, %d\n", puck.lastLocation.x, puck.lastLocation.y);
             printf("location: %d, %d\n", puck.location.x, puck.location.y);
 
 
             stepsPerPixel = 35;
-            if(puck.puckFound && mallet.puckFound) {
+            if(puck.found && mallet.found) {
                 if (abs(puck.location.y - mallet.location.y) <= 30) {
                     printf("Close enough\n");
                 } else {
@@ -140,6 +144,4 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
             printf("\nVectorXY: %f\n", VectorXY);*/
         }
     }
-
-
 }

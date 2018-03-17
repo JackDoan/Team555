@@ -33,15 +33,13 @@ private:
     time_t end = 0;
     double sec;
     cv::Size blahhhh = {640, 360};
-
-
 public:
     double frameRate = 0;
 
-    ImageProcess(Table table, Puck puck, Mallet mallet, Corners corners, Camera camera, Settings settings);
-    ~ImageProcess();
+    ImageProcess() = default;
+    ~ImageProcess() = default;
 
-    void process(Table table, Puck puck, Mallet mallet, Corners corners, Camera camera, Settings settings);
+    void process(Table table, Puck puck, Mallet mallet, Corners corners, Camera& camera, Settings settings);
 };
 
 

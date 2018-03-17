@@ -7,7 +7,7 @@
 
 #include "Camera.h"
 #include "helpers.h"
-#include "puck.h"
+#include "Puck.h"
 #include "Table.h"
 
 #include <opencv2/opencv.hpp>
@@ -57,7 +57,10 @@ public:
     std::vector<cv::Point_<int>> getCalibratedCorners();
     std::vector<cv::Point_<int>> getSortedX(std::vector<cv::Point_<int>> calibrated);
     std::vector<cv::Point_<int>> getSortedY(std::vector<cv::Point_<int>> calibrated);
-    Corners(bool calibrate);
+    Corners() {
+        Corners(false);
+    }
+    explicit Corners(bool calibrate);
     ~Corners();
 };
 

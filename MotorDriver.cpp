@@ -2,8 +2,8 @@
 // Created by mdl150330 on 3/6/2018.
 //
 
-#include "Serial.h"
-#include "MotorDriver.h"
+#include "inc/Serial.h"
+#include "inc/MotorDriver.h"
 #include <string.h>
 #include <cstdint>
 #include "stdio.h"
