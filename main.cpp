@@ -7,6 +7,8 @@
 #include <opencv2/imgproc.hpp>
 #include <sysinfoapi.h>
 #include <string>
+#include <thread>
+#include <ctime>
 
 #include "Table.h"
 #include "Puck.h"
@@ -17,6 +19,8 @@
 #include "MotorDriver.h"
 #include "Idle.h"
 #include "Config.h"
+#include "Mallet.h"
+#include "ImageProcess.h"
 
 #include <time.h>
 
@@ -39,47 +43,26 @@ void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
     int predict_pixY;
     int bounce_pixX;
     int bounce_pixY;
-
-
-
 }
-
-// Robot process, convert robot position to coordinates
-/* currently unused -- we're only tracking the puck
-void robotProcess() {
-	int coordX;
-	int coordY;
-
-	if ((RposX == 0) || (RposY == 0)) {
-		robotCoordX = 0;
-		robotCoordY = 0;
-	}
-	else {
-		// Convert from Camera reference system to Robot reference system
-		// Camera X axis correspond to robot Y axis
-		coordY = (RposX - cam_center_x);   // First we convert image coordinates to center of image
-		coordX = (RposY - cam_center_y);
-		robotCoordY = robot_table_center_y - coordY*cam_pix_to_mm + robot_y_offset;
-		robotCoordX = robot_table_center_x - coordX*cam_pix_to_mm;
-	}
-} */
 
 
 int main(int argc, char* argv[]) {
-    bool video_output = true;   //can be shown through Idle Process
-    char tempStr[80];
-    long frameTimestamp = 0;
-    long firstTimestamp = 0;
-    bool undistort = true;
-    bool calibrateCorners;
-    printf("%d\n", argc);
+    Settings settings;
+//    double pixelsToSteps;
+//    double stepsPerPixel = 35;
+//    bool video_output = false;   //can be shown through Idle Process
+//    char tempStr[80];
+//    bool undistort = true;
+    //bool calibrateCorners;
+//    long firstTimestamp = 0;
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
+            // TODO: Calibrate mode is broken, threshold is not working properly, cant see the pucks
             if (std::string(argv[i]) == "-calibrate") {
-                calibrateCorners = true;
+                settings.calibrateCorners = true;
                 printf("calibrateCorners set to true!\n");
             } else {
-                calibrateCorners = false;
+                settings.calibrateCorners = false;
                 printf("calibrateCorners set to false!\n");
             }
         }
@@ -91,73 +74,87 @@ int main(int argc, char* argv[]) {
 //        calibrateCorners = false;
 //    }
 
+// TODO: need to create a debug mode that allows us to turn on and off every possible debugging feature we could use
+// like trackbars for thresholding, thresholded images, writing and not writing the video, maybe even wrap all
+// all of our printfs for debuggin in a debug version of printf?
 
-    // TODO: make calibrate an input argument to the whole program and read the offsets and corner values from a file in the Corners class
 
-    cv::Mat grabbed;
-    cv::Mat frame;
-    cv::Mat imgHSV;
-    cv::Mat imgThresh;
+    // TODO: need to make a process that identifies the goal areas on the left and right walls and creates 'ranges'
+    // on the wall lines that are the goals
+
+    // TODO: thread video writing to improve framerate
+
+
+//    cv::Mat grabbed;
+//    cv::Mat frame;
+//    cv::Mat imgHSV;
+//    cv::Mat imgThresh;
     cv::VideoWriter record;
 
 
     // path to video: C:\AirHockeyRobot\cmake-build-debug
-    bool RunIdle = false;       //Idle Process to show video.
-    if(RunIdle) {
+//    bool RunIdle = false;       //Idle Process to show video.
+    if (settings.RunIdle) {
         Idle::Idle_Process();
         std::exit(0);
     }
 
-    time_t start = 0;
-    time_t end = 0;
-    double frameRate = 0;
-    int FrameCounter = 0;
-    double sec;
-    int execs = 0;
+//    time_t start = 0;
+//    time_t end = 0;
+//    double frameRate = 0;
+//    int FrameCounter = 0;
+//    double sec;
+//    int execs = 0;
 
-    cv::Point_<int> location;        //Added
-    cv::Point_<int> lastLocation;    //Added
+//    cv::Point_<int> location;        //Added
+//    cv::Point_<int> lastLocation;    //Added
+//
+//    cv::Point_<int> vectorXY;
 
-    cv::Point_<int> vectorXY;
 
-
-    //printf("this is a test: %d, %d\n", fuck[1].x, fuck[1].y);
     MotorDriver motorDriver = MotorDriver();
-    bool blahtest = motorDriver.initComPort('3', 'x');
 
 
-
-    Camera camera = Camera(1280,720);
+    Camera camera = Camera(1280, 720);
     Table table = Table(camera);
-    firstTimestamp = (long)GetTickCount();
     Puck puck = Puck(table);
-    Corners corners = Corners(calibrateCorners);
-//    readValues(corners);
-    std::vector<cv::Point_<int>> fuck;
-    fuck = corners.getCalibratedCorners();
-    table.setLimits(corners.sortedX, corners.sortedY);
-    puck.setWalls(corners.sortedX, corners.sortedY);
-
+    Mallet mallet = Mallet(table);
+    Corners corners = Corners(settings.calibrateCorners);
+    if (!settings.calibrateCorners) {
+        table.setLimits(corners.sortedX, corners.sortedY);
+        puck.setWalls(corners.sortedX, corners.sortedY);
+    }
 
     puck.setupTrackbars();
+    mallet.setupTrackbars();
+    ImageProcess imageProcess = ImageProcess(table, puck, mallet, corners, camera, settings);
+
+
+    // TESTING STEPS TO PIXELS RATIO
+    /*
+    do{
+    grabbed = camera.getUndistortedFrame(); // Query a new frame
+    mallet.findMallet(grabbed, table);
+}while (!mallet.puckFound);
+    imshow("Before", grabbed);
+    motorDriver.moveSteps(5000, 'x');
+    cv::waitKey(5000) >= 0;
+do{
+    grabbed = camera.getUndistortedFrame(); // Query a new frame
+    mallet.findMallet(grabbed, table);
+
+}while (!mallet.puckFound);
+    imshow("After", grabbed);
+    cv::waitKey(1) >= 0;
+*/
 
     //HANDLE xMotorCmd = createPipe(0);
 
-    cv::Size blahhhh = {640, 360};
-    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, blahhhh);
-
-
-
-
-    time(&start);
-    while (true) {
-//        testMessage(xMotorCmd);
-//        if (execs >= 100) {
-//            time(&end);
-//            frameRate = 100 / difftime(end, start);
-//            time(&start);
-//            execs = 0;
-//        }
+//    cv::Size blahhhh = {640, 360};
+//    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, blahhhh);
+//    time(&start);
+/*    while (true) {
+//        clock_t begin = clock();
 
         if (!undistort) {
             grabbed = camera.getFrame();
@@ -170,41 +167,68 @@ int main(int argc, char* argv[]) {
 
         } else {
             grabbed = camera.getUndistortedFrame(); // Query a new frame
-
             time(&end);
             ++FrameCounter;
             sec = difftime (end, start);
             frameRate = FrameCounter / sec;
             //printf("FPS = %.2f\n", frameRate);
-
         }
         if (grabbed.empty()) {
             printf("No frames!\n");
             break;
         }
-
-        frameTimestamp = (long) GetTickCount(); // Get timestamp (not too much resolution)
-
         if (!calibrateCorners) {
-            lastLocation = location;
-            puck.findPuck(grabbed, table);
+//            puck.lastLocation = puck.location;
+//            puck.findPuck(grabbed, table);
+//            mallet.findMallet(grabbed, table);
 
+
+            std::thread puckThread (&Puck::findPuck, std::ref(puck), grabbed, table);
+            std::thread malletThread (&Mallet::findMallet, std::ref(mallet), grabbed, table);
+
+
+            puckThread.join();
+            malletThread.join();
+
+
+
+//            printf("lastLocation: %d, %d\n", puck.lastLocation.x, puck.lastLocation.y);
+//            printf("location: %d, %d\n", puck.location.x, puck.location.y);
+
+
+//            stepsPerPixel = 35;
+//            if(puck.puckFound && mallet.puckFound) {
+//                if (abs(puck.location.y - mallet.location.y) <= 30) {
+//                    printf("Close enough\n");
+//                } else {
+//                    int difference = puck.location.y - mallet.location.y;
+//                    // NEGATIVE IS TOWARD THE MOTOR
+//                    // POSITIVE IS AWAY FROM THE MOTOR
+//                    long toMove = (long) (abs(stepsPerPixel) * difference) * -1;
+//                    if(abs(toMove) <= 1500) {
+//                        printf("not moving %ld steps\n", toMove);
+//                        delay = 100;
+//                    }
+//                    else {
+//                        printf("moving %ld steps\n", toMove);
+//                        motorDriver.moveSteps(toMove, 'x');
+//                        delay = 1000;
+//                    }
+//
+//                }
+//            }
             //corners = puck.findPucks(grabbed, table);
             //puck.getCoords(table);
-
             //puck.getVector(grabbed);
-
             //puck.getVector(grabbed);
-
             //printf("\nVectorXY: %f\n", VectorXY);
         }
 //        cameraProcess(grabbed, puck, 1000 / table.fps, table); // CAMERA PROCESS (puck coordinates, trajectory...)
 
         if (table.preview == 1) {
-            //multiplying FPS by 1.2
             sprintf(tempStr, "%f %ld %f %f %f\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x,
                     puck.location.y, puck.speedY);
-//            cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
+            cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
             table.annotate(grabbed);
             cv::Mat previewSmall;
             cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);
@@ -215,13 +239,12 @@ int main(int argc, char* argv[]) {
             }
 
 
-/*            if (corners.size() >= 3) {
+*//*            if (corners.size() >= 3) {
                 //printf("%d: \t %d,%d \t %d,%d \t %d,%d \t %d,%d\n", corners.size(), corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y, corners[3].x, corners[3].y);
-            }*/
+            }*//*
             if (calibrateCorners) {
                 corners.calibrateCorners(grabbed, previewSmall, table, puck);
                 writeConfigValues(corners);
-
             }
 
             //GOAL check
@@ -234,17 +257,24 @@ int main(int argc, char* argv[]) {
             //j test end//////////////////////////////////////
             //(previewSmall);
 //            corners.drawSquare(previewSmall, corners.getCorners(), corners.getOffsets());
-            video.write(previewSmall);
+//            puck.setGoals(previewSmall, corners.sortedX);
+            if (video_output) {
+                video.write(previewSmall);
+            }
             imshow("Video", previewSmall);
+//            clock_t end = clock();
+//            printf("elapsed: %f\n", double(end-begin)/CLOCKS_PER_SEC);
         }
 
         if (cv::waitKey(1) >= 0)
             break;
 
         execs++;
-    }
+
+    }*/
+    imageProcess.process(table, puck, mallet, corners, camera, settings);
     cvDestroyAllWindows();
-    if (video_output) {
+    if (settings.video_output) {
         record.release();
     }
 

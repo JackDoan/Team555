@@ -1,9 +1,9 @@
 //
-// Created by jad140230 on 1/21/2018.
+// Created by mdl150330 on 3/14/2018.
 //
 
-#ifndef AIRHOCKEYROBOT_PUCK_H
-#define AIRHOCKEYROBOT_PUCK_H
+#ifndef TEAM555_MALLET_H
+#define TEAM555_MALLET_H
 #include <opencv2/opencv.hpp>
 #include "ThresholdImage.h"
 #include "Table.h"
@@ -12,25 +12,24 @@
 #include <thread>
 
 
-class Puck {
+
+class Mallet {
 private:
-    int minArea = 1200;
-    int maxArea = 3600;
-    int minRoundness = 445;
+    int minArea = 1750;
+    int maxArea = 4500;
+    int minRoundness = 1800;
     int minAreaCalib = 800;
     int maxAreaCalib = 4000;
     int minRoundnessCalib = 320;
     ThresholdImage thresholdImage = ThresholdImage(threshold_s());
     ThresholdImage thresholdImageCalib = ThresholdImage(threshold_s());
-
-
 public:
     //double lastX = -1;
     // lastY = -1;
     //double x = 0;
     //double y = 0;
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
-//    Coordinate CoordsDouble;
+    Coordinate CoordsDouble;
     int vectorMult = 10;
 
 
@@ -39,8 +38,8 @@ public:
 //    double lastCoordX;
 //    double lastCoordY;
 
-    //int puckCoordX;
-    //int puckCoordY;
+    //int malletCoordX;
+    //int malletCoordY;
     //int oldCoordX;
     //int oldCoordY;
     int walls[4][3];
@@ -53,33 +52,17 @@ public:
     float direction;     // radians
     bool bouncex;
     bool bouncey;
-    bool puckFound;
+    bool malletFound;
     int lostCnt;
 
-//    double vectorX;
-//    double vectorY;
-
-
-
-    Puck(Table table);
-    ~Puck();
+    Mallet(Table table);
+    ~Mallet();
     void setupTrackbars();
     double getMinArea();
     double getMaxArea();
     double getMinRoundness();
-    std::vector<cv::Point_<int>> findPucks(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
-    void findPuck(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
-
-    void setGoals(cv::Mat previewSmall, std::vector<cv::Point_<int>> sortedX);
-    void calcVector(cv::Mat in);
-    void drawVector(cv::Mat in);
-    //Vector getVector(cv::Mat in);
-    //void getCoords(Table table);
-    //Coordinate getCoords(Table table);
-    void calcTraj(Table table);
-    void setWalls(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY);
-
+    void findMallet(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
 };
 
 
-#endif //AIRHOCKEYROBOT_PUCK_H
+#endif //TEAM555_MALLET_H

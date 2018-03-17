@@ -14,6 +14,7 @@ public:
 //    Serial* SPy = new Serial("\\\\.\\COM5");
     Serial* SPx;
     Serial* SPy;
+    Serial* SPb;
     char incomingData[256];
     int dataLength = 255;
     int readResult;
@@ -24,7 +25,8 @@ public:
     ~MotorDriver();
     bool initComPort(char comPort, char axis);
     int getSteps(char axis);
-    bool moveSteps(int steps, char axis);
+    bool moveSteps(long steps, char axis);
+    void sendRaw(char msg);
 };
 
 

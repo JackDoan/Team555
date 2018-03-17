@@ -14,13 +14,17 @@ ThresholdImage::~ThresholdImage() {
 }
 
 cv::Mat ThresholdImage::get(cv::Mat& in) {
+
     cv::Mat blurred,imgHSV;
     cv::GaussianBlur(in, blurred, cv::Size(3, 3), 0, 0); //smooth the original image using Gaussian kernel
-    cv::cvtColor(blurred, imgHSV, CV_BGR2HSV); //Change the color format from BGR to HSV
-    cv::inRange(in,
+
+    //cv::cvtColor(blurred, imgHSV, CV_BGR2HSV); //Change the color format from BGR to HSV
+
+    cv::inRange(blurred,
                 cv::Scalar(limits.minH, limits.minS, limits.minV),
                 cv::Scalar(limits.maxH, limits.maxS, limits.maxV),
                 result);
+
     return result;
 }
 
@@ -28,8 +32,8 @@ void ThresholdImage::setLimits(struct threshold_s newLimits) {
     limits = newLimits;
 }
 
-void ThresholdImage::setupTrackbars() {
-    char name[] = "Puck Detect Settings";
+void ThresholdImage::setupTrackbars(char* name) {
+//    char name[] = "Puck Detect Settings";
     char TrackbarName1[50];
     char TrackbarName2[50];
     char TrackbarName3[50];

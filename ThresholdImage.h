@@ -34,7 +34,7 @@ public:
     ~ThresholdImage();
     cv::Mat get(cv::Mat&);
     void setLimits(struct threshold_s);
-    void setupTrackbars();
+    void setupTrackbars(char* name);
 };
 
 
