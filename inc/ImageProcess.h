@@ -32,7 +32,6 @@ private:
     time_t start = 0;
     time_t end = 0;
     double sec;
-    cv::Size blahhhh = {640, 360};
 public:
     double frameRate = 0;
 

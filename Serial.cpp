@@ -4,40 +4,33 @@
 
 #include "inc/Serial.h"
 
-Serial::Serial(const char *portName)
-{
-    //We're not yet connected
-    this->connected = false;
+Serial::Serial(const char *portName)  {
 
+    this->connected = false; //We're not yet connected
     //Try to connect to the given port through CreateFile
     this->hSerial = CreateFile(portName,
                                GENERIC_READ | GENERIC_WRITE,
                                0,
                                NULL,
                                OPEN_EXISTING,
-                               FILE_ATTRIBUTE_NORMAL,
+                               FILE_ATTRIBUTE_NORMAL, //FILE_FLAG_OVERLAPPED
                                NULL);
 
     //Check if the connection was successful
     if(this->hSerial==INVALID_HANDLE_VALUE) {
         //If not success full display an Error
         if(GetLastError()==ERROR_FILE_NOT_FOUND){
-
-            //Print Error if neccessary
             printf("ERROR: Handle was not attached. Reason: %s not available.\n", portName);
-
         }
         else {
             printf("Serial port ERROR!!!");
         }
     }
-    else {
-        //If connected we try to set the comm parameters
+    else { //If connected we try to set the comm parameters
         DCB dcbSerialParams = {0};
 
         //Try to get the current
         if (!GetCommState(this->hSerial, &dcbSerialParams)) {
-            //If impossible, show an error
             printf("failed to get current serial parameters!");
         }
         else {
@@ -66,7 +59,6 @@ Serial::Serial(const char *portName)
     }
 
 }
-
 
 // -Mike : too dumb to fix this, fuck UTD they don't teach us enough programming
 // -Jack : no worries bro. You had it set to the default destructor in the header file. Ez-pz fix

@@ -62,8 +62,9 @@ protected:
     char TrackbarName[9][50] = { "MinH","MaxH","MinS","MaxS","MinV","MaxV","MinArea","MaxArea","MinRound" };
 public:
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
-    int vectorMult = 10;
+    int vectorMult = 20;
     int walls[4][3];
+    int goalArr[2][3];
     int predicted[3];
     double det;
     cv::Point_<double> intersect;
@@ -72,6 +73,12 @@ public:
     bool bouncey;
     bool found;
     int lostCnt;
+    bool goalFlag;
+    std::vector<cv::Point_<int>> Goals;
+    void setGoals(std::vector<cv::Point_<int>> sortedX);
+
+
+    bool onTable = false;
 
     Thing();
     ~Thing() = default;
@@ -80,7 +87,7 @@ public:
     double getMaxArea();
     double getMinRoundness();
     std::vector<cv::Point_<int>> find(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
-    void findOld(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
+    void findOld(cv::Mat in, Table table, bool isMallet);    //Changed from int to pointer, returns coords
     void calcVector(cv::Mat in);
     void drawVector(cv::Mat in);
     void calcTraj(Table table);
@@ -88,6 +95,7 @@ public:
         debugWindows = !debugWindows;
         if(debugWindows) {
             setupTrackbars();
+            cv::namedWindow(previewWindowName,0);
         }
         else {
             cv::destroyWindow(settingWindowName);

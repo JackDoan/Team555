@@ -11,6 +11,7 @@
 #include <ctime>
 
 
+
 // TODO: add logic to puck.findPuck that uses functions from camera, to adjust exposure and gain when puck isn't found for a long time
 // If speed is measured 'high' and puck is not found, turn up exposure and gain until it is found again
 // then once it is found again return it to its default setting
@@ -94,34 +95,3 @@ void Puck::setWalls(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_
     walls[3][2] = walls[3][0]*sortedY[0].x + walls[3][1]*sortedY[0].y;
 }
 
-void Puck::setGoals(cv::Mat previewSmall, std::vector<cv::Point_<int>> sortedX){
-    cv::Point_<int> L_mid;
-    cv::Point_<int> R_mid;
-
-    L_mid.y = sortedX[3].y - sortedX[2].y;
-    if(L_mid.y < 0)
-    {
-        L_mid.y = sortedX[2].y - sortedX[3].y;
-    }
-    L_mid.x = (sortedX[3].x + sortedX[2].x) / 2;
-
-    R_mid.y = sortedX[1].y - sortedX[0].y;
-    if(R_mid.y < 0)
-    {
-        R_mid.y = sortedX[0].y - sortedX[1].y;
-    }
-    R_mid.x = (sortedX[1].x + sortedX[0].x) / 2;
-
-    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 100};
-    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 100};
-
-    cv::Point_<int> R_top = {R_mid.x, R_mid.y + 100};
-    cv::Point_<int> R_bottom = {R_mid.x, R_mid.y - 100};
-
-    cv::line(previewSmall, L_top/2, L_bottom/2, cv::Scalar(255, 0, 0), 4);
-
-    cv::line(previewSmall, R_top/2, R_bottom/2, cv::Scalar(255, 0, 0), 4);
-
-    printf("L  x: %d, L y: %d\n", L_mid.x/2, L_mid.y/2);
-    printf("R  x: %d, R y: %d\n", R_mid.x/2, R_mid.y/2);
-}

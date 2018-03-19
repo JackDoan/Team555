@@ -210,18 +210,15 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat in, Table table) {
     return pointVec;
 }
 
-void Thing::findOld(cv::Mat in, Table table) {
+void Thing::findOld(cv::Mat in, Table table, bool isMallet) {
+    onTable = false;
+    goalFlag = false;
 
     double area = 0;
     double perimeter = 0;
     double roundness = 0;
-    int num;
-
-//    cv::Point_<int> puckPoint;
-
 
     cv::Mat imgThresh = getThresholdImage(in);
-
     if (debugWindows) {
         cv::Mat imgThreshSmall;
         cv::resize(imgThresh, imgThreshSmall, cv::Size(), 0.25, 0.25);
@@ -229,31 +226,16 @@ void Thing::findOld(cv::Mat in, Table table) {
     }
     std::vector< std::vector<cv::Point> > contours;  //hold the pointer to a contour in the memory block
     CvSeq* result;   //hold sequence of points of a contour
-    //CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
 
-    //cv::Mat imgCorners = TableCalibrate.get(in);
-    //mshow("Corners", imgCorners);
-
-    // Position initialization
-    //double posX = 0;
-    //double posY = 0;
 //    Coordinate pos = Coordinate(0.0,0);
     cv::Point_<int> pos = {0,0};
-//    Coordinate lastPos = Coordinate(0,0);
-    //double localLastX = x;
-    //double localLastY = y;
-    num = 0;
 
-    //cv::InputArray thisone = imgThresh;
     cv::findContours(imgThresh, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
     found = false;
     lastLocation = location; // move this out of the for loop, seems dumb? -Mike
     for (int i = 0; i < contours.size(); i++) {
         //todo: shrink the image to the table area, THEN search for contours.
-        num++;
         area = cv::contourArea(contours[i]);
-        //printf("%s %.2f %.2f", logStr, area, roundness);
-        //sprintf(logStr,"%s;%d %.2f", logStr,num, area);
         if ((area > getMinArea()) && (area < getMaxArea())) {  // Min and Max size of object
             //Detecting roundness   roundness = perimeter^2 / (2*pi*area)
             perimeter = cv::arcLength(contours[i], true);
@@ -267,8 +249,6 @@ void Thing::findOld(cv::Mat in, Table table) {
                 pos.x = moment10 * 2 / area;
                 pos.y = moment01 * 2 / area;
 
-                //pos.x = floor(moments.m10 * 2 / area + 0.5); // round
-                //pos.y = floor(moments.m01 * 2 / area + 0.5);
 
                 // limit the region of interest to the table
                 if ((pos.x > table.max.x * 2) ||
@@ -277,17 +257,9 @@ void Thing::findOld(cv::Mat in, Table table) {
                     (pos.y < table.min.y * 2)) {
                     pos.x = 0;
                     pos.y = 0;
-                    //contours = contours->h_next;
                     continue;  // continue with other contour... (this is outside the table)
                 } else {
                     location = pos/2;
-//                    puckPoint.x = (int) round(pos.x);
-//                    puckPoint.y = (int) round(pos.y);
-//                }
-//                    printf("puckPoint: %d, %d\n", (int) round(pos.x), (int) round(pos.y));
-//                    printf("lastLocation: %d, %d\n", lastLocation.x, lastLocation.y);
-//                    printf("location: %d, %d\n", location.x, location.y);
-
 
                     // Draw contour
                     if (table.preview == 1)
@@ -301,40 +273,64 @@ void Thing::findOld(cv::Mat in, Table table) {
         }
     }
 
-    //puck.speedX = vectorX * 100 / time;  // speed in dm/ms (
-    //puck.speedY = vectorY * 100 / time;
-
-    //CoordsDouble = Coordinate(location.x/2 - table.cam_center_x, location.y/2 - table.cam_center_y);
-    //CoordsDouble = Coordinate(location.x/2, location.y/2);
 
     if (!found) {
         lostCnt++;
-        if (lostCnt < 5) {
+        if (lostCnt < 10) {
             lastLocation = location;
             location = location + vectorXY;
         }
 
     }
 
-    // TODO: need to make two separate paths in calcVector, calcTraj and drawVector
-    // One for when the puck is found and when the puck is not found
-    // when puck is found use location and last location
-    // when puc is not found use estimated location and estimated last location
-    // also need to make a counter for how many frames the puck is not found
-    // if it goes more than 5 frames without finding the puck then stop calculating
-    // and drawing the trajectories and vectors
+// TODO: this needs to be improved, this if statement resets location and lost count
+    // because the 'predicted' last location can't totally be trusted after the puck reappears
+    // need to make it so if where the puck reappears is 'accurate' then use the previous
+    // predicted location as its last location and continue and if not reset and do NOT use
+    // the last predicted location as last location
 
-    if (!(found && lostCnt > 0)) {
-//        calcVector(in);
-        calcTraj(table);
-        drawVector(in);
-    } else {
+    if ((found && lostCnt > 0)) {
         lostCnt = 0;
+    } else {
+        calcVector(in);
+        if (!isMallet) {
+            calcTraj(table);
+            drawVector(in);
+        }
+
     }
+
+    if (location.x < table.max.x && location.y < table.max.y && location.x > table.min.x && location.y > table.min.y)  {
+        onTable = true;
+    }
+
+
+/*    if (predictedLocation.x < 0 || predictedLocation.y < 0) {
+        printf("Location: (%d, %d)\n"
+                       "lastLocation: (%d, %d)\n"
+                       "intersect: (%f, %f)\n"
+                       "predcitedLocation: (%d, %d)\n",
+               location.x, location.y,
+               lastLocation.x, location.y,
+               intersect.x, intersect.y,
+               predictedLocation.x, predictedLocation.y);
+    }
+    printf("Location: (%d, %d)\n"
+                   "lastLocation: (%d, %d)\n"
+                   "intersect: (%f, %f)\n"
+                   "predcitedLocation: (%d, %d)\n",
+           location.x, location.y,
+           lastLocation.x, location.y,
+           intersect.x, intersect.y,
+           predictedLocation.x, predictedLocation.y);
+    if (predictedLocation.x > table.max.x || predictedLocation.x < table.min.x ||
+            predictedLocation.y > table.max.y || predictedLocation.y < table.min.y) {
+        printf("broke\n");
+    }*/
 }
 
 void Thing::calcVector(cv::Mat in) {
-    // TODO: move this into calcTraj
+/*    // TODO: move this into calcTraj
     // Calculate speed and angle
 //    Vector VectorXY;
 
@@ -363,7 +359,9 @@ void Thing::calcVector(cv::Mat in) {
 //        //printf("coordY: %f\n", location.y);
 //        //printf("lastCoordY %f\n", lastLocation.y);
 //    }
-//    //    VectorXY = Vector(vectorX, vectorY);
+//    //    VectorXY = Vector(vectorX, vectorY);*/
+    vectorXY.x = (location.x - lastLocation.x);
+    vectorXY.y = (location.y - lastLocation.y);
 
 }
 
@@ -371,6 +369,12 @@ void Thing::drawVector(cv::Mat in) {
 
     if (bouncex || bouncey) {
 //                printf("Bounce was true! and intersect\n");
+        cv::line(in, cvPoint(predictedLocation.x-5, predictedLocation.y),
+                     cvPoint(predictedLocation.x+5, predictedLocation.y),
+                     cvScalar(0, 0, 255), 4);
+        cv::line(in, cvPoint(predictedLocation.x, predictedLocation.y-5),
+                     cvPoint(predictedLocation.x, predictedLocation.y+5),
+                     cvScalar(0, 0, 255), 4);
         cv::line(in, location, intersect, cvScalar(255, 0, 255), 4);
         cv::line(in, intersect, predictedLocation, cvScalar(255, 225, 0), 4);
 
@@ -396,7 +400,6 @@ void Thing::drawVector(cv::Mat in) {
 }
 
 void Thing::calcTraj(Table table) {
-    vectorXY = location - lastLocation;
     predictedLocation = location + vectorXY*vectorMult;
     predicted[0] = predictedLocation.y - location.y;    //A
     predicted[1] = location.x - predictedLocation.x;    //B
@@ -410,15 +413,16 @@ void Thing::calcTraj(Table table) {
             )
     {
         bouncex = true;
+        bouncey = false; //testing this
         // third wall
         det = predicted[0] * walls[2][1] - walls[2][0] * predicted[1];
         if (det == 0) {
-            dbgPrint("Error lines are parallel?\n");
+            //dbgPrint("Error lines are parallel?\n");
         }
         else {
             intersect.x = (walls[2][1] * predicted[2] - predicted[1] * walls[2][2]) / det;
             intersect.y = (predicted[0] * walls[2][2] - walls[2][0] * predicted[2]) / det;
-            dbgPrint("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
+//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
         }
     }
     else if (
@@ -427,15 +431,16 @@ void Thing::calcTraj(Table table) {
              abs(location.y - table.min.y) > abs(location.x - table.min.x))
             ) {
         bouncex = true;
+        bouncey = false; //testing this
         // first wall
         det = predicted[0] * walls[0][1] - walls[0][0] * predicted[1];
         if (det == 0) {
-            dbgPrint("Error lines are parallel?\n");
+            //dbgPrint("Error lines are parallel?\n");
         }
         else {
             intersect.x = (walls[0][1] * predicted[2] - predicted[1] * walls[0][2])/det;
             intersect.y = (predicted[0] * walls[0][2] - walls[0][0] * predicted[2])/det;
-            dbgPrint("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
+//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
         }
     }
     else if (
@@ -444,6 +449,7 @@ void Thing::calcTraj(Table table) {
              abs(location.x - table.min.x) > abs(location.y - table.max.y))
             ) {
         bouncey = true;
+        bouncex = false;
         // second wall
         det = predicted[0] * walls[1][1] - walls[1][0] * predicted[1];
         if (det == 0) {
@@ -452,7 +458,7 @@ void Thing::calcTraj(Table table) {
         else {
             intersect.x = (walls[1][1] * predicted[2] - predicted[1] * walls[1][2])/det;
             intersect.y = (predicted[0] * walls[1][2] - walls[1][0] * predicted[2])/det;
-           //printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
+//           printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
         }
     }
     else if (
@@ -461,6 +467,7 @@ void Thing::calcTraj(Table table) {
              abs(location.x - table.min.x) > abs(location.y - table.min.y))
             ) {
         bouncey = true;
+        bouncex = false;
         // fourth wall
         det = predicted[0] * walls[3][1] - walls[3][0] * predicted[1];
         if (det == 0) {
@@ -469,7 +476,7 @@ void Thing::calcTraj(Table table) {
         else {
             intersect.x = (walls[3][1] * predicted[2] - predicted[1] * walls[3][2])/det;
             intersect.y = (predicted[0] * walls[3][2] - walls[3][0] * predicted[2])/det;
-            //printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
+//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
         }
     }
     else {
@@ -477,28 +484,48 @@ void Thing::calcTraj(Table table) {
         bouncey = false;
     }
 
+
+
     if (bouncex || bouncey) {
     //                printf("Bounce was true! and intersect\n");
+        // bouncex means you are intersecting a y wall
         if (bouncex && !bouncey) {
-            predictedLocation.x = intersect.x - vectorXY.x * vectorMult;
-            predictedLocation.y = intersect.y + vectorXY.y * vectorMult;
+            if (intersect.y >= Goals[1].y || intersect.y <= Goals[0].y || intersect.y >= Goals[3].y || intersect.y <= Goals[2].y) {
+                goalFlag = true;
+                predictedLocation = intersect;
+            } else {
+                predictedLocation.x = intersect.x - vectorXY.x * vectorMult;
+                predictedLocation.y = intersect.y + vectorXY.y * vectorMult;
+            }
         }
+            // bouncy means you are intersecting a x wall
         else if (bouncey && !bouncex) {
             predictedLocation.x = intersect.x + vectorXY.x * vectorMult;
             predictedLocation.y = intersect.y - vectorXY.y * vectorMult;
         }
     }
-// TODO: Calculate a final predicted location with a bounce
-//    if (predictedLocation.y > table.max.y || predictedLocation.y < table.min.y) {
-//        printf("ERROR bounce prediction messed up!\n");
-//        printf("Coords: %d, %d\n", location.x, location.y);
-//        printf("Predicted Coords: %d, %d\n", predictedLocation.x, predictedLocation.y);
-//        printf("Vector: %d, %d\n", vectorXY.x, vectorXY.y);
-//        if (bouncex) {
-//            printf("Bouncex was true!\n");
-//        } else if (bouncey) {
-//            printf("Bouncey was true!\n");
-//        }
-//    }
 
 }
+
+void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
+
+    Goals = {cvPoint(0, 0), cvPoint(0, 0), cvPoint(0, 0), cvPoint(0, 0)};
+
+    cv::Point_<int> L_mid = {sortedX[0].x, 700/2};
+    cv::Point_<int> R_mid = {sortedX[3].x, 720/2};
+
+    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 90};
+    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 90};
+
+    cv::Point_<int> R_top = {R_mid.x, R_mid.y + 90};
+    cv::Point_<int> R_bottom = {R_mid.x, R_mid.y - 90};
+
+    //cv::line(previewSmall, L_top/2, L_bottom/2, cv::Scalar(255, 0, 0), 4);
+    //cv::line(previewSmall, R_top/2, R_bottom/2, cv::Scalar(255, 0, 0), 4);
+    Goals[0] = L_top;
+    Goals[1] = L_bottom;
+    Goals[2] = R_top;
+    Goals[3] = R_bottom;
+}
+
+

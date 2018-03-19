@@ -53,6 +53,6 @@ public:
 
 
 #define dbgPrint(fmt, ...) \
-            do { if (debug) fprintf(stderr, fmt, ##__VA_ARGS__); } while (0)
+            do { printf(fmt, ##__VA_ARGS__); } while (0)
 
 #endif //AIRHOCKEYROBOT_HELPERS_H

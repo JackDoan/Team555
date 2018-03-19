@@ -16,6 +16,8 @@ class Puck: public Thing {
 private:
 
 public:
+
+
     //double lastX = -1;
     // lastY = -1;
     //double x = 0;
@@ -24,9 +26,7 @@ public:
 //    Coordinate CoordsDouble;
     //int vectorMult = 10;
 
-    int walls[4][3];
     Puck();
-    void setGoals(cv::Mat previewSmall, std::vector<cv::Point_<int>> sortedX);
     //void calcVector(cv::Mat in);
     //void drawVector(cv::Mat in);
     //Vector getVector(cv::Mat in);
