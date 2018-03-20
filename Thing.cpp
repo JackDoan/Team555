@@ -369,11 +369,11 @@ void Thing::drawVector(cv::Mat in) {
 
     if (bouncex || bouncey) {
 //                printf("Bounce was true! and intersect\n");
-        cv::line(in, cvPoint(predictedLocation.x-5, predictedLocation.y),
-                     cvPoint(predictedLocation.x+5, predictedLocation.y),
+        cv::line(in, cvPoint(intersect.x-25, intersect.y),
+                     cvPoint(intersect.x+25, intersect.y),
                      cvScalar(0, 0, 255), 4);
-        cv::line(in, cvPoint(predictedLocation.x, predictedLocation.y-5),
-                     cvPoint(predictedLocation.x, predictedLocation.y+5),
+        cv::line(in, cvPoint(intersect.x, intersect.y-25),
+                     cvPoint(intersect.x, intersect.y+25),
                      cvScalar(0, 0, 255), 4);
         cv::line(in, location, intersect, cvScalar(255, 0, 255), 4);
         cv::line(in, intersect, predictedLocation, cvScalar(255, 225, 0), 4);
@@ -400,6 +400,7 @@ void Thing::drawVector(cv::Mat in) {
 }
 
 void Thing::calcTraj(Table table) {
+    intersect = {0, 0};
     predictedLocation = location + vectorXY*vectorMult;
     predicted[0] = predictedLocation.y - location.y;    //A
     predicted[1] = location.x - predictedLocation.x;    //B
@@ -488,7 +489,7 @@ void Thing::calcTraj(Table table) {
 
     if (bouncex || bouncey) {
     //                printf("Bounce was true! and intersect\n");
-        // bouncex means you are intersecting a y wall
+        // bouncex means you are intersecting a vertical wall
         if (bouncex && !bouncey) {
             if (intersect.y >= Goals[1].y || intersect.y <= Goals[0].y || intersect.y >= Goals[3].y || intersect.y <= Goals[2].y) {
                 goalFlag = true;
@@ -498,7 +499,7 @@ void Thing::calcTraj(Table table) {
                 predictedLocation.y = intersect.y + vectorXY.y * vectorMult;
             }
         }
-            // bouncy means you are intersecting a x wall
+            // bouncy means you are intersecting a horizontal wall
         else if (bouncey && !bouncex) {
             predictedLocation.x = intersect.x + vectorXY.x * vectorMult;
             predictedLocation.y = intersect.y - vectorXY.y * vectorMult;
@@ -514,11 +515,11 @@ void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
     cv::Point_<int> L_mid = {sortedX[0].x, 700/2};
     cv::Point_<int> R_mid = {sortedX[3].x, 720/2};
 
-    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 90};
-    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 90};
+    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 95};
+    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 85};
 
-    cv::Point_<int> R_top = {R_mid.x, R_mid.y + 90};
-    cv::Point_<int> R_bottom = {R_mid.x, R_mid.y - 90};
+    cv::Point_<int> R_top = {R_mid.x, R_mid.y + 115};
+    cv::Point_<int> R_bottom = {R_mid.x, R_mid.y - 65};
 
     //cv::line(previewSmall, L_top/2, L_bottom/2, cv::Scalar(255, 0, 0), 4);
     //cv::line(previewSmall, R_top/2, R_bottom/2, cv::Scalar(255, 0, 0), 4);
@@ -528,4 +529,66 @@ void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
     Goals[3] = R_bottom;
 }
 
+void Thing::calcTrajNew(Table table) {
 
+    bool done = false;
+    int leg[3];
+    cv::Point_<int> prediction;
+
+    prediction = location + vectorXY*vectorMult;
+    leg[0] = prediction.y - location.y;    //A
+    leg[1] = location.x - prediction.x;    //B
+    leg[2] = leg[0]*location.x + leg[1]*location.y;   //C
+
+    /*while (!done) {
+        // vector of vector of points trajs will describe each separate trajectory
+        // so the first one corresponds to the first calculated trajectory
+        // like the first point is where the puck is identified and the second
+        // is where the puck is going (location + vectorXY)
+
+        // the plan is to recursively populate this vector of vectors with each trajectory
+        // until all the length of the original vector is used
+
+        // is there going to be a bounce?
+//        if (prediction.x > table.max.x || prediction.x < table.min.x ||
+//                prediction.y > table.max.y || prediction.y < table.min.y) {
+//            // there is going to be a bounce
+//        }
+
+        // is there going to be a bounce on the right wall?
+        if (prediction.x > table.max.x) {
+            // calculate the intersect point
+            det = predicted[0] * walls[2][1] - walls[2][0] * predicted[1];
+            if (det == 0) {
+                //printf("Error lines are parallel?\n");
+            } else {
+                intersect.x = (walls[2][1] * leg[2] - leg[1] * walls[2][2]) / det;
+                intersect.y = (leg[0] * walls[2][2] - walls[2][0] * leg[2]) / det;
+            }
+            if () {
+                // this is a FALSE X bounce, this is actually a Y bounce!!!
+                // do the intersection calculation for an intersect with the bottom wall
+            } else if (intersect.y < table.min.y) {
+                // this is a FALSE X bounce, this is actually a Y bounce!!!
+                // do the intersection calculation for intersect with the top wall
+            } else {
+                // this is a standard X bounce on the right wall
+            }
+
+            // is there going to be a bounce on the left wall?
+        } else if (prediction.x < table.min.x) {
+            // calculate the intersect point
+            det = predicted[0] * walls[0][1] - walls[0][0] * predicted[1];
+            if (det == 0) {
+                //printf("Error lines are parallel?\n");
+            } else {
+                intersect.x = (walls[0][1] * predicted[2] - predicted[1] * walls[0][2])/det;
+                intersect.y = (predicted[0] * walls[0][2] - walls[0][0] * predicted[2])/det;
+            }
+
+        }
+
+
+    }*/
+
+}

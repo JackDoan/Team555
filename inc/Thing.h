@@ -62,6 +62,8 @@ protected:
     char TrackbarName[9][50] = { "MinH","MaxH","MinS","MaxS","MinV","MaxV","MinArea","MaxArea","MinRound" };
 public:
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
+    std::vector<std::vector<cv::Point_<int>>> trajs;
+
     int vectorMult = 20;
     int walls[4][3];
     int goalArr[2][3];
@@ -76,6 +78,7 @@ public:
     bool goalFlag;
     std::vector<cv::Point_<int>> Goals;
     void setGoals(std::vector<cv::Point_<int>> sortedX);
+    void Thing::calcTrajNew(Table table);
 
 
     bool onTable = false;

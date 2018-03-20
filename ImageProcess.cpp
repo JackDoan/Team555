@@ -19,12 +19,14 @@
 #include "inc/Camera.h"
 #include "inc/Settings.h"
 #include "inc/MotorDriver.h"
+#include "inc/Motion.h"
 
 clock_t begin;
 clock_t end;
 
 void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corners, Camera& camera, Settings settings) {
     MotorDriver motorDriver = MotorDriver();
+    Motion motion = Motion();
     bool yHome = false; //set this to false
     bool xHome = false;
     cv::Point_<int> malletHome = {1200, 360};
@@ -33,16 +35,17 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
 
 
     puck.setGoals(corners.sortedX);
-    cv::Size blahhhh = {640, 360};
-    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, blahhhh);
+//    cv::Size blahhhh = {640, 360}; // removed this in the next line and replaced with cvSize(640, 360), didn't test it though
+    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
     int FrameCounter = 0;
     long frameTimestamp = 0;
     time(&start); //todo does this fps calc ignores processing time
     cv::namedWindow("Video");
     cv::Rect roi;
     cv::Mat previewSmall;
-    cv::Mat moveSmall;
-    long initCount;
+
+    // ********* the following commented code is not in Motion.cpp *********//
+/*    long initCount;
     double ratio;
     while (!yHome) {
         if (!settings.undistort) {
@@ -148,9 +151,11 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
 
         if (cv::waitKey(100) >= 0)
             break;
-    }
+    }*/
+    motion.calibrateHome(motorDriver, table, mallet, settings);
 
-    motorDriver.setHome();
+
+
     // TODO: use these as our limits for X
     //motorDriver.moveSteps(1000, 'x');
     //_sleep(1000);
@@ -160,7 +165,6 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
     //(1000);
     //motorDriver.moveSteps(200, 'x');
 
-    long amount = mallet.location.y;
     while (true) {
         if (!settings.undistort) {
             grabbed = camera.getFrame();
@@ -260,8 +264,8 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
             //printf("lastLocation: %d, %d\n", puck.lastLocation.x, puck.lastLocation.y);
             //printf("loc: %d, ploc:%d\n", puck.predictedLocation.y, puck.location.y);
 
-//            begin = clock();
-            if(puck.lostCnt < 10 && mallet.found) {
+            // this is now in Motion::trackPredictedY()
+            /*if(puck.lostCnt < 10 && mallet.found) {
                 if (abs(puck.location.y - mallet.location.y) <= 30) {
                     //printf("Close enough\n");
                 } else {
@@ -289,8 +293,12 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
                                20, cv::Scalar(255, 0, 0), 4);
 
                 }
-            }
-//            end = clock();
+            }*/
+
+            // **** Uncomment ONE of the following linex to actually play **** //
+//            motion.trackPredictedY(motorDriver, table, mallet, puck, grabbed);
+            motion.defend(motorDriver, table, mallet, puck, grabbed);
+
 
             if (table.preview == 1) {
                 sprintf(tempStr, "%f %ld %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.vectorXY.y);
