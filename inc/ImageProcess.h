@@ -9,6 +9,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv/cv.hpp>
 #include <string>
+#include <vector>
 
 #include "Table.h"
 #include "Puck.h"

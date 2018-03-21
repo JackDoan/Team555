@@ -11,6 +11,7 @@
 #include <vector>
 #include <math.h>
 #include <thread>
+#include <string>
 
 struct threshold_s {
     int minH = 26;
@@ -64,6 +65,7 @@ public:
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
     std::vector<std::vector<cv::Point_<int>>> trajs;
 
+
     int vectorMult = 20;
     int walls[4][3];
     int goalArr[2][3];
@@ -77,8 +79,6 @@ public:
     int lostCnt;
     bool goalFlag;
     std::vector<cv::Point_<int>> Goals;
-    void setGoals(std::vector<cv::Point_<int>> sortedX);
-    void Thing::calcTrajNew(Table table);
 
 
     bool onTable = false;
@@ -105,7 +105,10 @@ public:
             cv::destroyWindow(previewWindowName);
         }
     }
-
+    void setGoals(std::vector<cv::Point_<int>> sortedX);
+    void calcTrajNew(Table table, cv::Mat grabbed);
+    std::vector<bool> bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed);
+    cv::Point_<int> findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint);
 
 };
 

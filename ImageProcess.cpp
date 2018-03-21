@@ -8,6 +8,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv/cv.hpp>
 #include <string>
+#include <vector>
 
 #include "inc/ImageProcess.h"
 #include "inc/Table.h"
@@ -152,7 +153,7 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
         if (cv::waitKey(100) >= 0)
             break;
     }*/
-    motion.calibrateHome(motorDriver, table, mallet, settings);
+//    motion.calibrateHome(motorDriver, table, mallet, settings);
 
 
 
@@ -165,6 +166,7 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
     //(1000);
     //motorDriver.moveSteps(200, 'x');
 
+    std::vector<bool> output = {false, false, false, false};
     while (true) {
         if (!settings.undistort) {
             grabbed = camera.getFrame();
@@ -192,7 +194,23 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
             std::thread malletThread(&Mallet::findOld, std::ref(mallet), grabbed, table, true);
             puckThread.join();
             malletThread.join();
+            // the following code was used to test and debug the new trajectory calculation code
+            puck.calcTrajNew(table, grabbed);
 
+            // the following code was used to test and debug bounce detection function
+/*            output = puck.bounceDetect(table, puck.location, puck.location+(puck.location-puck.lastLocation)*20, grabbed);
+            if (output[0]) {
+                cv::putText(grabbed, "0", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            }
+            if (output[1]) {
+                cv::putText(grabbed, "1", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            }
+            if (output[2]) {
+                cv::putText(grabbed, "2", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            }
+            if (output[3]) {
+                cv::putText(grabbed, "3", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            }*/
             /*if (table.preview == 1) {
                 sprintf(tempStr, "%f %ld %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.vectorXY.y);
                 cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
@@ -215,7 +233,7 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
 
                 //GOAL check
                 //find midpoints of Y lines being drawn with drawSquareNew
-                //      manually add offset in (while drawing lines to check) to find goal zone.
+                //      manually add offset in (while drawing lines to check) to find f zone.
 
 
                 //look into cvFitLine
@@ -301,8 +319,8 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
 
 
             if (table.preview == 1) {
-                sprintf(tempStr, "%f %ld %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.vectorXY.y);
-                cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
+//                sprintf(tempStr, "%f %ld %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.vectorXY.y);
+//                cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
                 table.annotate(grabbed);
                 cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);
 
