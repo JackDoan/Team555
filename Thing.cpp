@@ -214,6 +214,9 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat in, Table table) {
 void Thing::findOld(cv::Mat in, Table table, bool isMallet) {
     onTable = false;
     goalFlag = false;
+    trajectory.clear();
+    leftGoal = false;
+    rightGoal = false;
 
     double area = 0;
     double perimeter = 0;
@@ -295,6 +298,8 @@ void Thing::findOld(cv::Mat in, Table table, bool isMallet) {
     } else {
         calcVector(in);
         if (!isMallet) {
+            trajectory = calcTrajNew(table, in);
+            drawTrajNew(in);
 //            calcTraj(table);
 //            drawVector(in);
         }
@@ -535,13 +540,28 @@ void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
     Goals[3] = R_bottom;
 }
 
-void Thing::calcTrajNew(Table table, cv::Mat grabbed) {
+void Thing::drawTrajNew(cv::Mat in) {
+    for (int i = 0; i < trajectory.size(); i++) {
+        cv::line(in, trajectory[i][0], trajectory[i][1], cvScalar(255, 0, 255), 4);
+    }
+}
+
+std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajNew(Table table, cv::Mat grabbed) {
+    // need to set left and right goal flags to false at the start of this
     // remove grabbed once done testing and debugging
     intersect = {0, 0};
+    cv::Point_<int> dist;
+    cv::Point_<int> leftover;
+    std::vector<std::vector<cv::Point_<int>>> trajs;
+    int bnccnt = 0;
+    int bnccntmax;
+    if (lostCnt > 0) {
+        bnccntmax = 1;
+    } else {
+        bnccntmax = 3;
+    }
 
 
-
-    int leg[3];
     cv::Point_<int> prediction;
 
     prediction = location + vectorXY*vectorMult;
@@ -553,29 +573,75 @@ void Thing::calcTrajNew(Table table, cv::Mat grabbed) {
     trajs.emplace_back(temp);
     std::vector<bool> bounces = {false, false, false, false};
 
-    while (true) {
+    while (bnccnt < bnccntmax) {
         cv::Point_<int> intersection;
+        cv::Point_<int> newEndPoint;
         // detect a bounce
         bounces = bounceDetect(table, trajs.back()[0], trajs.back()[1], grabbed);
         // if all of bounces are false, set done = true and break
-        if (!bounces[0] && !bounces[1] && !bounces[2] && !bounces[3]) {
-            break;
-        }
-        // determine from bounces which wall is going to be intersected
-        // calculate the intersection point
-        intersection = findIntersection(bounces, trajs.back()[0], trajs.back()[1]);
-        // draw the intersection on grabbed, delete this after testing and debugging is finished
-        cv::line(grabbed, cvPoint(intersection.x-25, intersection.y),
-                 cvPoint(intersection.x+25, intersection.y),
-                 cvScalar(0, 0, 255), 4);
-        cv::line(grabbed, cvPoint(intersection.x, intersection.y-25),
-                 cvPoint(intersection.x, intersection.y+25),
-                 cvScalar(0, 0, 255), 4);
-        // determine distance from location to intersect point, this becomes the length of the current leg
-        // subtract that from the original length and this becomes the length of the next leg
+        if (bounces[0] || bounces[1] || bounces[2] || bounces[3]) {
+            // determine from bounces which wall is going to be intersected
+            // and calculate the intersection point
+            intersection = findIntersection(bounces, trajs.back()[0], trajs.back()[1]);
 
+            // draw the intersection on grabbed, delete this after testing and debugging is finished
+//            cv::line(grabbed, cvPoint(intersection.x-25, intersection.y),
+//                     cvPoint(intersection.x+25, intersection.y),
+//                     cvScalar(0, 0, 255), 4);
+//            cv::line(grabbed, cvPoint(intersection.x, intersection.y-25),
+//                     cvPoint(intersection.x, intersection.y+25),
+//                     cvScalar(0, 0, 255), 4);
+
+            // determine whether or not this is a goal
+            // depending on which goal is getting intersected
+            if (bounces[0] || bounces[2]) {
+                goalDetect(intersection, trajs.back()[1].x - trajs.back()[0].x);
+            }
+            if (leftGoal || rightGoal) {
+                // set endPoint equal to intersection and break
+                trajs.back()[1] = intersection;
+                break;
+            }
+
+            // determine distance from location to intersect point, this becomes the length of the current leg
+            // subtract that from the original length and this becomes the length of the next leg
+            dist = cvPoint(abs(intersection.x - trajs.back()[0].x),
+                           abs(intersection.y - trajs.back()[0].y));
+            leftover = cvPoint(abs(trajs.back()[1].x - dist.x),
+                               abs(trajs.back()[1].y - dist.y));
+//             determine ratios of leftover/total
+            double xrat = ((double)leftover.x)/((double)abs(trajs.back()[1].x - trajs.back()[0].x));
+            double yrat = ((double)leftover.y)/((double)abs(trajs.back()[1].y - trajs.back()[0].y));
+            double magorig = sqrt(pow(trajs.back()[1].x - trajs.back()[0].x, 2) +
+                                    pow(trajs.back()[1].y - trajs.back()[0].y, 2));
+            double magclipped = sqrt(pow(intersection.x - trajs.back()[0].x, 2) +
+                                     pow(intersection.y - trajs.back()[0].y, 2));
+            double magrat = magclipped / magorig;
+
+//             emplace back next trajs, which has start point at the point of intersect
+            if (bounces[0] || bounces[2]) {
+                newEndPoint.x = (int)(round((trajs.back()[0].x - trajs.back()[1].x) * (1 - magrat))) + intersection.x;
+                newEndPoint.y = (int)(round((trajs.back()[1].y - trajs.back()[0].y) * (1 - magrat))) + intersection.y;
+//                newEndPoint.x = (int)(round((trajs.back()[0].x - trajs.back()[1].x) * xrat)) + intersection.x;
+//                newEndPoint.y = (int)(round((trajs.back()[1].y - trajs.back()[0].y) * yrat)) + intersection.y;
+            } else if (bounces[1] || bounces[3]) {
+                newEndPoint.x = (int)(round((trajs.back()[1].x - trajs.back()[0].x) * (1 - magrat))) + intersection.x;
+                newEndPoint.y = (int)(round((trajs.back()[0].y - trajs.back()[1].y) * (1 - magrat))) + intersection.y;
+//                newEndPoint.x = (int)(round((trajs.back()[1].x - trajs.back()[0].x) * xrat)) + intersection.x;
+//                newEndPoint.y = (int)(round((trajs.back()[0].y - trajs.back()[1].y) * yrat)) + intersection.y;
+            }
+            // and appropriate endpoint
+
+            // set trajs.back()[1] to the point of intersection
+            trajs.back()[1] = intersection;
+            std::vector<cv::Point_<int>> tmptmp;
+            tmptmp.emplace_back(intersection);
+            tmptmp.emplace_back(newEndPoint);
+            trajs.emplace_back(tmptmp);
+        }
+        bnccnt++;
         // this break is temporary, please remove when done
-        break;
+//        break;
     }
     /*while (!done) {
         // vector of vector of points trajs will describe each separate trajectory
@@ -627,7 +693,7 @@ void Thing::calcTrajNew(Table table, cv::Mat grabbed) {
 
 
     }*/
-
+    return trajs;
 }
 std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed) {
     //remove grabbed onced done testing and debugging
@@ -674,7 +740,7 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             sprintf(tempStr,"(xtime, ytime): (%f, %f)\n", xtime, ytime);
-            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
+//            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
             if (ytime > xtime) {
                 output[3] = false;
             } else {
@@ -690,7 +756,7 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             sprintf(tempStr,"(xtime, ytime): (%f, %f)\n", xtime, ytime);
-            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
+//            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
             if (ytime > xtime) {
                 output[1] = false;
             } else {
@@ -706,7 +772,7 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             sprintf(tempStr,"(xtime, ytime): (%f, %f)\n", xtime, ytime);
-            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
+//            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
             if (ytime > xtime) {
                 output[1] = false;
             } else {
@@ -722,7 +788,7 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             sprintf(tempStr,"(xtime, ytime): (%f, %f)\n", xtime, ytime);
-            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
+//            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
             if (ytime > xtime) {
                 output[3] = false;
             } else {
@@ -786,3 +852,11 @@ cv::Point_<int> Thing::findIntersection(std::vector<bool> bounces, cv::Point_<in
     }
     return intersection;
 }
+
+void Thing::goalDetect(cv::Point_<int> intersection, int xvelo) {
+    if (xvelo > 0 && intersection.y >= Goals[3].y && intersection.y <= Goals[2].y) {
+        rightGoal = true;
+    } else if (xvelo < 0 && intersection.y >= Goals[1].y && intersection.y <= Goals[2].y) {
+        leftGoal = true;
+    }
+};

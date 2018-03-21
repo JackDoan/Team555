@@ -63,10 +63,9 @@ protected:
     char TrackbarName[9][50] = { "MinH","MaxH","MinS","MaxS","MinV","MaxV","MinArea","MaxArea","MinRound" };
 public:
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
-    std::vector<std::vector<cv::Point_<int>>> trajs;
 
 
-    int vectorMult = 20;
+    int vectorMult = 10;
     int walls[4][3];
     int goalArr[2][3];
     int predicted[3];
@@ -78,7 +77,10 @@ public:
     bool found;
     int lostCnt;
     bool goalFlag;
+    bool leftGoal;
+    bool rightGoal;
     std::vector<cv::Point_<int>> Goals;
+    std::vector<std::vector<cv::Point_<int>>> trajectory;
 
 
     bool onTable = false;
@@ -106,9 +108,11 @@ public:
         }
     }
     void setGoals(std::vector<cv::Point_<int>> sortedX);
-    void calcTrajNew(Table table, cv::Mat grabbed);
+    void drawTrajNew(cv::Mat in);
+    std::vector<std::vector<cv::Point_<int>>> calcTrajNew(Table table, cv::Mat grabbed);
     std::vector<bool> bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed);
     cv::Point_<int> findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint);
+    void goalDetect(cv::Point_<int> intersection, int xvelo);
 
 };
 

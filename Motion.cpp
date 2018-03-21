@@ -183,7 +183,15 @@ void Motion::defend(MotorDriver motorDriver, Table table, Mallet mallet, Puck pu
         // calc desired mallet location
 //        if (true) {
         // i dont know if this intersect check here is needed, just did it cause
-        if (puck.goalFlag && puck.intersect.x != 0 && puck.intersect.y != 0) {
+        if (puck.rightGoal) {
+            // move to the midpoint of the last trajectory vector
+            cv::putText(grabbed, "Goal!!", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            desiredLocation = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0])/2;
+        } else {
+            desiredLocation.x = 1100;
+            desiredLocation.y = 360;
+        }
+        /*if (puck.rightGoal && puck.intersect.x != 0 && puck.intersect.y != 0) {
 //            printf("Goal!!!!!\n");
 //            cv::putText(grabbed, "Goal!!", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
             if (puck.bouncey) {
@@ -195,7 +203,7 @@ void Motion::defend(MotorDriver motorDriver, Table table, Mallet mallet, Puck pu
         } else {
             desiredLocation.x = 1100;
             desiredLocation.y = 360;
-        }
+        }*/
         // limit desired location to x and y boundaries if they exceed those boundaries
         if(desiredLocation.y > table.max.y-100) {
             desiredLocation.y = table.max.y-100;
@@ -225,7 +233,6 @@ void Motion::defend(MotorDriver motorDriver, Table table, Mallet mallet, Puck pu
         } else if (puck.onTable) {
 //                printf("%ld Y steps\n", toMoveY);
 //            motorDriver.moveSteps(toMoveY, 'Y');
-
         }
 
 //        printf("Desired Location: (%d, %d)\n", desiredLocation.x, desiredLocation.y);
