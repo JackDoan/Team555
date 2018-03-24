@@ -198,7 +198,7 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
                 mallet.findOne(grabbed,table,false);
             }
             // the following code was used to test and debug the new trajectory calculation code
-            //puck.calcTrajNew(table, grabbed);
+            //puck.calcTraj(table, grabbed);
 
             // the following code was used to test and debug bounce detection function
 /*            output = puck.bounceDetect(table, puck.location, puck.location+(puck.location-puck.lastLocation)*20, grabbed);

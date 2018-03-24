@@ -295,8 +295,8 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
     } else {
         calcVector(in);
         if (!isMallet) {
-            trajectory = calcTrajNew(table, in);
-            drawTrajNew(in);
+            trajectory = calcTraj(table, in);
+            drawTraj(in);
 //            calcTraj(table);
 //            drawVector(in);
         }
@@ -368,149 +368,6 @@ void Thing::calcVector(cv::Mat in) {
 
 }
 
-void Thing::drawVector(cv::Mat in) {
-
-    if (bouncex || bouncey) {
-//                printf("Bounce was true! and intersect\n");
-        cv::line(in, cvPoint(intersect.x-25, intersect.y),
-                     cvPoint(intersect.x+25, intersect.y),
-                     cvScalar(0, 0, 255), 4);
-        cv::line(in, cvPoint(intersect.x, intersect.y-25),
-                     cvPoint(intersect.x, intersect.y+25),
-                     cvScalar(0, 0, 255), 4);
-        cv::line(in, location, intersect, cvScalar(255, 0, 255), 4);
-        cv::line(in, intersect, predictedLocation, cvScalar(255, 225, 0), 4);
-
-//        if (bouncex) {
-//            predictedLocation.x = intersect.x - vectorXY.x * vectorMult;
-//            predictedLocation.y = intersect.y + vectorXY.y * vectorMult;
-//            cv::line(in, intersect, predictedLocation, cvScalar(255, 225, 0), 4);
-//        } else if (bouncey) {
-//            predictedLocation.x = intersect.x + vectorXY.x * vectorMult;
-//            predictedLocation.y = intersect.y - vectorXY.y * vectorMult;
-//            cv::line(in, intersect, predictedLocation, cvScalar(255, 225, 0), 4);
-//        }
-
-    } else {
-        cv::line(in, location, (location+vectorXY*vectorMult), cvScalar(255, 0, 255), 4);
-    }
-
-    cv::circle(in, predictedLocation, 20, outlineColor, 4);
-
-
-    //printf("No puck found!\n");
-
-}
-
-void Thing::calcTraj(Table table) {
-    intersect = {0, 0};
-    predictedLocation = location + vectorXY*vectorMult;
-    predicted[0] = predictedLocation.y - location.y;    //A
-    predicted[1] = location.x - predictedLocation.x;    //B
-    predicted[2] = predicted[0]*location.x + predicted[1]*location.y;   //C
-    if (
-            predictedLocation.x > table.max.x &&
-                (
-                    abs(location.y - table.max.y) > abs(location.x - table.max.x) &&
-                    abs(location.y - table.min.y) > abs(location.x - table.max.x)
-                )
-            )
-    {
-        bouncex = true;
-        bouncey = false; //testing this
-        // third wall
-        det = predicted[0] * walls[2][1] - walls[2][0] * predicted[1];
-        if (det == 0) {
-            //dbgPrint("Error lines are parallel?\n");
-        }
-        else {
-            intersect.x = (walls[2][1] * predicted[2] - predicted[1] * walls[2][2]) / det;
-            intersect.y = (predicted[0] * walls[2][2] - walls[2][0] * predicted[2]) / det;
-//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
-        }
-    }
-    else if (
-            predictedLocation.x < table.min.x &&
-            (abs(location.y - table.max.y) > abs(location.x - table.min.x) &&
-             abs(location.y - table.min.y) > abs(location.x - table.min.x))
-            ) {
-        bouncex = true;
-        bouncey = false; //testing this
-        // first wall
-        det = predicted[0] * walls[0][1] - walls[0][0] * predicted[1];
-        if (det == 0) {
-            //dbgPrint("Error lines are parallel?\n");
-        }
-        else {
-            intersect.x = (walls[0][1] * predicted[2] - predicted[1] * walls[0][2])/det;
-            intersect.y = (predicted[0] * walls[0][2] - walls[0][0] * predicted[2])/det;
-//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
-        }
-    }
-    else if (
-            predictedLocation.y > table.max.y &&
-            (abs(location.x - table.max.x) > abs(location.y - table.max.y) &&
-             abs(location.x - table.min.x) > abs(location.y - table.max.y))
-            ) {
-        bouncey = true;
-        bouncex = false;
-        // second wall
-        det = predicted[0] * walls[1][1] - walls[1][0] * predicted[1];
-        if (det == 0) {
-            //printf("Error lines are parallel?\n");
-        }
-        else {
-            intersect.x = (walls[1][1] * predicted[2] - predicted[1] * walls[1][2])/det;
-            intersect.y = (predicted[0] * walls[1][2] - walls[1][0] * predicted[2])/det;
-//           printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
-        }
-    }
-    else if (
-            predictedLocation.y < table.min.y &&
-            (abs(location.x - table.max.x) > abs(location.y - table.min.y) &&
-             abs(location.x - table.min.x) > abs(location.y - table.min.y))
-            ) {
-        bouncey = true;
-        bouncex = false;
-        // fourth wall
-        det = predicted[0] * walls[3][1] - walls[3][0] * predicted[1];
-        if (det == 0) {
-        //            printf("Error lines are parallel?\n");
-        }
-        else {
-            intersect.x = (walls[3][1] * predicted[2] - predicted[1] * walls[3][2])/det;
-            intersect.y = (predicted[0] * walls[3][2] - walls[3][0] * predicted[2])/det;
-//            printf("The intersect point is: (%f, %f)\n", intersect.x, intersect.y);
-        }
-    }
-    else {
-        bouncex = false;
-        bouncey = false;
-    }
-
-
-
-    if (bouncex || bouncey) {
-    //                printf("Bounce was true! and intersect\n");
-        // bouncex means you are intersecting a vertical wall
-        if (bouncex && !bouncey) {
-            if (intersect.y >= Goals[1].y || intersect.y <= Goals[0].y || intersect.y >= Goals[3].y || intersect.y <= Goals[2].y) {
-                goalFlag = true;
-                predictedLocation = intersect;
-            } else {
-                predictedLocation.x = intersect.x - vectorXY.x * vectorMult;
-                predictedLocation.y = intersect.y + vectorXY.y * vectorMult;
-            }
-        }
-            // bouncy means you are intersecting a horizontal wall
-        else if (bouncey && !bouncex) {
-            predictedLocation.x = intersect.x + vectorXY.x * vectorMult;
-            predictedLocation.y = intersect.y - vectorXY.y * vectorMult;
-        }
-    }
-
-}
-
 void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
     int goalScale = 50;
     int goalPush = 0;
@@ -534,13 +391,13 @@ void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
     Goals[3] = R_bottom;
 }
 
-void Thing::drawTrajNew(cv::Mat in) {
+void Thing::drawTraj(cv::Mat in) {
     for (int i = 0; i < trajectory.size(); i++) {
         cv::line(in, trajectory[i][0], trajectory[i][1], cvScalar(255, 0, 255), 4);
     }
 }
 
-std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajNew(Table table, cv::Mat grabbed) {
+std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat grabbed) {
     // need to set left and right goal flags to false at the start of this
     // remove grabbed once done testing and debugging
     intersect = {0, 0};

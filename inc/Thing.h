@@ -108,8 +108,8 @@ public:
         }
     }
     void setGoals(std::vector<cv::Point_<int>> sortedX);
-    void drawTrajNew(cv::Mat in);
-    std::vector<std::vector<cv::Point_<int>>> calcTrajNew(Table table, cv::Mat grabbed);
+    void drawTraj(cv::Mat in);
+    std::vector<std::vector<cv::Point_<int>>> calcTraj(Table table, cv::Mat grabbed);
     std::vector<bool> bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed);
     cv::Point_<int> findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint);
     void goalDetect(cv::Point_<int> intersection, int xvelo);
