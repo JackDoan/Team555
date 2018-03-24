@@ -1,0 +1,13 @@
+Calibrated 1: 1257, 716
+Calibrated 2: 61, 660
+Calibrated 3: 78, 48
+Calibrated 4: 1260, 39
+Corner 1: 1217, 676
+Corner 2: 101, 620
+Corner 3: 118, 88
+Corner 4: 1220, 79
+Offset 1: 40, 40
+Offset 2: -40, 40
+Offset 3: -40, -40
+Offset 4: 40, -40
+

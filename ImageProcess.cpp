@@ -30,19 +30,15 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
     Motion motion = Motion();
     bool yHome = false; //set this to false
     bool xHome = false;
-    cv::Point_<int> malletHome = {1200, 360};
-    cv::Point_<int> firstPosition = {0,0};
     bool first = false;
-
+    bool threadIt = true;
 
     puck.setGoals(corners.sortedX);
-//    cv::Size blahhhh = {640, 360}; // removed this in the next line and replaced with cvSize(640, 360), didn't test it though
     cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
     int FrameCounter = 0;
     long frameTimestamp = 0;
     time(&start); //todo does this fps calc ignores processing time
     cv::namedWindow("Video");
-    cv::Rect roi;
     cv::Mat previewSmall;
 
     // ********* the following commented code is not in Motion.cpp *********//
@@ -111,7 +107,7 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
             printf("No frames!\n");
             break;
         }
-        mallet.findOld(grabbed, table, true);
+        mallet.findOne(grabbed, table, true);
         if (!first) {
             initCount = motorDriver.getSteps('x');
             // as the drivers where it is and store it as initial count
@@ -144,7 +140,7 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
             }
             else {
                 printf("%ld steps\n", toMove);
-                motorDriver.moveSteps(toMove, 'x');
+                motorDriver.sendCMD(toMove, 'x');
             }
             cv::circle(grabbed, cvPoint(difference, mallet.location.y),
                        25, cv::Scalar(255, 0, 0), 4);
@@ -158,16 +154,17 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
 
 
     // TODO: use these as our limits for X
-    //motorDriver.moveSteps(1000, 'x');
+    //motorDriver.sendCMD(1000, 'x');
     //_sleep(1000);
-    //motorDriver.moveSteps(-1200, 'x');
+    //motorDriver.sendCMD(-1200, 'x');
     //_sleep(1000);
-    //motorDriver.moveSteps(-700, 'x');
+    //motorDriver.sendCMD(-700, 'x');
     //(1000);
-    //motorDriver.moveSteps(200, 'x');
+    //motorDriver.sendCMD(200, 'x');
 
     std::vector<bool> output = {false, false, false, false};
-    while (true) {
+    bool keepGoing = true;
+    while (keepGoing) {
         if (!settings.undistort) {
             grabbed = camera.getFrame();
         } else {
@@ -187,13 +184,19 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
         }
         if (!settings.calibrateCorners) {
            puck.lastLocation = puck.location;
-            //puck.findOld(grabbed, table);
-            //mallet.findOld(grabbed, table);
+            //puck.findOne(grabbed, table);
+            //mallet.findOne(grabbed, table);
 
-            std::thread puckThread(&Puck::findOld, std::ref(puck), grabbed, table, false);
-            std::thread malletThread(&Mallet::findOld, std::ref(mallet), grabbed, table, true);
-            puckThread.join();
-            malletThread.join();
+            if(threadIt) {
+                std::thread puckThread(&Puck::findOne, std::ref(puck), grabbed, table, false);
+                std::thread malletThread(&Mallet::findOne, std::ref(mallet), grabbed, table, true);
+                puckThread.join();
+                malletThread.join();
+            }
+            else {
+                puck.findOne(grabbed,table,false);
+                mallet.findOne(grabbed,table,false);
+            }
             // the following code was used to test and debug the new trajectory calculation code
             //puck.calcTrajNew(table, grabbed);
 
@@ -255,19 +258,30 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
             ///you will cause the thread to hang
             switch(key) {
                 case 27: //ESC
-                    //do something to exit the program
+                    keepGoing = false;
+                    motorDriver.stop();
+                    continue; //this jumps to the top of the while loop and quits
                     break;
                 case 'q':
-                    motorDriver.setEnable(0,0);
+                    motorDriver.setEnable(false,false);
                     break;
                 case 'Q':
-                    motorDriver.setEnable(1,1);
+                    motorDriver.setEnable(true,true);
                     break;
                 case 'p':
+                    threadIt = false;
                     puck.toggleDebugInfo();
                     break;
+                case 't':
+                    threadIt = true;
+                    break;
                 case 'm':
+                    threadIt = false;
                     mallet.toggleDebugInfo();
+                    break;
+                case 'v':
+                    settings.video_output = !settings.video_output;
+                    printf("Video output: %d", settings.video_output);
                     break;
                 case 'R':
                     //todo disable drivers
@@ -305,7 +319,7 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
                     }
                     else if (puck.onTable){
                         printf("%ld steps\n", toMove);
-                        motorDriver.moveSteps(toMove, 'Y');
+                        motorDriver.sendCMD(toMove, 'Y');
                     }
                     cv::circle(grabbed, cvPoint(mallet.location.x, (toMove+720/2)/4),
                                20, cv::Scalar(255, 0, 0), 4);
@@ -313,7 +327,7 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
                 }
             }*/
 
-            // **** Uncomment ONE of the following linex to actually play **** //
+            // **** Uncomment ONE of the following lines to actually play **** //
 //            motion.trackPredictedY(motorDriver, table, mallet, puck, grabbed);
             motion.defend(motorDriver, table, mallet, puck, grabbed);
 
@@ -332,26 +346,6 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
                     // Draw Table borders
                     corners.drawSquareNew(previewSmall, corners.getCalibratedCorners());
                 }
-
-
-/*            if (corners.size() >= 3) {
-                //printf("%d: \t %d,%d \t %d,%d \t %d,%d \t %d,%d\n", corners.size(), corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y, corners[3].x, corners[3].y);
-            }*/
-
-                //GOAL check
-                //find midpoints of Y lines being drawn with drawSquareNew
-                //      manually add offset in (while drawing lines to check) to find goal zone.
-
-
-                //look into cvFitLine
-
-                //j test end//////////////////////////////////////
-                //(previewSmall);
-//            corners.drawSquare(previewSmall, corners.getCorners(), corners.getOffsets());
-//            puck.setGoals(previewSmall, corners.sortedX);
-              //puck.setGoals(previewSmall, corners.sortedX);
-
-
 
                 cv::line(previewSmall, puck.Goals[0]/2, puck.Goals[1]/2, cv::Scalar(255, 0, 0), 4);
                 cv::line(previewSmall, puck.Goals[2]/2, puck.Goals[3]/2, cv::Scalar(255, 0, 0), 4);

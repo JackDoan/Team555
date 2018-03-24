@@ -22,6 +22,7 @@ Motion::Motion() {
 }
 
 
+int deadband = 100;
 void Motion::calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, Settings settings) {
     Camera& camera = Camera::getInstance();
     bool yHome = false; //set this to false
@@ -46,7 +47,7 @@ void Motion::calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, 
             printf("No frames!\n");
             break;
         }
-        mallet.findOld(calHomeGrabbed, table, true);
+        mallet.findOne(calHomeGrabbed, table, true);
         if (table.preview == 1) {
             cv::resize(calHomeGrabbed, calHomeSmall, cv::Size(), 0.5, 0.5);
             imshow("CalHome", calHomeSmall);
@@ -81,7 +82,7 @@ void Motion::calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, 
             }
             else {
 //                printf("%ld steps\n", toMove);
-                motorDriver.moveSteps(toMove, 'y');
+                motorDriver.sendCMD(toMove, 'y');
             }
         }
         if (cv::waitKey(100) >= 0)
@@ -97,7 +98,7 @@ void Motion::calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, 
             printf("No frames!\n");
             break;
         }
-        mallet.findOld(calHomeGrabbed, table, true);
+        mallet.findOne(calHomeGrabbed, table, true);
         if (table.preview == 1) {
             cv::resize(calHomeGrabbed, calHomeSmall, cv::Size(), 0.5, 0.5);
             imshow("CalHome", calHomeSmall);
@@ -132,7 +133,7 @@ void Motion::calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, 
             }
             else {
 //                printf("%ld steps\n", toMove);
-                motorDriver.moveSteps(toMove, 'x');
+                motorDriver.sendCMD(toMove, 'x');
             }
         }
         if (cv::waitKey(100) >= 0)
@@ -143,30 +144,32 @@ void Motion::calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, 
     cvDestroyWindow("CalHome");
 }
 
+
+// this is broken af cause trajectory doesnt fill if the puck isnt moving...
 void Motion::trackPredictedY(MotorDriver motorDriver, Table table, Mallet mallet, Puck puck, cv::Mat grabbed) {
     if(puck.lostCnt < 10 && mallet.found) {
         if (abs(puck.location.y - mallet.location.y) <= 30) {
             //printf("Close enough\n");
-        } else {
+        } else if (puck.vectorXY.x != 0 || puck.vectorXY.y != 0){
             long toMove;
             //int difference = puck.predictedLocation.y - 720/2;//mallet.location.y;
             //todo why is ratio 4
-            if(puck.predictedLocation.y > table.max.y-100) {
+            if(puck.trajectory.back()[1].y > table.max.y-100) {
                 toMove = table.max.y-100;
             }
-            else if(puck.predictedLocation.y < table.min.y+100) {
+            else if(puck.trajectory.back()[1].y < table.min.y+100) {
                 toMove = table.min.y+100;
             }
             else {
-                toMove = puck.predictedLocation.y;
+                toMove = puck.trajectory.back()[1].y;
             }
-            toMove = ((toMove-720/2) * 4); //get to the middle
+//            toMove = ((toMove-720/2) * 4); //get to the middle
             if(abs(toMove) <= 25) {
                 //printf("not moving %ld steps\n", toMove);
             }
             else if (puck.onTable && puck.vectorXY.x > 0){
 //                printf("%ld steps\n", toMove);
-                motorDriver.moveSteps(toMove, 'Y');
+//                motorDriver.sendCMD(toMove, 'Y');
             }
             cv::circle(grabbed, cvPoint(mallet.location.x, (toMove)/4 + 360),
                        20, cv::Scalar(255, 0, 0), 4);
@@ -174,69 +177,72 @@ void Motion::trackPredictedY(MotorDriver motorDriver, Table table, Mallet mallet
         }
     }
 }
-
-void Motion::defend(MotorDriver motorDriver, Table table, Mallet mallet, Puck puck, cv::Mat grabbed) {
-    long toMoveX;
-    long toMoveY;
-    cv::Point_<int> desiredLocation = {1100, 360};
+void Motion::defend(MotorDriver motorDriver, Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
+    cv::Point_<int> toMove;
+    cv::Point_<int> desiredLocation;
     if(puck.lostCnt < 10 && mallet.found) {
         // calc desired mallet location
-//        if (true) {
         // i dont know if this intersect check here is needed, just did it cause
         if (puck.rightGoal) {
             // move to the midpoint of the last trajectory vector
             cv::putText(grabbed, "Goal!!", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
             desiredLocation = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0])/2;
         } else {
-            desiredLocation.x = 1100;
-            desiredLocation.y = 360;
+            desiredLocation = table.home;
         }
-        /*if (puck.rightGoal && puck.intersect.x != 0 && puck.intersect.y != 0) {
-//            printf("Goal!!!!!\n");
-//            cv::putText(grabbed, "Goal!!", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
-            if (puck.bouncey) {
-                desiredLocation.x = (int)puck.intersect.x + puck.vectorXY.x/2;
-                desiredLocation.y = (int)puck.intersect.y + puck.vectorXY.y/2;
-            } else {
-                desiredLocation = puck.location + puck.vectorXY/2;
-            }
-        } else {
-            desiredLocation.x = 1100;
-            desiredLocation.y = 360;
-        }*/
+
         // limit desired location to x and y boundaries if they exceed those boundaries
-        if(desiredLocation.y > table.max.y-100) {
-            desiredLocation.y = table.max.y-100;
-        }
-        else if(desiredLocation.y < table.min.y+100) {
-            desiredLocation.y = table.min.y+100;
-        }
+        desiredLocation = saturate(desiredLocation, table.motionLimitMin, table.motionLimitMax);
 
-        if(desiredLocation.x > table.max.x-100) {
-            desiredLocation.x = table.max.x-100;
-        }
-        else if(desiredLocation.x < table.min.x+740) {
-            desiredLocation.x = table.min.x+200;
-        }
         // move to that position
-
-        toMoveX = (desiredLocation.x - 1100) * 4;
-        toMoveY = (desiredLocation.y - 720/2) * 4;
-        if (abs(toMoveX) <= 200) {
-            //printf("not moving %ld steps\n", desiredLocation.x);
-        } else if (puck.onTable) {
-//                printf("%ld X steps\n", toMoveX);
-//            motorDriver.moveSteps(toMoveX, 'X');
+        toMove = table.pixelsToSteps(desiredLocation);
+        if (abs(toMove.x) <= deadband) {
+            toMove.x = 0;
         }
-        if (abs(toMoveY) <= 200) {
-            //printf("not moving %ld steps\n", desiredLocation.x);
-        } else if (puck.onTable) {
-//                printf("%ld Y steps\n", toMoveY);
-//            motorDriver.moveSteps(toMoveY, 'Y');
+        if (abs(toMove.y) <= deadband) {
+            toMove.y = 0;
+        }
+        if (puck.onTable) {
+            motorDriver.moveTo(toMove);
         }
 
 //        printf("Desired Location: (%d, %d)\n", desiredLocation.x, desiredLocation.y);
-        cv::circle(grabbed, cvPoint(desiredLocation.x, desiredLocation.y),
-                   20, cv::Scalar(225, 255, 0), 6);
+
+        cv::circle(grabbed, desiredLocation, 20, cv::Scalar(225, 255, 0), 6);
+    }
+}
+
+void Motion::attack(MotorDriver motorDriver, Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
+    cv::Point_<int> toMove;
+    cv::Point_<int> desiredLocation;
+    if(puck.lostCnt < 10 && mallet.found) {
+        // calc desired mallet location
+        // i dont know if this intersect check here is needed, just did it cause
+        if (puck.rightGoal) {
+            // move to the midpoint of the last trajectory vector
+            cv::putText(grabbed, "Goal!!", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            desiredLocation = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0])/2;
+        } else {
+            desiredLocation = table.home;
+        }
+
+        // limit desired location to x and y boundaries if they exceed those boundaries
+        desiredLocation = saturate(desiredLocation, table.motionLimitMin, table.motionLimitMax);
+
+        // move to that position
+        toMove = table.pixelsToSteps(desiredLocation);
+        if (abs(toMove.x) <= deadband) {
+            toMove.x = 0;
+        }
+        if (abs(toMove.y) <= deadband) {
+            toMove.y = 0;
+        }
+        if (puck.onTable) {
+            motorDriver.moveTo(toMove);
+        }
+
+//        printf("Desired Location: (%d, %d)\n", desiredLocation.x, desiredLocation.y);
+
+        cv::circle(grabbed, desiredLocation, 20, cv::Scalar(225, 255, 0), 6);
     }
 }

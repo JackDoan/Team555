@@ -4,6 +4,8 @@
 
 #ifndef TEAM555_DRIVERINTERFACE_H
 #define TEAM555_DRIVERINTERFACE_H
+
+#include <opencv2/core/types.hpp>
 #include "Serial.h"
 
 typedef union switchesU {
@@ -47,11 +49,14 @@ public:
     ~MotorDriver();
     bool initComPort(char comPort);
     void setHome();
-    bool moveSteps(long steps, char axis);
+    bool sendCMD(int steps, char axis);
     long getSteps(char axis);
     void setEnable(bool x, bool y);
     void sendRaw(char msg);
     void readAll();
+    bool moveTo(const cv::Point_<int> &in);
+    bool moveBy(const cv::Point_<int> &in);
+    bool stop();
 };
 
 

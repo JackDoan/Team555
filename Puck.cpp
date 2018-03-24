@@ -21,8 +21,8 @@ Puck::Puck() {
     //for green
     minArea = 1200;
     maxArea = 3600;
-    minRoundness = 445;
-    minAreaCalib = 800;
+    minRoundness = 100;
+    minAreaCalib = 600;
     maxAreaCalib = 4000;
     minRoundnessCalib = 320;
     settingWindowName = const_cast<char *>("Puck Settings");
@@ -33,12 +33,12 @@ Puck::Puck() {
 //    puckLimits.maxS = 155;
 //    puckLimits.minV = 20;
 //    puckLimits.maxV = 67;
-    limits.minH = 16;
-    limits.maxH = 121;
-    limits.minS = 23;
-    limits.maxS = 185;
+    limits.minH = 67;//16;
+    limits.maxH = 163;//121;
+    limits.minS = 119;//23;
+    limits.maxS = 214;//185;
     limits.minV = 0;
-    limits.maxV = 0;
+    limits.maxV = 34;//0
     outlineColor = cv::Scalar(0, 255, 0);
 
     puckLimitsCalib.minH = 43;

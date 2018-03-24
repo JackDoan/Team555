@@ -23,27 +23,8 @@
 
 #include <time.h>
 
-
-// Camera process, convert puck position to coordinates
-// and generate trajectory prediction and visualization
-// Xu = (Xd)/(1+param*dist2)  dist2 = distancia al cuadrado del pixel al centro
-void cameraProcess(cv::Mat& frameGrabbed, Puck puck, int time, Table table) {
-//    int coordX;
-//    int coordY;
-//    int lastCoordX;
-//    int lastCoordY;
-//    int vectorX;
-//    int vectorY;
-    double slope;
-
-    int bounce_x;
-    int bounce_y;
-    int predict_pixX;
-    int predict_pixY;
-    int bounce_pixX;
-    int bounce_pixY;
-}
-
+///Jack's settings:
+///Exposure: 1/170, Gain: 6.59db, Sharpness: 3, Gamma: 66, Denoise: 25, Sat: 255
 
 int main(int argc, char* argv[]) {
     Settings settings;
@@ -114,9 +95,8 @@ int main(int argc, char* argv[]) {
     ImageProcess imageProcess = ImageProcess();
     imageProcess.process(table, puck, mallet, corners, camera, settings);
     cvDestroyAllWindows();
-    if (settings.video_output) {
-        record.release();
-    }
+    record.release();
+    camera.close();
 
     return 0;
 }

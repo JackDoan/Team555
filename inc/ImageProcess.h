@@ -24,7 +24,7 @@
 
 class ImageProcess {
 private:
-    char tempStr[80];
+    char tempStr[80] = {};
     long firstTimestamp = 0;
     cv::Mat grabbed;
 //    cv::Mat frame;
@@ -32,7 +32,7 @@ private:
 //    cv::Mat imgThresh;
     time_t start = 0;
     time_t end = 0;
-    double sec;
+    double sec = 0;
 public:
     double frameRate = 0;
 

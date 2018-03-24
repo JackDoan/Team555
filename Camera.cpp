@@ -20,7 +20,7 @@ Camera::Camera(int nwidth, int nheight) {
             1.8080799428778758e-004, -1.2116565979220450e-003,
             -1.7769273735972861e-002);
 
-    dimensions = Coordinate(nwidth,nheight);
+    dimensions = {nwidth,nheight};
 
     capture.open(0);
     printf("Exposure: %f\n", capture.get(CV_CAP_PROP_EXPOSURE));
@@ -47,10 +47,6 @@ Camera::Camera(int nwidth, int nheight) {
 
 Camera::~Camera() {
     capture.release();
-}
-
-Coordinate Camera::getCenter() {
-    return dimensions;
 }
 
 cv::Mat Camera::getUndistortedFrame() {
@@ -88,6 +84,10 @@ cv::Mat Camera::getHomography(std::vector<cv::Point_<int>> corners,
     //use with warpPerspective(intput img, output img, h_transform, output.size());
 
     return h_transform;
+}
+
+void Camera::close() {
+    capture.release();
 }
 
 

@@ -65,7 +65,7 @@ public:
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
 
 
-    int vectorMult = 10;
+    int vectorMult = 15;
     int walls[4][3];
     int goalArr[2][3];
     int predicted[3];
@@ -84,7 +84,7 @@ public:
 
 
     bool onTable = false;
-
+    bool doBars = false;
     Thing();
     ~Thing() = default;
     void setupTrackbars();
@@ -92,19 +92,19 @@ public:
     double getMaxArea();
     double getMinRoundness();
     std::vector<cv::Point_<int>> find(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
-    void findOld(cv::Mat in, Table table, bool isMallet);    //Changed from int to pointer, returns coords
+    void findOne(cv::Mat in, Table table, bool isMallet);    //Changed from int to pointer, returns coords
     void calcVector(cv::Mat in);
     void drawVector(cv::Mat in);
     void calcTraj(Table table);
     void toggleDebugInfo() {
         debugWindows = !debugWindows;
         if(debugWindows) {
-            setupTrackbars();
-            cv::namedWindow(previewWindowName,0);
+            doBars = true;
+            //cv::namedWindow(previewWindowName,0);
         }
         else {
             cv::destroyWindow(settingWindowName);
-            cv::destroyWindow(previewWindowName);
+            //cv::destroyWindow(previewWindowName);
         }
     }
     void setGoals(std::vector<cv::Point_<int>> sortedX);

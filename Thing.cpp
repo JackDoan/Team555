@@ -15,10 +15,10 @@
 
 
 void Thing::setupTrackbars() {
-    if(debugWindows) {
+    doBars = false;
         int slidermax = 255;
         int sslidermax = 5000;
-        cv::namedWindow(settingWindowName, 0);
+        cv::namedWindow(settingWindowName);
         cv::createTrackbar(TrackbarName[0], settingWindowName, &(limits.minH), slidermax, onChange, this);
         cv::createTrackbar(TrackbarName[1], settingWindowName, &(limits.maxH), slidermax, onChange, this);
         cv::createTrackbar(TrackbarName[2], settingWindowName, &(limits.minS), slidermax, onChange, this);
@@ -30,7 +30,6 @@ void Thing::setupTrackbars() {
         cv::createTrackbar(TrackbarName[8], settingWindowName, &minRoundness, sslidermax, onChange, this);
         //cv::resizeWindow(settingWindowName, 500, 800);
         //TableCalibrate.setupTrackbars();
-    }
 }
 
 cv::Mat Thing::getThresholdImage(cv::Mat& in) {
@@ -128,9 +127,7 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat in, Table table) {
     //CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
 
     // Position initialization
-    //double posX = 0;
-    //double posY = 0;
-    Coordinate pos = Coordinate(0.0,0);
+    cv::Point_<int> pos = {0,0};
     //double localLastX = x;
     //double localLastY = y;
     num = 0;
@@ -155,8 +152,8 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat in, Table table) {
                 double moment01 = moments.m01;
                 area = moments.m00;
                 // Calculate object center
-                pos.x = moment10*2 / area;
-                pos.y = moment01*2 / area;
+                pos.x = (int)(moment10*2 / area);
+                pos.y = (int)(moment01*2 / area);
 
                 //pos.x = floor(moments.m10 * 2 / area + 0.5); // round
                 //pos.y = floor(moments.m01 * 2 / area + 0.5);
@@ -211,7 +208,7 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat in, Table table) {
     return pointVec;
 }
 
-void Thing::findOld(cv::Mat in, Table table, bool isMallet) {
+void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
     onTable = false;
     goalFlag = false;
     trajectory.clear();
@@ -224,9 +221,10 @@ void Thing::findOld(cv::Mat in, Table table, bool isMallet) {
 
     cv::Mat imgThresh = getThresholdImage(in);
     if (debugWindows) {
+        setupTrackbars();
         cv::Mat imgThreshSmall;
         cv::resize(imgThresh, imgThreshSmall, cv::Size(), 0.25, 0.25);
-        imshow(previewWindowName, imgThreshSmall);
+        imshow(settingWindowName, imgThreshSmall);
     }
     std::vector< std::vector<cv::Point> > contours;  //hold the pointer to a contour in the memory block
     CvSeq* result;   //hold sequence of points of a contour
@@ -236,7 +234,7 @@ void Thing::findOld(cv::Mat in, Table table, bool isMallet) {
 
     cv::findContours(imgThresh, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
     found = false;
-    lastLocation = location; // move this out of the for loop, seems dumb? -Mike
+    lastLocation = location;
     for (int i = 0; i < contours.size(); i++) {
         //todo: shrink the image to the table area, THEN search for contours.
         area = cv::contourArea(contours[i]);
@@ -268,7 +266,6 @@ void Thing::findOld(cv::Mat in, Table table, bool isMallet) {
                     // Draw contour
                     if (table.preview == 1)
                         cv::drawContours(in, contours, i, outlineColor, 5, 4);
-
                     found = true;
                     break;
                 }
@@ -281,7 +278,7 @@ void Thing::findOld(cv::Mat in, Table table, bool isMallet) {
     if (!found) {
         lostCnt++;
         if (lostCnt < 10) {
-            lastLocation = location;
+            //lastLocation = location;
             location = location + vectorXY;
         }
 
@@ -303,12 +300,9 @@ void Thing::findOld(cv::Mat in, Table table, bool isMallet) {
 //            calcTraj(table);
 //            drawVector(in);
         }
-
     }
 
-    if (location.x < table.max.x && location.y < table.max.y && location.x > table.min.x && location.y > table.min.y)  {
-        onTable = true;
-    }
+    onTable = within(location, table.min, table.max);
 
 
 /*    if (predictedLocation.x < 0 || predictedLocation.y < 0) {
@@ -370,8 +364,6 @@ void Thing::calcVector(cv::Mat in) {
         vectorXY = {0,0};
     } else {
         vectorXY = location - lastLocation;
-//        vectorXY.x = (location.x - lastLocation.x);
-//        vectorXY.y = (location.y - lastLocation.y);
     }
 
 }
@@ -520,20 +512,22 @@ void Thing::calcTraj(Table table) {
 }
 
 void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
-
+    int goalScale = 50;
+    int goalPush = 0;
     Goals = {cvPoint(0, 0), cvPoint(0, 0), cvPoint(0, 0), cvPoint(0, 0)};
 
     cv::Point_<int> L_mid = {sortedX[0].x, 700/2};
     cv::Point_<int> R_mid = {sortedX[3].x, 720/2};
 
-    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 95};
-    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 85};
+    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 95+goalScale};
+    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 85-goalScale};
 
-    cv::Point_<int> R_top = {R_mid.x, R_mid.y + 115};
-    cv::Point_<int> R_bottom = {R_mid.x, R_mid.y - 65};
+    cv::Point_<int> R_top = {R_mid.x+goalPush, R_mid.y + 115+goalScale};
+    cv::Point_<int> R_bottom = {R_mid.x+goalPush, R_mid.y - 65-goalScale};
 
     //cv::line(previewSmall, L_top/2, L_bottom/2, cv::Scalar(255, 0, 0), 4);
     //cv::line(previewSmall, R_top/2, R_bottom/2, cv::Scalar(255, 0, 0), 4);
+
     Goals[0] = L_top;
     Goals[1] = L_bottom;
     Goals[2] = R_top;
@@ -640,8 +634,6 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajNew(Table table, cv::Ma
             trajs.emplace_back(tmptmp);
         }
         bnccnt++;
-        // this break is temporary, please remove when done
-//        break;
     }
     /*while (!done) {
         // vector of vector of points trajs will describe each separate trajectory
@@ -854,6 +846,9 @@ cv::Point_<int> Thing::findIntersection(std::vector<bool> bounces, cv::Point_<in
 }
 
 void Thing::goalDetect(cv::Point_<int> intersection, int xvelo) {
+    if(Goals.size() < 4) {
+        return;
+    }
     if (xvelo > 0 && intersection.y >= Goals[3].y && intersection.y <= Goals[2].y) {
         rightGoal = true;
     } else if (xvelo < 0 && intersection.y >= Goals[1].y && intersection.y <= Goals[2].y) {

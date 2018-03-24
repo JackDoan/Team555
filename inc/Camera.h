@@ -18,7 +18,7 @@ class Camera {
         //float cam_pix_to_mm = CAM_PIX_TO_MM; //todo replace this with an expression
         // application parameters
 
-        Coordinate dimensions;
+
         Camera() : Camera(1280,720) {}
         Camera(int nwidth, int nheight);
         int preview = 1;
@@ -32,11 +32,12 @@ class Camera {
             static Camera instance;
             return instance;
         }
+        cv::Point_<int> dimensions;
         Camera(Camera const&)               = delete;
         void operator=(Camera const&)  = delete;
 
-        Coordinate getCenter();
         ~Camera();
+        void close();
         cv::Mat getUndistortedFrame();
         cv::Mat getFrame();
         //double calcFPS(int counter, bool active);

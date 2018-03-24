@@ -11,10 +11,10 @@
 
 Mallet::Mallet() {
     limits.minH = 0;
-    limits.maxH = 23;
-    limits.minS = 60;
-    limits.maxS = 141;
-    limits.minV = 129;
+    limits.maxH = 20;//23;
+    limits.minS = 110;//60;
+    limits.maxS = 198;//141;
+    limits.minV = 213;//129;
     limits.maxV = 255;
     settingWindowName = const_cast<char *>("Mallet Settings 1");
     previewWindowName = const_cast<char *>("Mallet");

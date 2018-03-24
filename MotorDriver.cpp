@@ -6,12 +6,12 @@
 #include "inc/MotorDriver.h"
 #include <string.h>
 #include <cstdint>
+#include <opencv2/core/types.hpp>
 #include "stdio.h"
 #include "inc/helpers.h"
 
-// TODO: test this
 
-typedef union longBytesU {
+typedef union {
     struct {
         char lowest:8;
         char low:8;
@@ -51,7 +51,19 @@ void MotorDriver::setHome() {
     writeResult = SPb->WriteData(bytes, sizeof(bytes));
 }
 
-bool MotorDriver::moveSteps(long steps, char cmd) {
+bool MotorDriver::stop() {
+    return sendCMD(0, '!');
+}
+
+bool MotorDriver::moveTo(const cv::Point_<int> &in) {
+    return sendCMD(in.x, 'X') && sendCMD(in.y, 'Y');
+}
+
+bool MotorDriver::moveBy(const cv::Point_<int> &in) {
+    return sendCMD(in.x, 'y') && sendCMD(in.y, 'y');
+}
+
+bool MotorDriver::sendCMD(int steps, char cmd) {
     longbytes toSend;
     toSend.l = steps;
     char bytes[7];
@@ -62,79 +74,7 @@ bool MotorDriver::moveSteps(long steps, char cmd) {
     bytes[4] = toSend.b.low;
     bytes[5] = toSend.b.lowest;
     bytes[6] = 0;
-    writeResult = SPb->WriteData(bytes, sizeof(bytes));
-    //readResult = SPb->ReadData(incomingData, dataLength);
-//    if(dataLength >= 6) {
-//        int toRead = (((long)incomingData[2] << 24) & 0xff000000) | (((long)incomingData[3] << 16) & 0x00ff0000 )| (((long)incomingData[4] << 8) & 0x0000ff00)| (((long)incomingData[5]) & 0x000000ff) ;
-//        printf("%d\n", toRead);
-////        printf("%c%c%ld\n",incomingData[0],incomingData[1],toRead);
-//    }
-
-    /*if (cmd == 'x') {
-        writeResult = SPx->WriteData(bytes, sizeof(bytes));
-        if (!writeResult) {
-            printf("Error writing steps: %ld, to axis %c\n", steps, cmd);
-            return false;
-        }
-        readResult = SPx->ReadData(incomingData, dataLength);
-        if(readResult) {
-            //printf(incomingData);
-        }
-        *//*if (!readResult) {
-            printf("Error reading steps: %ld, from axis %c\n", steps, axis);
-            return false;
-        } else {
-            if (incomingData == bytes) {
-                return true;
-            } else {
-                printf("Error, returned value in loopback did not match sent value\n");
-                return false;
-            }
-        }*//*
-
-
-    } else if (cmd == 'y') {
-        writeResult = SPy->WriteData(bytes, sizeof(bytes));
-        if (!writeResult) {
-            printf("Error writing steps: %ld, to axis %c\n", steps, cmd);
-            return false;
-        }
-        readResult = SPy->ReadData(incomingData, dataLength);
-        if (!readResult) {
-            printf("Error reading steps: %ld, from axis %c\n", steps, cmd);
-            return false;
-        } else {
-            if (incomingData == bytes) {
-                return true;
-            } else {
-                printf("Error, returned value in loopback did not match sent value\n");
-                return false;
-            }
-        }
-    } else if (cmd == 'b') {
-        writeResult = SPy->WriteData(bytes, sizeof(bytes));
-        if (!writeResult) {
-            printf("Error writing steps: %ld, to axis %c\n", steps, cmd);
-            return false;
-        }
-        readResult = SPy->ReadData(incomingData, dataLength);
-        if (!readResult) {
-            printf("Error reading steps: %ld, from axis %c\n", steps, cmd);
-            return false;
-        } else {
-            if (incomingData == bytes) {
-                return true;
-            } else {
-                printf("Error, returned value in loopback did not match sent value\n");
-                return false;
-            }
-        }
-    }
-
-    else {
-        printf("Inavlid Axis identifier in MotorDrivers\n");
-        return false;
-    }*/
+    SPb->WriteData(bytes, sizeof(bytes));
 }
 
 void MotorDriver::readAll() {
