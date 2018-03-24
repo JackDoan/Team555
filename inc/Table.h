@@ -17,8 +17,9 @@ public:
 
 
     cv::Point_<int> max, min, motionLimitMin, motionLimitMax;
-    const cv::Point_<int> home = {900,360};
-    cv::Point_<int> pixelsToSteps(cv::Point_<int> pixels);
+    cv::Rect_<int> motionLimit;
+    static const cv::Point_<int> home;
+    static cv::Point_<int> pixelsToSteps(cv::Point_<int> pixels);
     cv::Point_<int> stepsToPixels(cv::Point_<int> steps);
 
     void setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY);

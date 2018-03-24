@@ -31,6 +31,7 @@ typedef struct thermal_s {
 class MotorDriver {
 private:
     int processPacket(char input[6]);
+    int deadband = 5;
 public:
 //    Serial* SPx = new Serial("\\\\.\\COM4");
 //    Serial* SPy = new Serial("\\\\.\\COM5");
@@ -57,6 +58,9 @@ public:
     bool moveTo(const cv::Point_<int> &in);
     bool moveBy(const cv::Point_<int> &in);
     bool stop();
+    void getButtonsCmd();
+    long getButtonsResult();
+
 };
 
 

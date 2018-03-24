@@ -33,6 +33,8 @@ private:
     time_t start = 0;
     time_t end = 0;
     double sec = 0;
+    typedef enum motionMode_e {IDLE, DEFEND, ATTACK} motionMode_t;
+    motionMode_t motionMode = IDLE;
 public:
     double frameRate = 0;
 

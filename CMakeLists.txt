@@ -9,7 +9,7 @@ find_package( OpenCV REQUIRED opencv_core opencv_imgproc opencv_highgui opencv_i
         PATHS ${OpenCV_PREFIX}
         NO_DEFAULT_PATH) # For some reason CMake uses its defaults before the above paths.)
 INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS} )
-add_executable(AirHockeyRobot main.cpp Puck.cpp inc/Puck.h Table.cpp inc/Table.h Camera.cpp inc/Camera.h ViewFinder.cpp inc/ViewFinder.h inc/helpers.h corners.cpp inc/Corners.h Serial.cpp inc/Serial.h MotorDriver.cpp inc/MotorDriver.h Config.cpp inc/Config.h Control.cpp inc/Control.h Supervisor.cpp inc/Supervisor.h Idle.cpp inc/Idle.h Mallet.cpp inc/Mallet.h ImageProcess.cpp inc/ImageProcess.h inc/Settings.h Thing.cpp inc/Thing.h Motion.cpp inc/Motion.h helpers.cpp)
+add_executable(AirHockeyRobot src/main.cpp src/Puck.cpp inc/Puck.h src/Table.cpp inc/Table.h src/Camera.cpp inc/Camera.h src/ViewFinder.cpp inc/ViewFinder.h inc/helpers.h src/Corners.cpp inc/Corners.h src/Serial.cpp inc/Serial.h src/MotorDriver.cpp inc/MotorDriver.h src/Config.cpp inc/Config.h src/Idle.cpp inc/Idle.h src/Mallet.cpp inc/Mallet.h src/ImageProcess.cpp inc/ImageProcess.h inc/Settings.h src/Thing.cpp inc/Thing.h src/motion/Motion.cpp inc/motion/Motion.h src/helpers.cpp inc/motion/Attack.h src/motion/Attack.cpp inc/motion/Attack.h inc/motion/Strategy.h)
 link_directories(${OpenCV_LIB_DIR})
 target_link_libraries( AirHockeyRobot ${OpenCV_LIBS} )
 
