@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
 
 // TODO: need to make a process that identifies the goal areas on the left and right walls and creates 'ranges'
-// on the wall lines that are the goals
+// on the wall lines that are the goals         - Done
 
 // TODO: thread video writing to improve framerate
 
@@ -87,13 +87,16 @@ int main(int argc, char* argv[]) {
     Table table = Table();
     Puck puck = Puck();
     Mallet mallet = Mallet();
+    MotorDriver motorDriver = MotorDriver();
     Corners corners = Corners(settings.calibrateCorners);
     if (!settings.calibrateCorners) {
         table.setLimits(corners.sortedX, corners.sortedY);
         puck.setWalls(corners.sortedX, corners.sortedY);
     }
     ImageProcess imageProcess = ImageProcess();
-    imageProcess.process(table, puck, mallet, corners, camera, settings);
+
+
+    imageProcess.process();
     cvDestroyAllWindows();
     record.release();
     camera.close();

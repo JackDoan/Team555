@@ -33,7 +33,7 @@ Puck::Puck() {
 //    puckLimits.maxS = 155;
 //    puckLimits.minV = 20;
 //    puckLimits.maxV = 67;
-    limits.minH = 67;//16;
+    limits.minH = 16;//16;
     limits.maxH = 163;//121;
     limits.minS = 119;//23;
     limits.maxS = 214;//185;

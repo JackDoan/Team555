@@ -19,7 +19,7 @@
 #include "Corners.h"
 #include "Camera.h"
 #include "Settings.h"
-
+#include "MotorDriver.h"
 
 
 class ImageProcess {
@@ -35,13 +35,20 @@ private:
     double sec = 0;
     typedef enum motionMode_e {IDLE, DEFEND, ATTACK} motionMode_t;
     motionMode_t motionMode = IDLE;
+    bool threadIt = true;
+    Table table;
+    Puck puck;
+    Mallet mallet;
+    Corners corners;
+    Settings settings;
+    MotorDriver motorDriver;
 public:
     double frameRate = 0;
 
-    ImageProcess() = default;
+    ImageProcess(Table& table, Puck& puck, Mallet& mallet, Corners& corners, Settings& settings, MotorDriver& motorDriver);
     ~ImageProcess() = default;
 
-    void process(Table table, Puck puck, Mallet mallet, Corners corners, Camera& camera, Settings settings);
+    void process();
 };
 
 

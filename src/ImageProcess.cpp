@@ -26,14 +26,25 @@
 clock_t begin;
 clock_t end;
 
-void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corners, Camera& camera, Settings settings) {
-    MotorDriver motorDriver = MotorDriver();
+ImageProcess::ImageProcess(Table& table, Puck& puck, Mallet& mallet, Corners& corners, Settings& settings, MotorDriver& motorDriver) {
+    threadIt = true;
+    this->table = table;
+    this->puck = puck;
+    this->mallet = mallet;
+    this->corners = corners;
+    this->settings = settings;
+    this->motorDriver = motorDriver;
+    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
+}
+
+void ImageProcess::process() {
+
     Motion motion = Motion();
     Attack attack = Attack(table, motorDriver);
-    bool threadIt = true;
+    Camera& camera = Camera::getInstance();
 
     puck.setGoals(corners.sortedX);
-    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
+
     int FrameCounter = 0;
     long frameTimestamp = 0;
     time(&start); //todo does this fps calc ignores processing time
@@ -42,18 +53,26 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
 
     motion.calibrateHome(motorDriver, table, mallet, settings);
 
-    // TODO: use these as our limits for X
-    //motorDriver.sendCMD(1000, 'x');
-    //_sleep(1000);
-    //motorDriver.sendCMD(-1200, 'x');
-    //_sleep(1000);
-    //motorDriver.sendCMD(-700, 'x');
-    //(1000);
-    //motorDriver.sendCMD(200, 'x');
-
     std::vector<bool> output = {false, false, false, false};
     bool keepGoing = true;
+    bool sendGetButtons = true;
     while (keepGoing) {
+
+        if(sendGetButtons) {
+            motorDriver.getButtonsCmd();
+            sendGetButtons = false;
+        }
+        else {
+            long btns = motorDriver.getButtonsResult();
+            if(btns & (1<<5)) {
+                printf("White button pressed!\n");
+            }
+            if(btns & (1<<4)) {
+                printf("Red button pressed!\n");
+            }
+            sendGetButtons = true;
+        }
+
         if (!settings.undistort) {
             grabbed = camera.getFrame();
         } else {
@@ -62,8 +81,11 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
         if (FrameCounter > 600) {
             time(&start);
             FrameCounter = 1;
+
         }
         time(&end);
+
+
         ++FrameCounter;
         sec = difftime (end, start);
         frameRate = FrameCounter / sec;
@@ -132,7 +154,7 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
 
             switch(motionMode) {
                 case IDLE:
-                    //do nothing?
+                    //do nothing?  sit at home
                     break;
                 case DEFEND:
                     motion.defend(motorDriver, table, mallet, puck, grabbed);
@@ -145,9 +167,6 @@ void ImageProcess::process(Table table, Puck puck, Mallet mallet, Corners corner
                     }
                     break;
             }
-
-
-
 
             if (table.preview == 1) {
                 sprintf(tempStr, "%f %ld %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.vectorXY.y);

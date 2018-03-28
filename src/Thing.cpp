@@ -18,7 +18,7 @@ void Thing::setupTrackbars() {
     doBars = false;
         int slidermax = 255;
         int sslidermax = 5000;
-        cv::namedWindow(settingWindowName);
+        cv::namedWindow(settingWindowName, 1);
         cv::createTrackbar(TrackbarName[0], settingWindowName, &(limits.minH), slidermax, onChange, this);
         cv::createTrackbar(TrackbarName[1], settingWindowName, &(limits.maxH), slidermax, onChange, this);
         cv::createTrackbar(TrackbarName[2], settingWindowName, &(limits.minS), slidermax, onChange, this);

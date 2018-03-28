@@ -16,7 +16,7 @@ bool Attack::checkLimits(const Puck& puck, const Mallet& mallet) {
 void Attack::run(const Puck& puck, const Mallet& mallet, cv::Mat &grabbed) {
     ///Don't call this unless you're /ready/
     if ( !checkLimits(puck, mallet) ) {
-        ready = false;
+        ready = false;                //So if shotSpot is out of the mallet's limits, we don't do anything?
         return;
     }
 
