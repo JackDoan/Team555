@@ -121,7 +121,9 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat in, Table table) {
     cv::Mat imgThresh = getThresholdImage(in);
     cv::Mat imgThreshSmall;
     cv::resize(imgThresh,imgThreshSmall, cv::Size(), 0.25, 0.25);
-    imshow("Puck", imgThreshSmall);
+    if (debugWindows) {
+        imshow("Puck", imgThreshSmall);
+    }
     std::vector<std::vector<cv::Point> > contours;  //hold the pointer to a contour in the memory block
     CvSeq* result;   //hold sequence of points of a contour
     //CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
@@ -369,19 +371,21 @@ void Thing::calcVector(cv::Mat in) {
 
 }
 
+
+// TODO: programatically determine the mid points from corners, why 720/2 and 700/2?
 void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
     int goalScale = 50;
     int goalPush = 0;
     Goals = {cvPoint(0, 0), cvPoint(0, 0), cvPoint(0, 0), cvPoint(0, 0)};
 
-    cv::Point_<int> L_mid = {sortedX[0].x, 700/2};
-    cv::Point_<int> R_mid = {sortedX[3].x, 720/2};
+    cv::Point_<int> L_mid = {sortedX[1].x, 700/2};
+    cv::Point_<int> R_mid = {sortedX[2].x, 730/2};
 
-    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 95+goalScale};
-    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 85-goalScale};
+    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 50 + goalScale};
+    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 50 - goalScale};
 
-    cv::Point_<int> R_top = {R_mid.x+goalPush, R_mid.y + 115+goalScale};
-    cv::Point_<int> R_bottom = {R_mid.x+goalPush, R_mid.y - 65-goalScale};
+    cv::Point_<int> R_top = {R_mid.x+goalPush, R_mid.y + 50 + goalScale};
+    cv::Point_<int> R_bottom = {R_mid.x+goalPush, R_mid.y - 50 - goalScale};
 
     //cv::line(previewSmall, L_top/2, L_bottom/2, cv::Scalar(255, 0, 0), 4);
     //cv::line(previewSmall, R_top/2, R_bottom/2, cv::Scalar(255, 0, 0), 4);

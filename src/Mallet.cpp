@@ -20,9 +20,9 @@ Mallet::Mallet() {
     previewWindowName = const_cast<char *>("Mallet");
     outlineColor = cv::Scalar(255, 0, 0);
 
-    minArea = 1750;
+    minArea = 1150;
     maxArea = 4500;
-    minRoundness = 1800;
+    minRoundness = 800;
     //int minAreaCalib = 800;
     //int maxAreaCalib = 4000;
     //int minRoundnessCalib = 320;

@@ -16,7 +16,6 @@ private:
 public:
     Attack(const Table& table, const MotorDriver& motorDriver) {
         this->table = table;
-        this->motorDriver = motorDriver;
     }
     void run(const Puck& puck, const Mallet& mallet, cv::Mat& grabbed);
 };

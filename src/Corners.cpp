@@ -23,7 +23,7 @@ Corners::Corners(bool calibrate) {
     std::vector<cv::Point_<int>> calibratedCornersVector;
     std::vector<cv::Point_<int>> cornersVector;
     std::vector<cv::Point_<int>> offsetsVector;
-    configFile.open("C:/AirHockeyRobot/blahgood.txt");
+    configFile.open("C:/AirHockeyRobot/blahnew.txt");
     std::string blue;
     int j = 0;
     if (configFile.is_open()) {

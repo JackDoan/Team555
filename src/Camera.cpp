@@ -23,8 +23,16 @@ Camera::Camera(int nwidth, int nheight) {
     dimensions = {nwidth,nheight};
 
     capture.open(0);
-    printf("Exposure: %f\n", capture.get(CV_CAP_PROP_EXPOSURE));
+
+    printf("Brightness: %f\n", capture.get(CV_CAP_PROP_BRIGHTNESS));
+    printf("Contrast: %f\n", capture.get(CV_CAP_PROP_CONTRAST));
+    printf("Saturation: %f\n", capture.get(CV_CAP_PROP_SATURATION));
+    printf("Hue: %f\n", capture.get(CV_CAP_PROP_HUE));
     printf("Gain: %f\n", capture.get(CV_CAP_PROP_GAIN));
+    printf("Exposure: %f\n", capture.get(CV_CAP_PROP_EXPOSURE));
+    printf("Sharpness: %f\n", capture.get(CV_CAP_PROP_SHARPNESS)); 
+    printf("Gamma: %f\n", capture.get(CV_CAP_PROP_GAMMA));
+//    printf("Temperature?: %f\n", capture.get(CV_CAP_PROP_TEMPERATURE));
 
     if (!capture.isOpened()) {
         printf("OPENCV Capture failure!\n");
@@ -90,5 +98,8 @@ void Camera::close() {
     capture.release();
 }
 
+double Camera::getFrameRate() {
+    return capture.get(CV_CAP_PROP_FPS);
+}
 
 // TODO: Create functions that adjust gain and exposure

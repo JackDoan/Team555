@@ -32,9 +32,16 @@ class MotorDriver {
 private:
     int processPacket(char input[6]);
     int deadband = 5;
+    MotorDriver();
 public:
 //    Serial* SPx = new Serial("\\\\.\\COM4");
 //    Serial* SPy = new Serial("\\\\.\\COM5");
+    static MotorDriver& getInstance() {
+        static MotorDriver instance;
+        return instance;
+    }
+    MotorDriver(MotorDriver const&)               = delete;
+    void operator=(MotorDriver const&) = delete;
     Serial* SPb;
     switches_t switches;
     thermal_t thermal;
@@ -46,7 +53,7 @@ public:
     bool writeResult;
     int parsed;
     bool debug = true;
-    MotorDriver();
+
     ~MotorDriver();
     bool initComPort(char comPort);
     void setHome();

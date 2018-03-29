@@ -87,13 +87,13 @@ int main(int argc, char* argv[]) {
     Table table = Table();
     Puck puck = Puck();
     Mallet mallet = Mallet();
-    MotorDriver motorDriver = MotorDriver();
+    //MotorDriver motorDriver = MotorDriver();
     Corners corners = Corners(settings.calibrateCorners);
     if (!settings.calibrateCorners) {
         table.setLimits(corners.sortedX, corners.sortedY);
         puck.setWalls(corners.sortedX, corners.sortedY);
     }
-    ImageProcess imageProcess = ImageProcess();
+    ImageProcess imageProcess = ImageProcess(table, puck, mallet, corners, settings);
 
 
     imageProcess.process();

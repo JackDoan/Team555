@@ -24,7 +24,7 @@ typedef union {
 } longbytes;
 
 MotorDriver::MotorDriver() {
-    initComPort('5');
+    initComPort('6');
 }
 MotorDriver::~MotorDriver() = default;
 

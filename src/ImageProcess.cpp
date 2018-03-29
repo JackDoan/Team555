@@ -26,19 +26,19 @@
 clock_t begin;
 clock_t end;
 
-ImageProcess::ImageProcess(Table& table, Puck& puck, Mallet& mallet, Corners& corners, Settings& settings, MotorDriver& motorDriver) {
+ImageProcess::ImageProcess(Table& table, Puck& puck, Mallet& mallet, Corners& corners, Settings& settings) {
     threadIt = true;
     this->table = table;
     this->puck = puck;
     this->mallet = mallet;
     this->corners = corners;
     this->settings = settings;
-    this->motorDriver = motorDriver;
-    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
+//    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
 }
 
 void ImageProcess::process() {
-
+    MotorDriver& motorDriver = MotorDriver::getInstance();
+    cv::VideoWriter video("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
     Motion motion = Motion();
     Attack attack = Attack(table, motorDriver);
     Camera& camera = Camera::getInstance();
@@ -47,48 +47,52 @@ void ImageProcess::process() {
 
     int FrameCounter = 0;
     long frameTimestamp = 0;
-    time(&start); //todo does this fps calc ignores processing time
+    time(&start);
     cv::namedWindow("Video");
     cv::Mat previewSmall;
 
-    motion.calibrateHome(motorDriver, table, mallet, settings);
+    motion.calibrateHome(table, mallet, settings);
 
     std::vector<bool> output = {false, false, false, false};
     bool keepGoing = true;
     bool sendGetButtons = true;
     while (keepGoing) {
 
-        if(sendGetButtons) {
-            motorDriver.getButtonsCmd();
-            sendGetButtons = false;
-        }
-        else {
-            long btns = motorDriver.getButtonsResult();
-            if(btns & (1<<5)) {
-                printf("White button pressed!\n");
+
+        if (settings.checkButtons) {
+            if(sendGetButtons) {
+                motorDriver.getButtonsCmd();
+                sendGetButtons = false;
             }
-            if(btns & (1<<4)) {
-                printf("Red button pressed!\n");
+            else {
+                long btns = motorDriver.getButtonsResult();
+                if(btns & (1<<5)) {
+                    printf("White button pressed!\n");
+                }
+                if(btns & (1<<4)) {
+                    printf("Red button pressed!\n");
+                }
+                sendGetButtons = true;
             }
-            sendGetButtons = true;
         }
+
 
         if (!settings.undistort) {
             grabbed = camera.getFrame();
         } else {
             grabbed = camera.getUndistortedFrame(); // Query a new frame
         }
-        if (FrameCounter > 600) {
+        if (FrameCounter > 60) {
+            time(&end);
+            sec = difftime (end, start);
+            frameRate = FrameCounter / sec;
             time(&start);
             FrameCounter = 1;
 
         }
-        time(&end);
-
-
         ++FrameCounter;
-        sec = difftime (end, start);
-        frameRate = FrameCounter / sec;
+
+
         if (grabbed.empty()) {
             printf("No frames!\n");
             break;
@@ -157,7 +161,7 @@ void ImageProcess::process() {
                     //do nothing?  sit at home
                     break;
                 case DEFEND:
-                    motion.defend(motorDriver, table, mallet, puck, grabbed);
+                    motion.defend(table, mallet, puck, grabbed);
                     break;
                 case ATTACK:
                     attack.run(puck, mallet, grabbed);
@@ -169,8 +173,8 @@ void ImageProcess::process() {
             }
 
             if (table.preview == 1) {
-                sprintf(tempStr, "%f %ld %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.vectorXY.y);
-                cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0));
+                sprintf(tempStr, "%3.2f %ld %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.vectorXY.y);
+                cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
                 table.annotate(grabbed);
                 cv::rectangle(grabbed,table.motionLimitMax,table.motionLimitMin,cv::Scalar(0,255,0),4);
                 cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);

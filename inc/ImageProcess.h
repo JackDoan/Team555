@@ -41,11 +41,10 @@ private:
     Mallet mallet;
     Corners corners;
     Settings settings;
-    MotorDriver motorDriver;
 public:
     double frameRate = 0;
 
-    ImageProcess(Table& table, Puck& puck, Mallet& mallet, Corners& corners, Settings& settings, MotorDriver& motorDriver);
+    ImageProcess(Table& table, Puck& puck, Mallet& mallet, Corners& corners, Settings& settings);
     ~ImageProcess() = default;
 
     void process();

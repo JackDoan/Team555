@@ -23,7 +23,7 @@ Motion::Motion() {
 
 
 
-void Motion::calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, Settings settings) {
+void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
     Camera& camera = Camera::getInstance();
     bool yHome = false; //set this to false
     bool xHome = false;
@@ -33,7 +33,7 @@ void Motion::calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, 
     cv::Mat calHomeGrabbed;
     cv::Mat calHomeSmall;
     cv::namedWindow("CalHome");
-
+    MotorDriver& motorDriver = MotorDriver::getInstance();
 
     long initCount;
     double ratio;
@@ -144,9 +144,16 @@ void Motion::calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, 
     cvDestroyWindow("CalHome");
 }
 
+bool rollingCheck(bool in) {
+    static int index = 0;
+    static bool x[3];
+    x[(++index %3 )] = in;
+    return x[0] || x[1] || x[2];
+}
 
 // this is broken af cause trajectory doesnt fill if the puck isnt moving...
-void Motion::trackPredictedY(MotorDriver motorDriver, Table table, Mallet mallet, Puck puck, cv::Mat grabbed) {
+void Motion::trackPredictedY(Table table, Mallet mallet, Puck puck, cv::Mat grabbed) {
+    MotorDriver& motorDriver = MotorDriver::getInstance();
     if(puck.lostCnt < 10 && mallet.found) {
         if (abs(puck.location.y - mallet.location.y) <= 30) {
             //printf("Close enough\n");
@@ -177,16 +184,24 @@ void Motion::trackPredictedY(MotorDriver motorDriver, Table table, Mallet mallet
         }
     }
 }
-void Motion::defend(MotorDriver motorDriver, Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
+void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
+    static cv::Point_<int> interceptSpot;
+    MotorDriver& motorDriver = MotorDriver::getInstance();
     cv::Point_<int> desiredLocation;
     if(puck.lostCnt < 10 && mallet.found) {
         // calc desired mallet location
         // i dont know if this intersect check here is needed, just did it cause
         if (puck.rightGoal) {
             // move to the midpoint of the last trajectory vector
-            cv::putText(grabbed, "Goal!!", cvPoint(450,320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
-            desiredLocation = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0])/2;
-        } else {
+            cv::putText(grabbed, "Goal!!", cvPoint(450, 320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            desiredLocation = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0]) / 2;
+            interceptSpot = desiredLocation;
+        }
+        else if(rollingCheck(puck.rightGoal)) {
+            cv::putText(grabbed, "Goal!!", cvPoint(450, 320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            desiredLocation =  interceptSpot;
+        }
+        else {
             desiredLocation = table.home;
         }
 

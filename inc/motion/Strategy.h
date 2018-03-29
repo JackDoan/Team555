@@ -13,13 +13,11 @@
 class Strategy {
 protected:
     Table table{};
-    MotorDriver motorDriver{};
     bool ready = false;
 public:
     Strategy() = default;
-    Strategy(const Table& table, const MotorDriver& motorDriver) {
+    Strategy(const Table& table) {
         this->table = table;
-        this->motorDriver = motorDriver;
     }
     virtual void run(const Puck& puck, const Mallet& mallet, cv::Mat& grabbed) {};
     bool isReady() { return ready; }

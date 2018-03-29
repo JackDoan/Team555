@@ -38,6 +38,7 @@ class Camera {
 
         ~Camera();
         void close();
+        double getFrameRate();
         cv::Mat getUndistortedFrame();
         cv::Mat getFrame();
         //double calcFPS(int counter, bool active);

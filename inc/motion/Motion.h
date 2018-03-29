@@ -18,11 +18,11 @@ private:
 
 public:
 
-    void calibrateHome(MotorDriver motorDriver, Table table, Mallet mallet, Settings settings);
+    void calibrateHome(Table table, Mallet mallet, Settings settings);
     void trackY();
-    void trackPredictedY(MotorDriver motorDriver, Table table, Mallet mallet, Puck puck, cv::Mat grabbed);
-    void defend(MotorDriver motorDriver, Table table, Mallet mallet, Puck puck, cv::Mat& grabbed);
-    void attack(MotorDriver motorDriver, Table table, Mallet mallet, Puck puck, cv::Mat & grabbed);
+    void trackPredictedY(Table table, Mallet mallet, Puck puck, cv::Mat grabbed);
+    void defend(Table table, Mallet mallet, Puck puck, cv::Mat& grabbed);
+    //void attack(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed);
     Motion();
     ~Motion() = default;
 
