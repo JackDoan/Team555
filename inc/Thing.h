@@ -126,6 +126,9 @@ public:
     void drawTrajHistory(cv::Mat in);
     void drawTrajEndPointHistory(cv::Mat in);
     void drawGoalVector(cv::Mat in);
+    std::vector<double> magHistory;
+    void fillVeloMagHistory();
+    void writeVeloMagHistory(cv::Mat in);
 
 };
 

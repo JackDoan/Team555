@@ -341,7 +341,9 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
         fillTrajHistory();
         drawTrajHistory(in);
         drawTrajEndPointHistory(in);
-        drawGoalVector(in);
+        fillVeloMagHistory();
+        writeVeloMagHistory(in);
+//        drawGoalVector(in);
     }
 
 
@@ -773,6 +775,19 @@ void Thing::drawTrajEndPointHistory(cv::Mat in) {
         if (foundHistory[i-1] && foundHistory[i]) {
             cv::circle(in, trajectoryHistory[i-1].back().back(), 10, cv::Scalar(210, 0, 210), 6);
         }
+    }
+}
+
+void Thing::fillVeloMagHistory() {
+    magHistory.insert(magHistory.begin(), sqrt(pow(vectorXY.x * vectorMult, 2) + pow(vectorXY.y * vectorMult, 2)));
+    magHistory.resize(historyDepth);
+}
+
+void Thing::writeVeloMagHistory(cv::Mat in) {
+    char tempStr[80] = {};
+    for (int i = 0; i < historyDepth; i++) {
+        sprintf(tempStr, "Velo %d: %3.2f", i, magHistory[i]);
+        cv::putText(in, tempStr, cvPoint(10, 100 + 40 * i), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
     }
 }
 
