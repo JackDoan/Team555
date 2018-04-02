@@ -23,16 +23,28 @@ Camera::Camera(int nwidth, int nheight) {
     dimensions = {nwidth,nheight};
 
     capture.open(0);
-
-    printf("Brightness: %f\n", capture.get(CV_CAP_PROP_BRIGHTNESS));
-    printf("Contrast: %f\n", capture.get(CV_CAP_PROP_CONTRAST));
-    printf("Saturation: %f\n", capture.get(CV_CAP_PROP_SATURATION));
-    printf("Hue: %f\n", capture.get(CV_CAP_PROP_HUE));
-    printf("Gain: %f\n", capture.get(CV_CAP_PROP_GAIN));
-    printf("Exposure: %f\n", capture.get(CV_CAP_PROP_EXPOSURE));
-    printf("Sharpness: %f\n", capture.get(CV_CAP_PROP_SHARPNESS)); 
-    printf("Gamma: %f\n", capture.get(CV_CAP_PROP_GAMMA));
-//    printf("Temperature?: %f\n", capture.get(CV_CAP_PROP_TEMPERATURE));
+    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
+    printf("Brightness: \t\t%f\n", capture.get(CV_CAP_PROP_BRIGHTNESS));
+    printf("Contrast: \t\t%f\n", capture.get(CV_CAP_PROP_CONTRAST));
+    printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
+    printf("Hue: \t\t\t%f\n", capture.get(CV_CAP_PROP_HUE));
+    printf("Gain: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAIN));
+    printf("Exposure: \t\t%f\n", capture.get(CV_CAP_PROP_EXPOSURE));
+    printf("Sharpness: \t\t%f\n", capture.get(CV_CAP_PROP_SHARPNESS));
+    printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
+    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
+    printf("******** SETTING CAMERA DEVICE PROPERTIES *********\n");
+    capture.set(CV_CAP_PROP_SATURATION, 255);
+    printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
+    capture.set(CV_CAP_PROP_GAIN, 77);
+    printf("Gain: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAIN));
+    capture.set(CV_CAP_PROP_EXPOSURE, -8);
+    printf("Exposure: \t\t%f\n", capture.get(CV_CAP_PROP_EXPOSURE));
+    capture.set(CV_CAP_PROP_SHARPNESS, 14);
+    printf("Sharpness: \t\t%f\n", capture.get(CV_CAP_PROP_SHARPNESS));
+    capture.set(CV_CAP_PROP_GAMMA, 67);
+    printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
+    printf("********** SET CAMERA DEVICE PROPERTIES ***********\n");
 
     if (!capture.isOpened()) {
         printf("OPENCV Capture failure!\n");

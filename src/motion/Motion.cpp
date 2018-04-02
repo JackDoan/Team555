@@ -194,7 +194,7 @@ void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
         if (puck.rightGoal) {
             // move to the midpoint of the last trajectory vector
             cv::putText(grabbed, "Goal!!", cvPoint(450, 320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
-            desiredLocation = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0]) / 2;
+            desiredLocation = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0]) * 0.7;
             interceptSpot = desiredLocation;
         }
         else if(rollingCheck(puck.rightGoal)) {

@@ -44,7 +44,7 @@ void Table::annotate(cv::Mat frameGrabbed) {
 }
 
 Table::~Table() = default;
-const cv::Point_<int> Table::home = cv::Point_<int>(1135,360);
+const cv::Point_<int> Table::home = cv::Point_<int>(1150,360);
 void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY) {
     min.x = sortedX[0].x; printf("Setting min X: %d\n", min.x);
     max.x = sortedX[3].x; printf("Setting max X: %d\n", max.x);
@@ -52,10 +52,10 @@ void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Poin
     max.y = sortedY[3].y; printf("Setting max Y: %d\n", max.y);
 
     //todo make these ratios
-    motionLimitMin.y = min.y + 100;
-    motionLimitMax.y = max.y - 100;
-    motionLimitMin.x = min.x + 720;
-    motionLimitMax.x = max.x - 80;
+    motionLimitMin.y = min.y + 80;
+    motionLimitMax.y = max.y - 80;
+    motionLimitMin.x = min.x + 680;
+    motionLimitMax.x = max.x - 55;
     motionLimit = cv::Rect_<int>(motionLimitMin,motionLimitMax);
 
 }

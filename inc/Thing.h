@@ -61,9 +61,9 @@ protected:
         minRoundness = cv::getTrackbarPos(TrackbarName[8],settingWindowName);
     }
     char TrackbarName[9][50] = { "MinH","MaxH","MinS","MaxS","MinV","MaxV","MinArea","MaxArea","MinRound" };
+    int historyDepth;
 public:
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
-
 
     int vectorMult = 15;
     int walls[4][3];
@@ -96,6 +96,7 @@ public:
     void calcVector(cv::Mat in);
     void drawVector(cv::Mat in);
     void calcTraj(Table table);
+
     void toggleDebugInfo() {
         debugWindows = !debugWindows;
         if(debugWindows) {
@@ -113,6 +114,18 @@ public:
     std::vector<bool> bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed);
     cv::Point_<int> findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint);
     void goalDetect(cv::Point_<int> intersection, int xvelo);
+
+    std::vector<bool> foundHistory;
+    void fillFoundHistory(bool found);
+    std::vector<cv::Point_<int>> locationHistory;
+    void fillLocationHistory(cv::Point_<int>);
+    void drawLocationHistory(cv::Mat in);
+    std::vector<std::vector<std::vector<cv::Point_<int>>>> trajectoryHistory;
+    bool drawWholeHistory;
+    void fillTrajHistory();
+    void drawTrajHistory(cv::Mat in);
+    void drawTrajEndPointHistory(cv::Mat in);
+    void drawGoalVector(cv::Mat in);
 
 };
 

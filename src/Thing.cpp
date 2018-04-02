@@ -106,7 +106,11 @@ Thing::Thing() {
     bouncey = false;
     found = false;
     lostCnt = 0;
-
+    historyDepth = 15;
+    for (int i = 0; i < historyDepth; i++) {
+        foundHistory.insert(foundHistory.begin(), false);
+    }
+    drawWholeHistory = false;
 }
 
 std::vector<cv::Point_<int>> Thing::find(cv::Mat in, Table table) {
@@ -330,6 +334,17 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
             predictedLocation.y > table.max.y || predictedLocation.y < table.min.y) {
         printf("broke\n");
     }*/
+    if (!isMallet) {
+        fillFoundHistory(found);
+        fillLocationHistory(location);
+        drawLocationHistory(in);
+        fillTrajHistory();
+        drawTrajHistory(in);
+        drawTrajEndPointHistory(in);
+        drawGoalVector(in);
+    }
+
+
 }
 
 void Thing::calcVector(cv::Mat in) {
@@ -378,14 +393,14 @@ void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
     int goalPush = 0;
     Goals = {cvPoint(0, 0), cvPoint(0, 0), cvPoint(0, 0), cvPoint(0, 0)};
 
-    cv::Point_<int> L_mid = {sortedX[1].x, 700/2};
-    cv::Point_<int> R_mid = {sortedX[2].x, 730/2};
+    cv::Point_<int> L_mid = {sortedX[1].x, 685/2};
+    cv::Point_<int> R_mid = {sortedX[2].x, 725/2};
 
-    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 50 + goalScale};
-    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 50 - goalScale};
+    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 35 + goalScale};
+    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 35 - goalScale};
 
-    cv::Point_<int> R_top = {R_mid.x+goalPush, R_mid.y + 50 + goalScale};
-    cv::Point_<int> R_bottom = {R_mid.x+goalPush, R_mid.y - 50 - goalScale};
+    cv::Point_<int> R_top = {R_mid.x+goalPush, R_mid.y + 35 + goalScale};
+    cv::Point_<int> R_bottom = {R_mid.x+goalPush, R_mid.y - 35 - goalScale};
 
     //cv::line(previewSmall, L_top/2, L_bottom/2, cv::Scalar(255, 0, 0), 4);
     //cv::line(previewSmall, R_top/2, R_bottom/2, cv::Scalar(255, 0, 0), 4);
@@ -717,3 +732,63 @@ void Thing::goalDetect(cv::Point_<int> intersection, int xvelo) {
         leftGoal = true;
     }
 };
+
+void Thing::fillFoundHistory(bool found) {
+    foundHistory.insert(foundHistory.begin(), found);
+    foundHistory.resize(historyDepth);
+}
+
+void Thing::fillLocationHistory(cv::Point_<int>) {
+    locationHistory.insert(locationHistory.begin(), location);
+    locationHistory.resize(historyDepth);
+}
+
+void Thing::drawLocationHistory(cv::Mat in){
+    for (int i = 0; i < historyDepth; i++) {
+        if (foundHistory[i])
+            cv::circle(in, locationHistory[i], 10, cv::Scalar(100, 200 - i*10, 0), 6);
+    }
+}
+
+void Thing::fillTrajHistory(){
+    trajectoryHistory.insert(trajectoryHistory.begin(), trajectory);
+    trajectoryHistory.resize(historyDepth);
+}
+
+void Thing::drawTrajHistory(cv::Mat in) {
+    for (int i = historyDepth-1; i > 0; i--) {
+        if (foundHistory[i]) {
+            for (int j = 0; j < trajectoryHistory[i].size(); j++) {
+                cv::line(in, trajectoryHistory[i][j][0], trajectoryHistory[i][j][1], cvScalar(210, 0, 210), 4);
+            }
+            if (!drawWholeHistory) {
+                break;
+            }
+        }
+    }
+}
+
+void Thing::drawTrajEndPointHistory(cv::Mat in) {
+    for (int i = 1; i < historyDepth; i++) {
+        if (foundHistory[i-1] && foundHistory[i]) {
+            cv::circle(in, trajectoryHistory[i-1].back().back(), 10, cv::Scalar(210, 0, 210), 6);
+        }
+    }
+}
+
+void Thing::drawGoalVector(cv::Mat in){
+
+    cv::Point_<int> tempGoal = {30, 685/2};
+    cv::line(in, tempGoal, location, cvScalar(20, 200, 20), 4);
+
+    //To eventually replace shotSpot
+    //shotSpotScalar is affected by distance from goal, shouldn't be a problem though?
+    //Todo: apply calcTraj(maybe?) to allow for bounce shots
+    float shotSpotScalar = 0.2;
+    cv::Point_<int> JshotSpot = {shotSpotScalar*(location.x - 30) + location.x, shotSpotScalar*(location.y - (685/2)) + location.y};
+
+    cv::line(in, location, JshotSpot, cvScalar(20,20,20), 4);
+    cv::circle(in, JshotSpot, 10, cv::Scalar(15, 15, 15), 6);
+
+}
+

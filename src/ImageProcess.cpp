@@ -82,14 +82,21 @@ void ImageProcess::process() {
         } else {
             grabbed = camera.getUndistortedFrame(); // Query a new frame
         }
-        if (FrameCounter > 60) {
-            time(&end);
-            sec = difftime (end, start);
+        time(&end);
+        sec = difftime (end, start);
+        if (sec > 1) {
             frameRate = FrameCounter / sec;
+            FrameCounter = 0;
             time(&start);
-            FrameCounter = 1;
-
         }
+
+//        if (FrameCounter > 60) {
+//            time(&end);
+//            sec = difftime (end, start);
+//            frameRate = FrameCounter / sec;
+//            time(&start);
+//            FrameCounter = 1;
+//        }
         ++FrameCounter;
 
 
@@ -158,7 +165,9 @@ void ImageProcess::process() {
 
             switch(motionMode) {
                 case IDLE:
-                    //do nothing?  sit at home
+                    //cv::putText(grabbed, "EDUCATIONAL", cvPoint(200, 190), cv::FONT_HERSHEY_SIMPLEX, 5, cv::Scalar(225/2, 255/2, 0), 5);
+                    //cv::putText(grabbed, "CONTENT", cvPoint(250, 390), cv::FONT_HERSHEY_SIMPLEX, 5, cv::Scalar(225/2, 255/2, 0), 5);
+                    //cv::putText(grabbed, "F = MA", cvPoint(350, 590), cv::FONT_HERSHEY_SIMPLEX, 5, cv::Scalar(225/2, 255/2, 0), 5);
                     break;
                 case DEFEND:
                     motion.defend(table, mallet, puck, grabbed);
@@ -176,7 +185,8 @@ void ImageProcess::process() {
                 sprintf(tempStr, "%3.2f %ld %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.vectorXY.y);
                 cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
                 table.annotate(grabbed);
-                cv::rectangle(grabbed,table.motionLimitMax,table.motionLimitMin,cv::Scalar(0,255,0),4);
+                // drawing the motion limits
+                cv::rectangle(grabbed, table.motionLimitMax, table.motionLimitMin, cv::Scalar(225, 150, 0), 4);
                 cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);
 
                 if (settings.calibrateCorners) {
@@ -198,5 +208,8 @@ void ImageProcess::process() {
             }
         }
 //            printf("elapsed: %f\n", double(end-begin)/CLOCKS_PER_SEC);
+        if (frameRate < 10) {
+            //printf("framerate sucks!\n");
+        }
     }
 }
