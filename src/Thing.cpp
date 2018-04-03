@@ -98,6 +98,8 @@ Thing::Thing() {
     limits.maxV = 212;
      */
 
+    s = clock();
+    e = clock();
     location = {0,0};
     lastLocation = {0,0};
     vectorXY = {0,0};
@@ -343,6 +345,7 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
         drawTrajEndPointHistory(in);
         fillVeloMagHistory();
         writeVeloMagHistory(in);
+        fillGoalFlagsHistory();
 //        drawGoalVector(in);
     }
 
@@ -380,6 +383,7 @@ void Thing::calcVector(cv::Mat in) {
 //        //printf("lastCoordY %f\n", lastLocation.y);
 //    }
 //    //    VectorXY = Vector(vectorX, vectorY);*/
+
     if (abs(location.x-lastLocation.x) < 3 && abs(location.y - lastLocation.y) < 3) {
         vectorXY = {0,0};
     } else {
@@ -398,11 +402,11 @@ void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
     cv::Point_<int> L_mid = {sortedX[1].x, 685/2};
     cv::Point_<int> R_mid = {sortedX[2].x, 725/2};
 
-    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 35 + goalScale};
-    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 35 - goalScale};
+    cv::Point_<int> L_top = {L_mid.x, L_mid.y + 45 + goalScale};
+    cv::Point_<int> L_bottom = {L_mid.x, L_mid.y - 45 - goalScale};
 
-    cv::Point_<int> R_top = {R_mid.x+goalPush, R_mid.y + 35 + goalScale};
-    cv::Point_<int> R_bottom = {R_mid.x+goalPush, R_mid.y - 35 - goalScale};
+    cv::Point_<int> R_top = {R_mid.x+goalPush, R_mid.y + 45 + goalScale};
+    cv::Point_<int> R_bottom = {R_mid.x+goalPush, R_mid.y - 45 - goalScale};
 
     //cv::line(previewSmall, L_top/2, L_bottom/2, cv::Scalar(255, 0, 0), 4);
     //cv::line(previewSmall, R_top/2, R_bottom/2, cv::Scalar(255, 0, 0), 4);
@@ -779,16 +783,27 @@ void Thing::drawTrajEndPointHistory(cv::Mat in) {
 }
 
 void Thing::fillVeloMagHistory() {
-    magHistory.insert(magHistory.begin(), sqrt(pow(vectorXY.x * vectorMult, 2) + pow(vectorXY.y * vectorMult, 2)));
+    e = clock();
+    double el = double(e - s) / CLOCKS_PER_SEC;
+    // magnitude of pixels per second (px/sec)
+    magHistory.insert(magHistory.begin(), sqrt(pow(vectorXY.x, 2) + pow(vectorXY.y, 2)) / el);
     magHistory.resize(historyDepth);
+    s = clock();
 }
 
 void Thing::writeVeloMagHistory(cv::Mat in) {
     char tempStr[80] = {};
     for (int i = 0; i < historyDepth; i++) {
-        sprintf(tempStr, "Velo %d: %3.2f", i, magHistory[i]);
-        cv::putText(in, tempStr, cvPoint(10, 100 + 40 * i), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+        sprintf(tempStr, "Velo %d: %5.2f", i, magHistory[i]);
+        cv::putText(in, tempStr, cvPoint(10, 100 + 40 * i), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 0), 3);
     }
+}
+
+void Thing::fillGoalFlagsHistory() {
+    rightGoalHistory.insert(rightGoalHistory.begin(), rightGoal);
+    rightGoalHistory.resize(historyDepth);
+    leftGoalHistory.insert(leftGoalHistory.begin(), leftGoal);
+    leftGoalHistory.resize(historyDepth);
 }
 
 void Thing::drawGoalVector(cv::Mat in){

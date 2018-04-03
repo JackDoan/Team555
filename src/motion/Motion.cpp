@@ -184,6 +184,13 @@ void Motion::trackPredictedY(Table table, Mallet mallet, Puck puck, cv::Mat grab
         }
     }
 }
+
+bool checkLast15goalFlags(std::vector<bool> goalFlagHistory) {
+    for (int i = 0; i < goalFlagHistory.size(); i++) {
+        if (goalFlagHistory[i])
+            return true;
+    }
+}
 void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
     static cv::Point_<int> interceptSpot;
     MotorDriver& motorDriver = MotorDriver::getInstance();
@@ -197,7 +204,7 @@ void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
             desiredLocation = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0]) * 0.7;
             interceptSpot = desiredLocation;
         }
-        else if(rollingCheck(puck.rightGoal)) {
+        else if(checkLast15goalFlags(puck.rightGoalHistory)) {
             cv::putText(grabbed, "Goal!!", cvPoint(450, 320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
             desiredLocation =  interceptSpot;
         }

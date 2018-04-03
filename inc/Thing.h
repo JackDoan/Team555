@@ -65,6 +65,8 @@ protected:
 public:
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
 
+    clock_t s;
+    clock_t e;
     int vectorMult = 15;
     int walls[4][3];
     int goalArr[2][3];
@@ -129,6 +131,9 @@ public:
     std::vector<double> magHistory;
     void fillVeloMagHistory();
     void writeVeloMagHistory(cv::Mat in);
+    std::vector<bool> rightGoalHistory;
+    std::vector<bool> leftGoalHistory;
+    void fillGoalFlagsHistory();
 
 };
 
