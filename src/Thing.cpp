@@ -341,10 +341,10 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
         fillLocationHistory(location);
         drawLocationHistory(in);
         fillTrajHistory();
-        drawTrajHistory(in);
+//        drawTrajHistory(in);
         drawTrajEndPointHistory(in);
-        fillVeloMagHistory();
-        writeVeloMagHistory(in);
+//        fillVeloMagHistory();
+//        writeVeloMagHistory(in);
         fillGoalFlagsHistory();
 //        drawGoalVector(in);
     }
@@ -448,13 +448,17 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat g
     temp.emplace_back(location);
     temp.emplace_back(prediction);
     trajs.emplace_back(temp);
-    std::vector<bool> bounces = {false, false, false, false};
+   /* char tempStr[80];
+    sprintf(tempStr, "Leg: %d = (%d, %d) -> (%d, %d)\n", -1, trajs.back()[0].x, trajs.back()[0].y, trajs.back()[1].x, trajs.back()[1].y);
+    cv::putText(grabbed, tempStr, cvPoint(30, 410), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
+//    std::vector<bool> bounces = {false, false, false, false};
 
     while (bnccnt < bnccntmax) {
+        std::vector<bool> bounces = {false, false, false, false};
         cv::Point_<int> intersection;
         cv::Point_<int> newEndPoint;
         // detect a bounce
-        bounces = bounceDetect(table, trajs.back()[0], trajs.back()[1], grabbed);
+        bounces = bounceDetect(table, trajs.back()[0], trajs.back()[1], grabbed, bnccnt);
         // if all of bounces are false, set done = true and break
         if (bounces[0] || bounces[1] || bounces[2] || bounces[3]) {
             // determine from bounces which wall is going to be intersected
@@ -462,12 +466,14 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat g
             intersection = findIntersection(bounces, trajs.back()[0], trajs.back()[1]);
 
             // draw the intersection on grabbed, delete this after testing and debugging is finished
-//            cv::line(grabbed, cvPoint(intersection.x-25, intersection.y),
-//                     cvPoint(intersection.x+25, intersection.y),
-//                     cvScalar(0, 0, 255), 4);
-//            cv::line(grabbed, cvPoint(intersection.x, intersection.y-25),
-//                     cvPoint(intersection.x, intersection.y+25),
-//                     cvScalar(0, 0, 255), 4);
+/*
+            cv::line(grabbed, cvPoint(intersection.x-25, intersection.y),
+                     cvPoint(intersection.x+25, intersection.y),
+                     cvScalar(0, 0, 255), 4);
+            cv::line(grabbed, cvPoint(intersection.x, intersection.y-25),
+                     cvPoint(intersection.x, intersection.y+25),
+                     cvScalar(0, 0, 255), 4);
+*/
 
             // determine whether or not this is a goal
             // depending on which goal is getting intersected
@@ -499,13 +505,9 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat g
             if (bounces[0] || bounces[2]) {
                 newEndPoint.x = (int)(round((trajs.back()[0].x - trajs.back()[1].x) * (1 - magrat))) + intersection.x;
                 newEndPoint.y = (int)(round((trajs.back()[1].y - trajs.back()[0].y) * (1 - magrat))) + intersection.y;
-//                newEndPoint.x = (int)(round((trajs.back()[0].x - trajs.back()[1].x) * xrat)) + intersection.x;
-//                newEndPoint.y = (int)(round((trajs.back()[1].y - trajs.back()[0].y) * yrat)) + intersection.y;
             } else if (bounces[1] || bounces[3]) {
                 newEndPoint.x = (int)(round((trajs.back()[1].x - trajs.back()[0].x) * (1 - magrat))) + intersection.x;
                 newEndPoint.y = (int)(round((trajs.back()[0].y - trajs.back()[1].y) * (1 - magrat))) + intersection.y;
-//                newEndPoint.x = (int)(round((trajs.back()[1].x - trajs.back()[0].x) * xrat)) + intersection.x;
-//                newEndPoint.y = (int)(round((trajs.back()[0].y - trajs.back()[1].y) * yrat)) + intersection.y;
             }
             // and appropriate endpoint
 
@@ -515,62 +517,17 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat g
             tmptmp.emplace_back(intersection);
             tmptmp.emplace_back(newEndPoint);
             trajs.emplace_back(tmptmp);
+
         }
+        /*char tempStr[80];
+        sprintf(tempStr, "Leg: %d = (%d, %d) -> (%d, %d)\n", bnccnt+1, trajs.back()[0].x, trajs.back()[0].y, trajs.back()[1].x, trajs.back()[1].y);
+        cv::putText(grabbed, tempStr, cvPoint(30, 450 + 40 * bnccnt+1), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
         bnccnt++;
     }
-    /*while (!done) {
-        // vector of vector of points trajs will describe each separate trajectory
-        // so the first one corresponds to the first calculated trajectory
-        // like the first point is where the puck is identified and the second
-        // is where the puck is going (location + vectorXY)
 
-        // the plan is to recursively populate this vector of vectors with each trajectory
-        // until all the length of the original vector is used
-
-        // is there going to be a bounce?
-//        if (prediction.x > table.max.x || prediction.x < table.min.x ||
-//                prediction.y > table.max.y || prediction.y < table.min.y) {
-//            // there is going to be a bounce
-//        }
-
-        // is there going to be a bounce on the right wall?
-        if (prediction.x > table.max.x) {
-            // calculate the intersect point
-            det = predicted[0] * walls[2][1] - walls[2][0] * predicted[1];
-            if (det == 0) {
-                //printf("Error lines are parallel?\n");
-            } else {
-                intersect.x = (walls[2][1] * leg[2] - leg[1] * walls[2][2]) / det;
-                intersect.y = (leg[0] * walls[2][2] - walls[2][0] * leg[2]) / det;
-            }
-            if () {
-                // this is a FALSE X bounce, this is actually a Y bounce!!!
-                // do the intersection calculation for an intersect with the bottom wall
-            } else if (intersect.y < table.min.y) {
-                // this is a FALSE X bounce, this is actually a Y bounce!!!
-                // do the intersection calculation for intersect with the top wall
-            } else {
-                // this is a standard X bounce on the right wall
-            }
-
-            // is there going to be a bounce on the left wall?
-        } else if (prediction.x < table.min.x) {
-            // calculate the intersect point
-            det = predicted[0] * walls[0][1] - walls[0][0] * predicted[1];
-            if (det == 0) {
-                //printf("Error lines are parallel?\n");
-            } else {
-                intersect.x = (walls[0][1] * predicted[2] - predicted[1] * walls[0][2])/det;
-                intersect.y = (predicted[0] * walls[0][2] - walls[0][0] * predicted[2])/det;
-            }
-
-        }
-
-
-    }*/
     return trajs;
 }
-std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed) {
+std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed, int bnccnt) {
     //remove grabbed onced done testing and debugging
 
     std::vector<bool> output = {false, false, false, false};
@@ -604,7 +561,7 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
         printf("bounceDetect error, truecnt >2\n");
         return {false, false, false, false};
      }
-    char tempStr[80];
+//    char tempStr[80];
     if (truecnt > 1) {
         // checking the top left condition
         if (output[0] && output[3]) {
@@ -614,8 +571,10 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
             int ydif = startPoint.y - table.min.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
-            sprintf(tempStr,"(xtime, ytime): (%f, %f)\n", xtime, ytime);
-//            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
+            /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
+                                    output[0]?"1":"0", output[1]?"1":"0",
+                                    output[2]?"1":"0", output[3]?"1":"0");
+            cv::putText(grabbed, tempStr, cvPoint(30, 80  + 40 * bnccnt), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
             if (ytime > xtime) {
                 output[3] = false;
             } else {
@@ -630,8 +589,10 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
             int ydif = table.max.y - startPoint.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
-            sprintf(tempStr,"(xtime, ytime): (%f, %f)\n", xtime, ytime);
-//            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
+            /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
+                    output[0]?"1":"0", output[1]?"1":"0",
+                    output[2]?"1":"0", output[3]?"1":"0");
+            cv::putText(grabbed, tempStr, cvPoint(30, 80 + 40 * bnccnt), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
             if (ytime > xtime) {
                 output[1] = false;
             } else {
@@ -646,8 +607,10 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
             int ydif = table.max.y - startPoint.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
-            sprintf(tempStr,"(xtime, ytime): (%f, %f)\n", xtime, ytime);
-//            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
+            /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
+                    output[0]?"1":"0", output[1]?"1":"0",
+                    output[2]?"1":"0", output[3]?"1":"0");
+            cv::putText(grabbed, tempStr, cvPoint(30, 80 + 40 * bnccnt), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
             if (ytime > xtime) {
                 output[1] = false;
             } else {
@@ -662,8 +625,10 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
             int ydif = startPoint.y - table.min.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
-            sprintf(tempStr,"(xtime, ytime): (%f, %f)\n", xtime, ytime);
-//            cv::putText(grabbed, tempStr, cvPoint(30, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0));
+            /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
+                    output[0]?"1":"0", output[1]?"1":"0",
+                    output[2]?"1":"0", output[3]?"1":"0");
+            cv::putText(grabbed, tempStr, cvPoint(30, 80 + 40 * bnccnt), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
             if (ytime > xtime) {
                 output[3] = false;
             } else {
@@ -679,7 +644,7 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
 
 cv::Point_<int> Thing::findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint) {
     cv::Point_<int> intersection = {0, 0};
-    int prediction[3];
+    double prediction[3];
     double determinant;
     prediction[0] = endPoint.y - startPoint.y;    //A
     prediction[1] = startPoint.x - endPoint.x;    //B
@@ -691,8 +656,12 @@ cv::Point_<int> Thing::findIntersection(std::vector<bool> bounces, cv::Point_<in
         if (determinant == 0) {
             //printf("Errors lines are parallel?\n");
         } else {
-            intersection.x = (walls[0][1] * prediction[2] - prediction[1] * walls[0][2])/determinant;
-            intersection.y = (prediction[0] * walls[0][2] - walls[0][0] * prediction[2])/determinant;
+            double tempx = (walls[0][1] * prediction[2] - prediction[1] * walls[0][2])/determinant;
+            intersection.x = (int)tempx;
+            double tempy = (prediction[0] * walls[0][2] - walls[0][0] * prediction[2])/determinant;
+            intersection.y = (int)tempy;
+//            intersection.x = (walls[0][1] * prediction[2] - prediction[1] * walls[0][2])/determinant;
+//            intersection.y = (prediction[0] * walls[0][2] - walls[0][0] * prediction[2])/determinant;
         }
     }
     // if we are intersecting wall 1 (bottom)
@@ -701,8 +670,12 @@ cv::Point_<int> Thing::findIntersection(std::vector<bool> bounces, cv::Point_<in
         if (determinant == 0) {
             //printf("Errors lines are parallel?\n");
         } else {
-            intersection.x = (walls[1][1] * prediction[2] - prediction[1] * walls[1][2])/determinant;
-            intersection.y = (prediction[0] * walls[1][2] - walls[1][0] * prediction[2])/determinant;
+            double tempx = (walls[1][1] * prediction[2] - prediction[1] * walls[1][2])/determinant;
+            intersection.x = (int)tempx;
+            double tempy = (prediction[0] * walls[1][2] - walls[1][0] * prediction[2])/determinant;
+            intersection.y = (int)tempy;
+//            intersection.x = (walls[1][1] * prediction[2] - prediction[1] * walls[1][2])/determinant;
+//            intersection.y = (prediction[0] * walls[1][2] - walls[1][0] * prediction[2])/determinant;
         }
     }
     // if we are intersecting wall 2 (right)
@@ -711,8 +684,12 @@ cv::Point_<int> Thing::findIntersection(std::vector<bool> bounces, cv::Point_<in
         if (determinant == 0) {
             //printf("Errors lines are parallel?\n");
         } else {
-            intersection.x = (walls[2][1] * prediction[2] - prediction[1] * walls[2][2])/determinant;
-            intersection.y = (prediction[0] * walls[2][2] - walls[2][0] * prediction[2])/determinant;
+            double tempx = (walls[2][1] * prediction[2] - prediction[1] * walls[2][2])/determinant;
+            intersection.x = (int)tempx;
+            double tempy = (prediction[0] * walls[2][2] - walls[2][0] * prediction[2])/determinant;
+            intersection.y = (int)tempy;
+//            intersection.x = (walls[2][1] * prediction[2] - prediction[1] * walls[2][2])/determinant;
+//            intersection.y = (prediction[0] * walls[2][2] - walls[2][0] * prediction[2])/determinant;
         }
     }
     // if we are intersecting wall 3 (top)
@@ -721,8 +698,12 @@ cv::Point_<int> Thing::findIntersection(std::vector<bool> bounces, cv::Point_<in
         if (determinant == 0) {
             //printf("Errors lines are parallel?\n");
         } else {
-            intersection.x = (walls[3][1] * prediction[2] - prediction[1] * walls[3][2])/determinant;
-            intersection.y = (prediction[0] * walls[3][2] - walls[3][0] * prediction[2])/determinant;
+            double tempx = (walls[3][1] * prediction[2] - prediction[1] * walls[3][2])/determinant;
+            intersection.x = (int)tempx;
+            double tempy = (prediction[0] * walls[3][2] - walls[3][0] * prediction[2])/determinant;
+            intersection.y = (int)tempy;
+//            intersection.x = (walls[3][1] * prediction[2] - prediction[1] * walls[3][2])/determinant;
+//            intersection.y = (prediction[0] * walls[3][2] - walls[3][0] * prediction[2])/determinant;
         }
     }
     return intersection;

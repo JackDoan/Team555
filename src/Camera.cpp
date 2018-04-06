@@ -34,16 +34,16 @@ Camera::Camera(int nwidth, int nheight) {
     printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
     printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
     printf("******** SETTING CAMERA DEVICE PROPERTIES *********\n");
-    capture.set(CV_CAP_PROP_SATURATION, 255);
-    printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
-    capture.set(CV_CAP_PROP_GAIN, 77);
-    printf("Gain: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAIN));
-    capture.set(CV_CAP_PROP_EXPOSURE, -8);
-    printf("Exposure: \t\t%f\n", capture.get(CV_CAP_PROP_EXPOSURE));
-    capture.set(CV_CAP_PROP_SHARPNESS, 14);
-    printf("Sharpness: \t\t%f\n", capture.get(CV_CAP_PROP_SHARPNESS));
-    capture.set(CV_CAP_PROP_GAMMA, 67);
-    printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
+//    capture.set(CV_CAP_PROP_SATURATION, 255);
+//    printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
+//    capture.set(CV_CAP_PROP_GAIN, 77);
+//    printf("Gain: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAIN));
+//    capture.set(CV_CAP_PROP_EXPOSURE, -8);
+//    printf("Exposure: \t\t%f\n", capture.get(CV_CAP_PROP_EXPOSURE));
+//    capture.set(CV_CAP_PROP_SHARPNESS, 14);
+//    printf("Sharpness: \t\t%f\n", capture.get(CV_CAP_PROP_SHARPNESS));
+//    capture.set(CV_CAP_PROP_GAMMA, 67);
+//    printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
     printf("********** SET CAMERA DEVICE PROPERTIES ***********\n");
 
     if (!capture.isOpened()) {

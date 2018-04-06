@@ -68,10 +68,10 @@ public:
     clock_t s;
     clock_t e;
     int vectorMult = 15;
-    int walls[4][3];
-    int goalArr[2][3];
-    int predicted[3];
-    double det;
+    double walls[4][3];
+//    int goalArr[2][3];
+//    int predicted[3];
+//    double det;
     cv::Point_<double> intersect;
 
     bool bouncex;
@@ -113,7 +113,7 @@ public:
     void setGoals(std::vector<cv::Point_<int>> sortedX);
     void drawTraj(cv::Mat in);
     std::vector<std::vector<cv::Point_<int>>> calcTraj(Table table, cv::Mat grabbed);
-    std::vector<bool> bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed);
+    std::vector<bool> bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed, int bnccnt);
     cv::Point_<int> findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint);
     void goalDetect(cv::Point_<int> intersection, int xvelo);
 

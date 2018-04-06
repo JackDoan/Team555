@@ -183,7 +183,7 @@ void ImageProcess::process() {
             }
 
             if (table.preview == 1) {
-                sprintf(tempStr, "%3.2f %ld %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.location.x, puck.location.y, puck.vectorXY.y);
+                sprintf(tempStr, "%3.2f %ld %d %d %d %d\n", frameRate, frameTimestamp - firstTimestamp, puck.lastLocation.x, puck.lastLocation.y, puck.location.x, puck.location.y);
                 cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
                 table.annotate(grabbed);
                 // drawing the motion limits

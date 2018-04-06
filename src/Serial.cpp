@@ -31,7 +31,7 @@ Serial::Serial(const char *portName)  {
 
         //Try to get the current
         if (!GetCommState(this->hSerial, &dcbSerialParams)) {
-            printf("failed to get current serial parameters!");
+            printf("failed to get current serial parameters!\n");
         }
         else {
             //Define serial connection parameters for the arduino board
@@ -45,17 +45,29 @@ Serial::Serial(const char *portName)  {
 
             //Set the parameters and check for their proper application
             if(!SetCommState(hSerial, &dcbSerialParams)) {
-                printf("ALERT: Could not set Serial Port parameters");
+                printf("ALERT: Could not set Serial Port parameters\n");
             }
             else {
+                /*printf("timeouts got set!\n");
+                COMMTIMEOUTS timeouts={0};
+                timeouts.ReadIntervalTimeout=10;
+                timeouts.ReadTotalTimeoutConstant=10;
+                timeouts.ReadTotalTimeoutMultiplier=1;
+                timeouts.WriteTotalTimeoutConstant=10;
+                timeouts.WriteTotalTimeoutMultiplier=1;
+                if(!SetCommTimeouts(hSerial, &timeouts)){
+                   printf("ALERT: Failed to set timeouts parameters\n");
+                }*/
                 //If everything went fine we're connected
                 this->connected = true;
                 //Flush any remaining characters in the buffers
                 PurgeComm(this->hSerial, PURGE_RXCLEAR | PURGE_TXCLEAR);
                 //We wait 2s as the arduino board will be resetting
                 Sleep(ARDUINO_WAIT_TIME); //todo explain this to Jack
+                // TODO: explain this to mike, because mike didn't put it here
             }
         }
+
     }
 
 }
