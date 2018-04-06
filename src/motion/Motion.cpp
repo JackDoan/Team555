@@ -205,7 +205,7 @@ void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
             interceptSpot = desiredLocation;
         }
         else if(checkLast15goalFlags(puck.rightGoalHistory)) {
-            cv::putText(grabbed, "Goal!!", cvPoint(450, 320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            cv::putText(grabbed, "Goal!!", cvPoint(350, 320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
             desiredLocation =  interceptSpot;
         }
         else {
@@ -214,8 +214,9 @@ void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
 
         // limit desired location to x and y boundaries if they exceed those boundaries
         desiredLocation = saturate(desiredLocation, table.motionLimitMin, table.motionLimitMax);
-
+//        if (puck.onTable && ((abs(desiredLocation.x - mallet.location.x) > motorDriver.deadband) || (abs(desiredLocation.y - mallet.location.y) > motorDriver.deadband)))
         if (puck.onTable) {
+            cv::putText(grabbed, "moving", cvPoint(1100, 665), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 255, 0), 2);
             motorDriver.moveTo(desiredLocation);
         }
 

@@ -51,7 +51,7 @@ void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Poin
     min.y = sortedY[0].y; printf("Setting min Y: %d\n", min.y);
     max.y = sortedY[3].y; printf("Setting max Y: %d\n", max.y);
 
-    //todo make these ratios
+    //todo make these ratios                adjust drawGoalVector after made into ratios
     motionLimitMin.y = min.y + 80;
     motionLimitMax.y = max.y - 80;
     motionLimitMin.x = min.x + 680;

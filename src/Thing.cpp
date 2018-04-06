@@ -346,7 +346,8 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
 //        fillVeloMagHistory();
 //        writeVeloMagHistory(in);
         fillGoalFlagsHistory();
-//        drawGoalVector(in);
+        //drawGoalVector(in);               todo: convince Mike to use this
+        //drawGoalVector(in, corners.sortedY);
     }
 
 
@@ -793,10 +794,19 @@ void Thing::drawGoalVector(cv::Mat in){
     cv::line(in, tempGoal, location, cvScalar(20, 200, 20), 4);
 
     //To eventually replace shotSpot
-    //shotSpotScalar is affected by distance from goal, shouldn't be a problem though?
     //Todo: apply calcTraj(maybe?) to allow for bounce shots
     float shotSpotScalar = 0.2;
     cv::Point_<int> JshotSpot = {shotSpotScalar*(location.x - 30) + location.x, shotSpotScalar*(location.y - (685/2)) + location.y};
+
+    //cv::Point_<int> malletMaxY = {0, (sortedY[3].y - 80)};      //todo: adjust to ratios
+    //cv::Point_<int> malletMinY = {0, (sortedY[0].y + 80)};
+
+//    if(JshotSpot.y > malletMaxY.y){
+//        JshotSpot.y = malletMaxY.y;
+//    }
+//    else if (JshotSpot.y < malletMinY.y){
+//        JshotSpot.y = malletMinY.y;
+//    }
 
     cv::line(in, location, JshotSpot, cvScalar(20,20,20), 4);
     cv::circle(in, JshotSpot, 10, cv::Scalar(15, 15, 15), 6);

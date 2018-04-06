@@ -31,9 +31,10 @@ typedef struct thermal_s {
 class MotorDriver {
 private:
     int processPacket(char input[6]);
-    int deadband = 5;
+
     MotorDriver();
 public:
+    int deadband = 5;
 //    Serial* SPx = new Serial("\\\\.\\COM4");
 //    Serial* SPy = new Serial("\\\\.\\COM5");
     static MotorDriver& getInstance() {
