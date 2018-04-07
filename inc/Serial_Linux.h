@@ -1,13 +1,9 @@
 //
-// Created by mdl150330 on 3/6/2018.
+// Created by jack on 4/6/18.
 //
 
-#ifndef SERIALCLASS_H_INCLUDED
-#define SERIALCLASS_H_INCLUDED
-
-#define ARDUINO_WAIT_TIME 2000
-
-#ifdef WINDOWS
+#ifndef TEAM555_SERIAL_LINUX_H
+#define TEAM555_SERIAL_LINUX_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,13 +12,10 @@ class Serial
 {
 private:
     //Serial comm handler
-    HANDLE hSerial;
+    int hSerial;
     //Connection status
     bool connected;
-    //Get various information about the connection
-    COMSTAT status;
-    //Keep track of last error
-    DWORD errors;
+
 
 public:
     //Initialize Serial communication with the given COM port
@@ -45,8 +38,4 @@ public:
 
 };
 
-#else
-#include "Serial_Linux.h"
-#endif
-
-#endif // SERIALCLASS_H_INCLUDED
+#endif //TEAM555_SERIAL_LINUX_H

@@ -14,7 +14,7 @@
 class Camera {
     private:
         // Camera variables
-        cv::VideoCapture capture = 0;
+        cv::VideoCapture capture;
         //float cam_pix_to_mm = CAM_PIX_TO_MM; //todo replace this with an expression
         // application parameters
 

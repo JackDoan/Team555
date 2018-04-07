@@ -11,7 +11,7 @@
 #include "../inc/helpers.h"
 #include "../inc/MotorDriver.h"
 #include "../inc/Table.h"
-
+#include "unistd.h"
 
 typedef union {
     struct {
@@ -33,9 +33,10 @@ bool MotorDriver::initComPort(char comPort) {
     portPath[sizeof(portPath) - 2] = comPort; //replace the COM port number
     auto comHandle = new Serial(portPath);
     bool toReturn = comHandle->IsConnected();
+    SPb = comHandle; //todo hack
     if(toReturn) {
         printf("ComPort: %c has connected\n", comPort);
-        SPb = comHandle;
+
     }
     else {
         printf("Comport: %c failed to connect!!", comPort);
@@ -155,7 +156,8 @@ long MotorDriver::getSteps(char axis) {
     char bytes[6] = {0x69,'?',0,0,0,axis};
     char buffer[6] = {0};
     writeResult = SPb->WriteData(bytes, sizeof(bytes));
-    _sleep(10);
+
+    usleep(1000);
     readResult = SPb->ReadData(buffer, sizeof(buffer));
     if(readResult >= 6) {
         longbytes data;

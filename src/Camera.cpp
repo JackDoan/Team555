@@ -22,18 +22,28 @@ Camera::Camera(int nwidth, int nheight) {
 
     dimensions = {nwidth,nheight};
 
+#ifdef WINDOWS
     capture.open(0);
-    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
-    printf("Brightness: \t\t%f\n", capture.get(CV_CAP_PROP_BRIGHTNESS));
-    printf("Contrast: \t\t%f\n", capture.get(CV_CAP_PROP_CONTRAST));
-    printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
-    printf("Hue: \t\t\t%f\n", capture.get(CV_CAP_PROP_HUE));
-    printf("Gain: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAIN));
-    printf("Exposure: \t\t%f\n", capture.get(CV_CAP_PROP_EXPOSURE));
-    printf("Sharpness: \t\t%f\n", capture.get(CV_CAP_PROP_SHARPNESS));
-    printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
-    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
-    printf("******** SETTING CAMERA DEVICE PROPERTIES *********\n");
+#else
+
+
+
+
+    capture.open("tcambin ! video/x-raw,format=RGBx,width=1280,height=720,framerate=80/1 ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! appsink" );
+                 /*autovideosink*/
+
+#endif
+//    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
+//    printf("Brightness: \t\t%f\n", capture.get(CV_CAP_PROP_BRIGHTNESS));
+//    printf("Contrast: \t\t%f\n", capture.get(CV_CAP_PROP_CONTRAST));
+//    printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
+//    printf("Hue: \t\t\t%f\n", capture.get(CV_CAP_PROP_HUE));
+//    printf("Gain: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAIN));
+//    printf("Exposure: \t\t%f\n", capture.get(CV_CAP_PROP_EXPOSURE));
+//    printf("Sharpness: \t\t%f\n", capture.get(CV_CAP_PROP_SHARPNESS));
+//    printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
+//    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
+//    printf("******** SETTING CAMERA DEVICE PROPERTIES *********\n");
 //    capture.set(CV_CAP_PROP_SATURATION, 255);
 //    printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
 //    capture.set(CV_CAP_PROP_GAIN, 77);
@@ -51,9 +61,10 @@ Camera::Camera(int nwidth, int nheight) {
         exit(-123);
     }
 
-
+#ifdef WINDOWS
     capture.set(CV_CAP_PROP_FRAME_WIDTH, nwidth);
     capture.set(CV_CAP_PROP_FRAME_HEIGHT, nheight);
+#endif
 
     //capture.read(currentView);
     cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(),

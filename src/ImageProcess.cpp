@@ -91,15 +91,7 @@ void ImageProcess::process() {
             time(&start);
         }
 
-//        if (FrameCounter > 60) {
-//            time(&end);
-//            sec = difftime (end, start);
-//            frameRate = FrameCounter / sec;
-//            time(&start);
-//            FrameCounter = 1;
-//        }
         ++FrameCounter;
-
 
         if (grabbed.empty()) {
             printf("No frames!\n");
