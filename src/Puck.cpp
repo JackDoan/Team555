@@ -39,7 +39,7 @@ Puck::Puck() {
     limits.maxS = 160;//185;
     limits.minV = 0;
     limits.maxV = 255;//0
-    outlineColor = cv::Scalar(0, 255, 0);
+    outlineColor = cv::Scalar(40, 255, 255);
 
     puckLimitsCalib.minH = 43;
     puckLimitsCalib.maxH = 110;

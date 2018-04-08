@@ -18,7 +18,7 @@ Mallet::Mallet() {
     limits.maxV = 255;//255;
     settingWindowName = const_cast<char *>("Mallet Settings 1");
     previewWindowName = const_cast<char *>("Mallet");
-    outlineColor = cv::Scalar(255, 0, 0);
+    outlineColor = cv::Scalar(210, 255, 255);
 
     minArea = 1548;
     maxArea = 4500;

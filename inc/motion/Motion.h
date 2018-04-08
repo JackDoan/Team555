@@ -22,7 +22,8 @@ public:
     void trackY();
     void trackPredictedY(Table table, Mallet mallet, Puck puck, cv::Mat grabbed);
     void defend(Table table, Mallet mallet, Puck puck, cv::Mat& grabbed);
-    //void attack(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed);
+    void attack(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed);
+    void findHitVector(Table table, Mallet mallet, Puck puck, cv::Mat grabbed);
     Motion();
     ~Motion() = default;
 

@@ -58,6 +58,12 @@ void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Poin
     motionLimitMax.x = max.x - 55;
     motionLimit = cv::Rect_<int>(motionLimitMin,motionLimitMax);
 
+    strikeLimitMin.y = motionLimitMin.y + 30;
+    strikeLimitMax.y = motionLimitMax.y - 30;
+    strikeLimitMin.x = motionLimitMin.x + 30;
+    strikeLimitMax.x = motionLimitMax.x - 30;
+
+
 }
 
 cv::Point_<int> Table::pixelsToSteps(cv::Point_<int> pixels) {

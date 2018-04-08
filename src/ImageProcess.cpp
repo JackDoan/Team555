@@ -146,7 +146,7 @@ void ImageProcess::process() {
                     printf("Motion Mode = Defend\n");
                     motionMode = DEFEND;
                     break;
-                case 'A':
+                case 'a':
                     printf("Motion Mode = Attack\n");
                     motionMode = ATTACK;
                     break;
@@ -164,13 +164,15 @@ void ImageProcess::process() {
                     break;
                 case DEFEND:
                     motion.defend(table, mallet, puck, grabbed);
+
                     break;
                 case ATTACK:
-                    attack.run(puck, mallet, grabbed);
+                    motion.attack(table, mallet, puck, grabbed);
+                    /*attack.run(puck, mallet, grabbed);
                     if(!attack.isReady()) {
                         printf("Attack done. Switching to IDLE\n");
                         motionMode = IDLE;
-                    }
+                    }*/
                     break;
             }
 
@@ -179,7 +181,7 @@ void ImageProcess::process() {
                 cv::putText(grabbed, tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
                 table.annotate(grabbed);
                 // drawing the motion limits
-                cv::rectangle(grabbed, table.motionLimitMax, table.motionLimitMin, cv::Scalar(225, 150, 0), 4);
+                cv::rectangle(grabbed, table.motionLimitMax, table.motionLimitMin, cv::Scalar(210, 200, 200), 4);
                 cv::resize(grabbed, previewSmall, cv::Size(), 0.5, 0.5);
 
                 if (settings.calibrateCorners) {
@@ -191,13 +193,13 @@ void ImageProcess::process() {
                     corners.drawSquareNew(previewSmall, corners.getCalibratedCorners());
                 }
                 //cv::line(previewSmall,table.motionLimitMax,table.motionLimitMin,cv::Scalar(255,0,0),4);
-                cv::line(previewSmall, puck.Goals[0]/2, puck.Goals[1]/2, cv::Scalar(255, 0, 0), 4);
-                cv::line(previewSmall, puck.Goals[2]/2, puck.Goals[3]/2, cv::Scalar(255, 0, 0), 4);
+                cv::line(previewSmall, puck.Goals[0]/2, puck.Goals[1]/2, cv::Scalar(180, 255, 255), 4);
+                cv::line(previewSmall, puck.Goals[2]/2, puck.Goals[3]/2, cv::Scalar(180, 255, 255), 4);
 
                 if (settings.video_output) {
                     video.write(previewSmall);
                 }
-
+                //TODO need to fix the colorspace
                 cv::cvtColor(previewSmall, previewSmall, cv::COLOR_HSV2RGB);
                 imshow("Video", previewSmall);
             }

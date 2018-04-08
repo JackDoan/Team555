@@ -12,6 +12,8 @@ public:
     Supervisor();
     ~Supervisor() = default;
     void run(bool idle);
+    void decide();
+    void idle();
     void defense();
     void offense();
 };

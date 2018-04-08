@@ -218,10 +218,10 @@ void Corners::drawSquareNew(cv::Mat previewSmall, std::vector<cv::Point_<int>> c
 //           sortedY[1].x, sortedY[1].y,
 //           sortedY[2].x, sortedY[2].y,
 //           sortedY[3].x, sortedY[3].y);
-    cv::line(previewSmall, sortedX[0]/2, sortedX[1]/2, cv::Scalar(255, 255, 255), 4);
-    cv::line(previewSmall, sortedX[2]/2, sortedX[3]/2, cv::Scalar(255, 255, 255), 4);
-    cv::line(previewSmall, sortedY[0]/2, sortedY[1]/2, cv::Scalar(255, 255, 255), 4);
-    cv::line(previewSmall, sortedY[2]/2, sortedY[3]/2, cv::Scalar(255, 255, 255), 4);
+    cv::line(previewSmall, sortedX[0]/2, sortedX[1]/2, cv::Scalar(100, 200, 255), 4);
+    cv::line(previewSmall, sortedX[2]/2, sortedX[3]/2, cv::Scalar(100, 200, 255), 4);
+    cv::line(previewSmall, sortedY[0]/2, sortedY[1]/2, cv::Scalar(100, 200, 255), 4);
+    cv::line(previewSmall, sortedY[2]/2, sortedY[3]/2, cv::Scalar(100, 200, 255), 4);
 
     //TODO:Drawing Goal Lines?
     //cv::Point_<int> midY1 = (sortedY[0]/2 - sortedY[1]/2)/2 + sortedY[0]/2;

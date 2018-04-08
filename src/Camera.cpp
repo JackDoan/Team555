@@ -10,6 +10,14 @@
 
 #include <time.h>
 
+
+
+
+
+
+
+
+
 Camera::Camera(int nwidth, int nheight) {
 
     cameraMatrix = (cv::Mat_<double>(3,3)
@@ -25,7 +33,6 @@ Camera::Camera(int nwidth, int nheight) {
 #ifdef WINDOWS
     capture.open(0);
 #else
-
 
 //gst-launch-1.0 tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance ! bayer2rgb ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! xvimagesink
     //tcam-ctrl -p -s "Exposure=5000" 42614274

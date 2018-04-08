@@ -108,7 +108,7 @@ Thing::Thing() {
     bouncey = false;
     found = false;
     lostCnt = 0;
-    historyDepth = 15;
+    historyDepth = 30;
     for (int i = 0; i < historyDepth; i++) {
         foundHistory.insert(foundHistory.begin(), false);
     }
@@ -303,7 +303,7 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
     } else {
         calcVector(in);
         if (!isMallet) {
-            trajectory = calcTraj(table, in);
+            trajectory = calcTraj(table, in, lastLocation, location);
             predictedLocation = trajectory.back()[1];
             drawTraj(in);
 //            calcTraj(table);
@@ -339,10 +339,10 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
     if (!isMallet) {
         fillFoundHistory(found);
         fillLocationHistory(location);
-        drawLocationHistory(in);
+        //drawLocationHistory(in);
         fillTrajHistory();
 //        drawTrajHistory(in);
-        drawTrajEndPointHistory(in);
+        //drawTrajEndPointHistory(in);
 //        fillVeloMagHistory();
 //        writeVeloMagHistory(in);
         fillGoalFlagsHistory();
@@ -354,36 +354,7 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
 }
 
 void Thing::calcVector(cv::Mat in) {
-/*    // TODO: move this into calcTraj
-    // Calculate speed and angle
-//    Vector VectorXY;
 
-
-
-//test
-//    if (location.x >= 1.001 * lastLocation.x || location.x <= 0.999 * lastLocation.x) {
-//                printf("coordx,y: %d, %d\t\t lastcoordx,y: %d, %d\n", location.x,
-//                          location.y, lastLocation.x, lastLocation.y);
-//                printf("vectorx,y: %d, %d\n", vectorXY.x, vectorXY.y);
-//    }
-//   if (vectorX != 0 && vectorY != 0)
-//    if (vectorXY.x != 0 || vectorXY.y != 0) {
-////       printf("vectorX: %d\n", vectorX);
-////       printf("vectorY: %d\n", vectorY);
-////        cv::line(in, cvPoint(lastLocation.x/2, lastLocation.y/2), cvPoint(location.x/2 + vectorXY.x*vectorMult/2,
-////                                                                      location.y/2 + vectorXY.y*vectorMult/2),
-////                                                                       cvScalar(255, 0, 255), 4);
-//        cv::line(in, location, (location+vectorXY*vectorMult), cvScalar(255, 0, 255), 4);
-//
-//
-//
-//    } else {
-//    //        printf("coord: %f\n", location.x);
-//    //        printf("lastCoord %f\n", lastLocation.x);
-//        //printf("coordY: %f\n", location.y);
-//        //printf("lastCoordY %f\n", lastLocation.y);
-//    }
-//    //    VectorXY = Vector(vectorX, vectorY);*/
 
     if (abs(location.x-lastLocation.x) < 3 && abs(location.y - lastLocation.y) < 3) {
         vectorXY = {0,0};
@@ -420,11 +391,14 @@ void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
 
 void Thing::drawTraj(cv::Mat in) {
     for (int i = 0; i < trajectory.size(); i++) {
-        cv::line(in, trajectory[i][0], trajectory[i][1], cvScalar(255, 0, 255), 4);
+        cv::line(in, trajectory[i][0], trajectory[i][1], cvScalar(165, 255, 255), 4);
     }
 }
 
-std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat grabbed) {
+
+// TODO: this needs to ensure that the last leg ends AT the last intersection point if bnccntmax is reached, predicted location should NEVER exceed the limits of the table
+// TODO: need to make a second version of calcTraj that does not set the classses goal flags so that offense doesn't mess up defense
+std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajOffense(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc) {
     // need to set left and right goal flags to false at the start of this
     // remove grabbed once done testing and debugging
     intersect = {0, 0};
@@ -436,13 +410,14 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat g
     if (lostCnt > 0) {
         bnccntmax = 1;
     } else {
-        bnccntmax = 3;
+        bnccntmax = 5;
     }
 
 
     cv::Point_<int> prediction;
 
-    prediction = location + vectorXY*vectorMult;
+    prediction = loc + ((loc - lastLoc)*vectorMult);
+//    prediction = location + vectorXY*vectorMult;
 
 
     std::vector<cv::Point_<int>> temp;
@@ -528,6 +503,110 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat g
 
     return trajs;
 }
+
+std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc) {
+    // need to set left and right goal flags to false at the start of this
+    // remove grabbed once done testing and debugging
+    intersect = {0, 0};
+    cv::Point_<int> dist;
+    cv::Point_<int> leftover;
+    std::vector<std::vector<cv::Point_<int>>> trajs;
+    int bnccnt = 0;
+    int bnccntmax;
+    if (lostCnt > 0) {
+        bnccntmax = 1;
+    } else {
+        bnccntmax = 3;
+    }
+
+    auto prediction = loc + ((loc - lastLoc)*vectorMult);
+//    prediction = location + vectorXY*vectorMult;
+
+
+    std::vector<cv::Point_<int>> temp = {location, prediction};
+//    temp.emplace_back(location);
+//    temp.emplace_back(prediction);
+    trajs.emplace_back(temp);
+#ifdef MIKE_DEBUG
+     char tempStr[80];
+     sprintf(tempStr, "Leg: %d = (%d, %d) -> (%d, %d)\n", -1, trajs.back()[0].x, trajs.back()[0].y, trajs.back()[1].x, trajs.back()[1].y);
+     cv::putText(grabbed, tempStr, cvPoint(30, 410), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);
+#endif
+    while (bnccnt <= bnccntmax) {
+        std::vector<bool> bounces = {false, false, false, false};
+        cv::Point_<int> intersection;
+        cv::Point_<int> newEndPoint;
+        // detect a bounce
+        bounces = bounceDetect(table, trajs.back()[0], trajs.back()[1], grabbed, bnccnt);
+        // if all of bounces are false, set done = true and break
+        if (bounces[0] || bounces[1] || bounces[2] || bounces[3]) {
+            // determine from bounces which wall is going to be intersected
+            // and calculate the intersection point
+            intersection = findIntersection(bounces, trajs.back()[0], trajs.back()[1]);
+/*
+            // draw the intersection on grabbed
+            cv::line(grabbed, cvPoint(intersection.x-25, intersection.y),
+                     cvPoint(intersection.x+25, intersection.y),
+                     cvScalar(0, 0, 255), 4);
+            cv::line(grabbed, cvPoint(intersection.x, intersection.y-25),
+                     cvPoint(intersection.x, intersection.y+25),
+                     cvScalar(0, 0, 255), 4);
+*/
+            // determine whether or not this is a goal
+            // depending on which goal is getting intersected
+            if (bounces[0] || bounces[2]) {
+                goalDetect(intersection, trajs.back()[1].x - trajs.back()[0].x);
+                if (leftGoal || rightGoal) {
+                    // set endPoint equal to intersection and break
+                    trajs.back()[1] = intersection;
+                    break;
+                }
+            }
+
+
+            // determine distance from location to intersect point, this becomes the length of the current leg
+            // subtract that from the original length and this becomes the length of the next leg
+            dist = cvPoint(abs(intersection.x - trajs.back()[0].x),
+                           abs(intersection.y - trajs.back()[0].y));
+            leftover = cvPoint(abs(trajs.back()[1].x - dist.x),
+                               abs(trajs.back()[1].y - dist.y));
+//             determine ratios of leftover/total
+            double magorig = sqrt(pow(trajs.back()[1].x - trajs.back()[0].x, 2) +
+                                  pow(trajs.back()[1].y - trajs.back()[0].y, 2));
+            double magclipped = sqrt(pow(intersection.x - trajs.back()[0].x, 2) +
+                                     pow(intersection.y - trajs.back()[0].y, 2));
+            double magrat = magclipped / magorig;
+
+//             emplace back next trajs, which has start point at the point of intersect
+            if (bounces[0] || bounces[2]) {
+                newEndPoint.x = (int)(round((trajs.back()[0].x - trajs.back()[1].x) * (1 - magrat))) + intersection.x;
+                newEndPoint.y = (int)(round((trajs.back()[1].y - trajs.back()[0].y) * (1 - magrat))) + intersection.y;
+            } else if (bounces[1] || bounces[3]) {
+                newEndPoint.x = (int)(round((trajs.back()[1].x - trajs.back()[0].x) * (1 - magrat))) + intersection.x;
+                newEndPoint.y = (int)(round((trajs.back()[0].y - trajs.back()[1].y) * (1 - magrat))) + intersection.y;
+            }
+            // and appropriate endpoint
+
+            // set trajs.back()[1] to the point of intersection
+            trajs.back()[1] = intersection;
+            std::vector<cv::Point_<int>> pts = {intersection, newEndPoint};
+            trajs.emplace_back(pts);
+        }
+        /*char tempStr[80];
+        sprintf(tempStr, "Leg: %d = (%d, %d) -> (%d, %d)\n", bnccnt+1, trajs.back()[0].x, trajs.back()[0].y, trajs.back()[1].x, trajs.back()[1].y);
+        cv::putText(grabbed, tempStr, cvPoint(30, 450 + 40 * bnccnt+1), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
+        bnccnt++;
+    }
+
+    if(trajs.size() >= 4) { ///if we have an 'extra' bounce, clip it
+        std::vector<std::vector<cv::Point_<int>>> toReturn = {trajs[0],trajs[1],trajs[2],trajs[3]};
+        return toReturn;
+    }
+    else {
+        return trajs;
+    }
+}
+
 std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed, int bnccnt) {
     //remove grabbed onced done testing and debugging
 
@@ -747,7 +826,7 @@ void Thing::drawTrajHistory(cv::Mat in) {
     for (int i = historyDepth-1; i > 0; i--) {
         if (foundHistory[i]) {
             for (int j = 0; j < trajectoryHistory[i].size(); j++) {
-                cv::line(in, trajectoryHistory[i][j][0], trajectoryHistory[i][j][1], cvScalar(210, 0, 210), 4);
+                cv::line(in, trajectoryHistory[i][j][0], trajectoryHistory[i][j][1], cvScalar(165, 255, 255), 4);
             }
             if (!drawWholeHistory) {
                 break;
@@ -811,5 +890,20 @@ void Thing::drawGoalVector(cv::Mat in){
     cv::line(in, location, JshotSpot, cvScalar(20,20,20), 4);
     cv::circle(in, JshotSpot, 10, cv::Scalar(15, 15, 15), 6);
 
+}
+
+
+// TODO: we can use this to detect an alias, set an alias flag high in the next frame and avoid calculating a bad trajectory
+void Thing::calcNextLoc() {
+    // really want to calculate a predicted location in the next frame
+    cv::Point_<int> total;
+    total.x = abs(location.x - lastLocation.x);
+    total.y = abs(location.y - lastLocation.y);
+    if(total.x > abs(trajectory.front()[1].x) || total.y > abs(trajectory.front()[1].y)) {
+        cv::Point_<int> leftover;
+        leftover.x = total.x - abs(trajectory.front()[1].x);
+        leftover.y = total.y - abs(trajectory.front()[1].y);
+        // idk how to finish this, seems complicated
+    }
 }
 

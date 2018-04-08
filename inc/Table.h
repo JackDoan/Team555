@@ -16,7 +16,7 @@ class Table {
 public:
 
 
-    cv::Point_<int> max, min, motionLimitMin, motionLimitMax;
+    cv::Point_<int> max, min, motionLimitMin, motionLimitMax, strikeLimitMin, strikeLimitMax;
     cv::Rect_<int> motionLimit;
     static const cv::Point_<int> home;
     static cv::Point_<int> pixelsToSteps(cv::Point_<int> pixels);

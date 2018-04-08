@@ -43,7 +43,7 @@ protected:
     bool debugWindows = false;
     struct threshold_s limits;
     cv::Mat getThresholdImage(cv::Mat& in);
-    cv::Scalar outlineColor = cv::Scalar(0, 255, 0);
+    cv::Scalar outlineColor = cv::Scalar(40, 255, 255);
     static void onChange(int v, void *ptr) {
         // resolve 'this':
         auto *that = (Thing*)ptr;
@@ -67,7 +67,7 @@ public:
 
     clock_t s;
     clock_t e;
-    int vectorMult = 15;
+    int vectorMult = 15*2;
     double walls[4][3];
 //    int goalArr[2][3];
 //    int predicted[3];
@@ -112,7 +112,8 @@ public:
     }
     void setGoals(std::vector<cv::Point_<int>> sortedX);
     void drawTraj(cv::Mat in);
-    std::vector<std::vector<cv::Point_<int>>> calcTraj(Table table, cv::Mat grabbed);
+    std::vector<std::vector<cv::Point_<int>>> calcTraj(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);
+    std::vector<std::vector<cv::Point_<int>>> calcTrajOffense(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);
     std::vector<bool> bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed, int bnccnt);
     cv::Point_<int> findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint);
     void goalDetect(cv::Point_<int> intersection, int xvelo);
@@ -136,6 +137,7 @@ public:
     std::vector<bool> rightGoalHistory;
     std::vector<bool> leftGoalHistory;
     void fillGoalFlagsHistory();
+    void calcNextLoc();
 
 };
 
