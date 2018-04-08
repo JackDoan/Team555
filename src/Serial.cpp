@@ -154,6 +154,9 @@ bool Serial::IsConnected() {
 
 //#define SERIALDEBUG 1
 
+
+
+
 Serial::Serial(const char *portName)  {
 
     this->connected = false; //We're not yet connected
@@ -173,13 +176,14 @@ Serial::Serial(const char *portName)  {
     }
     else {
         connected = true;
-//        struct termios options;
-//        tcgetattr(hSerial, &options); //Get the current options for the port
-//        cfmakeraw(&options);
-//        options.c_cflag |= (CLOCAL | CREAD); //Enable the receiver and set local mode ///pretty sure this isnt needed
-//        cfsetispeed(&options, B115200); //Set the baud rates
-//        cfsetospeed(&options, B115200); //Set the baud rates
-//        tcsetattr(hSerial, TCSAFLUSH, &options); //set options, wait for operation to complete
+        struct termios options;
+        tcgetattr(hSerial, &options); //Get the current options for the port
+        cfmakeraw(&options);
+        options.c_cflag |= (CLOCAL | CREAD); //Enable the receiver and set local mode ///pretty sure this isnt needed
+        options.c_lflag &= ~(ECHO | ICANON | ISIG);
+        cfsetispeed(&options, B115200); //Set the baud rates
+        cfsetospeed(&options, B115200); //Set the baud rates
+        tcsetattr(hSerial, TCSAFLUSH, &options); //set options, wait for operation to complete
 
 
     }

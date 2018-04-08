@@ -197,6 +197,8 @@ void ImageProcess::process() {
                 if (settings.video_output) {
                     video.write(previewSmall);
                 }
+
+                cv::cvtColor(previewSmall, previewSmall, cv::COLOR_HSV2RGB);
                 imshow("Video", previewSmall);
             }
         }

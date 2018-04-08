@@ -27,9 +27,12 @@ Camera::Camera(int nwidth, int nheight) {
 #else
 
 
-
-
-    capture.open("tcambin ! video/x-raw,format=RGBx,width=1280,height=720,framerate=80/1 ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! appsink" );
+//gst-launch-1.0 tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance ! bayer2rgb ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! xvimagesink
+    //tcam-ctrl -p -s "Exposure=5000" 42614274
+    //tcam-ctrl -p -s "Gain=96" 42614274
+    capture.open("tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance ! bayer2rgb ! video/x-raw,format=RGBx ! videoconvert ! appsink" );
+    /*autovideosink*/
+    //capture.open("tcambin ! video/x-raw,format=RGBx,width=1280,height=720,framerate=80/1 ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! appsink" );
                  /*autovideosink*/
 
 #endif
@@ -44,8 +47,9 @@ Camera::Camera(int nwidth, int nheight) {
 //    printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
 //    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
 //    printf("******** SETTING CAMERA DEVICE PROPERTIES *********\n");
-//    capture.set(CV_CAP_PROP_SATURATION, 255);
-//    printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
+    //capture.set(CV_CAP_PROP_CONVERT_RGB, true);
+//   capture.set(CV_CAP_PROP_SATURATION, 255);
+ //   printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
 //    capture.set(CV_CAP_PROP_GAIN, 77);
 //    printf("Gain: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAIN));
 //    capture.set(CV_CAP_PROP_EXPOSURE, -8);
@@ -80,23 +84,29 @@ Camera::~Camera() {
     capture.release();
 }
 
+
 cv::Mat Camera::getUndistortedFrame() {
     // TODO: look at source code for capture.read and see if we can apply undistort to each pixel as its read from the camera to improve performance
     // VideoCapture::read calls retrieve
     auto result = capture.read(currentView);
+
+
+    cv::cvtColor(currentView, hsv, cv::COLOR_RGB2HSV);
     //undistortedFrame = currentView.clone();
     //cv::Mat undistortedFrame;// = currentView.clone();
-    //bitwise_not(currentView, currentView);
-    remap(currentView, undistortedFrame, map1, map2, cv::INTER_LINEAR);
+//    bitwise_not(hsv, hsv);
+    remap(hsv, undistortedFrame, map1, map2, cv::INTER_LINEAR);
     return undistortedFrame;
     //return currentView;
 }
+
 
 cv::Mat Camera::getFrame() {
     capture.read(currentView);
     return currentView;
     //return currentView;
 }
+
 cv::Mat Camera::getHomography(std::vector<cv::Point_<int>> corners,
                                std::vector<cv::Point_<int>> Calibrated_corners){
     std::vector<cv::Point_<int>> pts_src;

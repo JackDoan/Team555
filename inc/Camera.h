@@ -27,6 +27,7 @@ class Camera {
         cv::Mat newCameraMatrix, map1, map2;
         cv::Mat cameraMatrix;
         cv::Mat distCoeffs;
+    cv::Mat hsv;
     public:
         static Camera& getInstance() {
             static Camera instance;
