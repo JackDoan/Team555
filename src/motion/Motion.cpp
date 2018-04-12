@@ -28,7 +28,6 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
     Camera& camera = Camera::getInstance();
     bool yHome = false; //set this to false
     bool xHome = false;
-    cv::Point_<int> malletHome = Table::home;
     cv::Point_<int> firstPosition = {0,0};
     bool first = false;
     cv::Mat calHomeGrabbed;
@@ -37,7 +36,6 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
     MotorDriver& motorDriver = MotorDriver::getInstance();
 
     long initCount;
-    double ratio;
     while (!yHome) {
         if (!settings.undistort) {
             calHomeGrabbed = camera.getFrame();
@@ -66,17 +64,17 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
         }
 
         int stepsPerPixel = 1;
-        if (abs(malletHome.y - mallet.location.y) <= 5) {
+        if (abs(Table::home.y - mallet.location.y) <= 5) {
             //printf("Close enough\n");
             yHome = true;
             long finalCount = motorDriver.getSteps('y');
             long countDif = finalCount - initCount;
-            ratio = abs((double)countDif / (double)abs(malletHome.y - firstPosition.y));
+            //ratio = abs((double)countDif / (double)abs(Table::home.y - firstPosition.y));
 //            printf("ratio: %f\n", ratio);
             // ask the drivers where it is and store as final count
 //            break;
         } else {
-            int difference = malletHome.y - mallet.location.y;
+            int difference = Table::home.y - mallet.location.y;
             long toMove = (long) (abs(stepsPerPixel) * difference);
             if(abs(toMove) <= 3) {
                 //printf("not moving %ld steps\n", toMove);
@@ -116,18 +114,18 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
             first = true;
         }
 
-        int stepsPerPixel = 1;
-        if (abs(malletHome.x - mallet.location.x) <= 5) {
+        int stepsPerPixel = 4;
+        if (abs(Table::home.x - mallet.location.x) <= 5) {
             //printf("Close enough\n");
             xHome = true;
             long finalCount = motorDriver.getSteps('x');
             long countDif = finalCount - initCount;
-            ratio = abs((double)countDif / (double)abs(malletHome.x - firstPosition.x));
+            //ratio = abs((double)countDif / (double)abs(Table::home.x - firstPosition.x));
 //            printf("ratio: %f\n", ratio);
             // ask the drivers where it is and store as final count
 //            break;
         } else {
-            int difference = mallet.location.x - malletHome.x;
+            int difference = mallet.location.x - Table::home.x;
             long toMove = (long) (abs(stepsPerPixel) * difference);
             if(abs(toMove) <= 3) {
                 printf("not moving %ld steps\n", toMove);
@@ -212,7 +210,7 @@ void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
             desiredLocation =  interceptSpot;
         }
         else {
-            desiredLocation = table.home;
+            desiredLocation = Table::home;
         }
 
         // limit desired location to x and y boundaries if they exceed those boundaries
@@ -229,10 +227,37 @@ void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
     }
 }
 
+
+// TODO: test this
 void Motion::attack(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
-    // TODO: this aint gonna work, fix this make it recursive
+    MotorDriver& motorDriver = MotorDriver::getInstance();
+
     if (within(puck.location, table.strikeLimitMin, table.strikeLimitMax)) {
-        findHitVector(table, mallet, puck, grabbed);
+        if (!hitVectorFound) {
+            hitVector = findHitVector(table, mallet, puck, grabbed);
+            // tell the motors to move to the staging position
+            motorDriver.moveTo(hitVector.front());
+        } else if (striking) {
+            // check if done striking
+            if (abs(mallet.location.x - hitVector.back().x) < 25 && abs(mallet.location.y - hitVector.back().y) < 25) {
+                attackDone = true;
+                hitVectorFound = false;
+                striking = false;
+                // tell motors to return to home position
+                motorDriver.moveTo(table.home);
+                // set motionMode to defense somewhere else if motion.attackDone is true;
+            }
+        } else if (!stillStaging(mallet.location, hitVector.front())){
+            striking = true;
+            // tell the motors to move to to the last point in hitVector
+            motorDriver.moveTo(hitVector.back());
+
+        }
+
+
+
+
+
     }
     // find a direct hit path from the current mallet location to a point some amount beyond the
     // puck predicted location and some amount from the puck back to the mallet's current location the same amount
@@ -247,8 +272,21 @@ void Motion::attack(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
             // if reach 3 moves then just take that shot
 }
 
-void Motion::findHitVector(Table table, Mallet mallet, Puck puck, cv::Mat grabbed) {
+bool Motion::stillStaging (cv::Point_<int> malletloc, cv::Point_<int> staging) {
+    if (abs(malletloc.x - staging.x) > 5 || abs(malletloc.y - staging.y) > 5) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+std::vector<cv::Point_<int>> Motion::findHitVector(Table table, Mallet mallet, Puck puck, cv::Mat grabbed) {
+    bool useNewTraj = false;
     double sf = 80;
+    cv::Point_<int> startPos = {0, 0};
+    int yoff = 30;
+    int offdir = 0;
+    int i = 2;
     cv::Point_<double> mallet2puck = puck.location - mallet.location;
     double mag = sqrt(pow(mallet2puck.x, 2) + pow(mallet2puck.y, 2));
     cv::Point_<double> amountdbl = (mallet2puck/mag)*sf;
@@ -256,7 +294,76 @@ void Motion::findHitVector(Table table, Mallet mallet, Puck puck, cv::Mat grabbe
     cv::Point_<int> puckplus = puck.location + amountint;
     cv::Point_<int> puckminus = puck.location - amountint;
     puckplus = saturate(puckplus, table.motionLimitMin, table.motionLimitMax);
+//    cv::line(grabbed, puckplus, puckminus, cvScalar(55, 200, 200), 3);
+//    cv::circle(grabbed, puckplus, 10, cv::Scalar(55, 200, 200), 3);
+//    cv::circle(grabbed, puckminus, 10, cv::Scalar(5, 200, 200), 3);
+    std::vector<std::vector<cv::Point_<int>>> estTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+    std::vector<std::vector<cv::Point_<int>>> newTraj;
+    if (!puck.leftGoalOffense) {
+        useNewTraj = true;
+        // determine which y-direction gets me closer to the goal
+        int dist2goal = abs(estTraj.back().back().y - puck.L_mid.y);
+        // calculate negative new puckplus and puckminus positions
+        mallet2puck = puck.location - cv::Point(mallet.location.x, mallet.location.y-yoff);
+        mag = sqrt(pow(mallet2puck.x, 2) + pow(mallet2puck.y, 2));
+        amountdbl = (mallet2puck/mag)*sf;
+        amountint = {round(amountdbl.x), round(amountdbl.y)};
+        puckplus = puck.location + amountint;
+        puckminus = puck.location - amountint;
+        puckplus = saturate(puckplus, table.motionLimitMin, table.motionLimitMax);
+        newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+        // if this new trajectory does not result in a goal or it takes us further away from the goal
+        // immediately set the offset direction variable to 1 and start checking that direction else
+        // if it results in a goal then take that shot but if not continue incrementing until a goal is found
+        if(!puck.leftGoalOffense || abs(newTraj.back().back().y - puck.L_mid.y) > dist2goal) {
+            offdir = 1;
+            for (i = 2; i < 10; i++) {
+                mallet2puck = puck.location - cv::Point(mallet.location.x, mallet.location.y + yoff*i);
+                mag = sqrt(pow(mallet2puck.x, 2) + pow(mallet2puck.y, 2));
+                amountdbl = (mallet2puck/mag)*sf;
+                amountint = {round(amountdbl.x), round(amountdbl.y)};
+                puckplus = puck.location + amountint;
+                puckminus = puck.location - amountint;
+                puckplus = saturate(puckplus, table.motionLimitMin, table.motionLimitMax);
+                newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+                if (puck.leftGoalOffense) {
+                    break;
+                }
+            }
+        } else if (puck.leftGoalOffense) {
+            // first move the mallet to the offset position and then tell it to move to strike spot
+        } else {
+            offdir = -1;
+            for (i = 2; i < 10; i++) {
+                mallet2puck = puck.location - cv::Point(mallet.location.x, mallet.location.y - yoff*i);
+                mag = sqrt(pow(mallet2puck.x, 2) + pow(mallet2puck.y, 2));
+                amountdbl = (mallet2puck/mag)*sf;
+                amountint = {round(amountdbl.x), round(amountdbl.y)};
+                puckplus = puck.location + amountint;
+                puckminus = puck.location - amountint;
+                puckplus = saturate(puckplus, table.motionLimitMin, table.motionLimitMax);
+                newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+                if (puck.leftGoalOffense) {
+                    break;
+                }
+            }
+        }
+    }
     cv::line(grabbed, puckplus, puckminus, cvScalar(55, 200, 200), 3);
     cv::circle(grabbed, puckplus, 10, cv::Scalar(55, 200, 200), 3);
     cv::circle(grabbed, puckminus, 10, cv::Scalar(5, 200, 200), 3);
+    if (useNewTraj) {
+        puck.drawTraj(grabbed, newTraj);
+    } else {
+        puck.drawTraj(grabbed, estTraj);
+    }
+    // return the staging position and the moveTo position
+    cv::Point_<int> stage = {mallet.location.x, mallet.location.y + yoff * i * offdir};
+    cv::Point_<int> moveTo = puckplus;
+    hitVectorFound = true;
+    return {stage, moveTo};
+
+
+
+
 }

@@ -1,0 +1,27 @@
+Air Hockey Robot - Software Manual
+
+Last updated:   April 12, 2018
+
+--------------------------------------
+
+Contents:
+
+1. General Information  (overall process, settings, etc?)
+2. Command Keys
+3. Calibration
+4.
+5. Image Process
+6.
+7. Offense
+8. Defense
+
+
+Hardware requirements?
+
+---------------------------------------
+
+1. General Information:
+
+sdfsdfsdf
+
+going to wait till are closer to being done

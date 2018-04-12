@@ -17,13 +17,18 @@ class Motion {
 private:
 
 public:
-
+    bool hitVectorFound = false;
+    bool staging = false;
+    bool striking = false;
+    bool attackDone = false;
     void calibrateHome(Table table, Mallet mallet, Settings settings);
     void trackY();
     void trackPredictedY(Table table, Mallet mallet, Puck puck, cv::Mat grabbed);
     void defend(Table table, Mallet mallet, Puck puck, cv::Mat& grabbed);
     void attack(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed);
-    void findHitVector(Table table, Mallet mallet, Puck puck, cv::Mat grabbed);
+    bool stillStaging (cv::Point_<int> malletloc, cv::Point_<int> staging);
+    std::vector<cv::Point_<int>> hitVector;
+    std::vector<cv::Point_<int>> findHitVector(Table table, Mallet mallet, Puck puck, cv::Mat grabbed);
     Motion();
     ~Motion() = default;
 

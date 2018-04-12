@@ -9,7 +9,7 @@
 #include <opencv/cv.hpp>
 #include <string>
 #include <vector>
-
+#include "unistd.h"
 
 #include "../inc/ImageProcess.h"
 #include "../inc/Table.h"
@@ -28,7 +28,7 @@ clock_t begin;
 clock_t end;
 
 ImageProcess::ImageProcess(Table& table, Puck& puck, Mallet& mallet, Corners& corners, Settings& settings) {
-    threadIt = true;
+    threadIt = false;
     this->table = table;
     this->puck = puck;
     this->mallet = mallet;
@@ -150,8 +150,17 @@ void ImageProcess::process() {
                     printf("Motion Mode = Attack\n");
                     motionMode = ATTACK;
                     break;
+                case 'k':
+                    while(cvWaitKey(1) == -1) {
+                        cv::Point_<int> fuck = {0, 200};
+                        motorDriver.moveTo(Table::home + fuck);
+                        sleep(2);
+                        motorDriver.moveTo(Table::home - fuck);
+                        sleep(2l);
+                    }
+
                 default:
-                    //printf("Motion Mode = IDLE\n");
+                    //printf("You pressed %d\n", key);
                     //motionMode = IDLE;
                     break;
             }

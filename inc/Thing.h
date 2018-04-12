@@ -65,9 +65,12 @@ protected:
 public:
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
 
+
+    cv::Point_<int> L_mid;
+    cv::Point_<int> R_mid;
     clock_t s;
     clock_t e;
-    int vectorMult = 15*2;
+    int vectorMult = 15;
     double walls[4][3];
 //    int goalArr[2][3];
 //    int predicted[3];
@@ -81,6 +84,8 @@ public:
     bool goalFlag;
     bool leftGoal;
     bool rightGoal;
+    bool leftGoalOffense;
+    bool rightGoalOffense;
     std::vector<cv::Point_<int>> Goals;
     std::vector<std::vector<cv::Point_<int>>> trajectory;
 
@@ -111,12 +116,13 @@ public:
         }
     }
     void setGoals(std::vector<cv::Point_<int>> sortedX);
-    void drawTraj(cv::Mat in);
+    void drawTraj(cv::Mat in, std::vector<std::vector<cv::Point_<int>>> traj);
     std::vector<std::vector<cv::Point_<int>>> calcTraj(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);
     std::vector<std::vector<cv::Point_<int>>> calcTrajOffense(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);
     std::vector<bool> bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed, int bnccnt);
     cv::Point_<int> findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint);
     void goalDetect(cv::Point_<int> intersection, int xvelo);
+    void goalDetectOffense(cv::Point_<int> intersection, int xvelo);
 
     std::vector<bool> foundHistory;
     void fillFoundHistory(bool found);

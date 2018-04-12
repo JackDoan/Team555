@@ -66,7 +66,7 @@ bool MotorDriver::moveTo(const cv::Point_<int> &in) { ///this takes pixels now!
     if (abs(toMove.y) <= deadband) {
         toMove.y = 0;
     }
-    return sendCMD(-toMove.x, 'X') && sendCMD(toMove.y, 'Y');
+    return sendCMD(toMove.x, 'X') && sendCMD(toMove.y, 'Y');
 }
 
 bool MotorDriver::moveBy(const cv::Point_<int> &in) {

@@ -44,7 +44,7 @@ void Table::annotate(cv::Mat frameGrabbed) {
 }
 
 Table::~Table() = default;
-const cv::Point_<int> Table::home = cv::Point_<int>(1150,360);
+const cv::Point_<int> Table::home = cv::Point_<int>(1100,360);
 void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY) {
     min.x = sortedX[0].x; printf("Setting min X: %d\n", min.x);
     max.x = sortedX[3].x; printf("Setting max X: %d\n", max.x);
