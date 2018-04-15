@@ -12,8 +12,6 @@ public:
     bool video_output = false;   //can be shown through Idle Process
     bool undistort = true;
     bool calibrateCorners = false;
-    bool RunIdle = false;       //Idle Process to show video.
-    bool checkButtons = false;
 
 
 

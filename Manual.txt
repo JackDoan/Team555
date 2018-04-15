@@ -6,7 +6,7 @@ Last updated:   April 12, 2018
 
 Contents:
 
-1. General Information  (overall process, settings, etc?)
+1. General Information  (overall run, settings, etc?)
 2. Command Keys
 3. Calibration
 4.

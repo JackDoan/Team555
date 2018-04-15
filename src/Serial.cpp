@@ -169,7 +169,7 @@ Serial::Serial(const char *portName)  {
 #endif
 
 
-    this->hSerial =  open(file, O_RDWR | O_NOCTTY | O_NDELAY);
+    this->hSerial =  open(file, O_RDWR|O_NONBLOCK|O_NOCTTY|O_SYNC); //open(file, O_RDWR | O_NOCTTY | O_NDELAY);
     if(this->hSerial == 0) {
         connected = false;
         printf("ERROR: Handle was not attached. errno %d\n", errno);
@@ -180,7 +180,7 @@ Serial::Serial(const char *portName)  {
         tcgetattr(hSerial, &options); //Get the current options for the port
         cfmakeraw(&options);
         options.c_cflag |= (CLOCAL | CREAD); //Enable the receiver and set local mode ///pretty sure this isnt needed
-        options.c_lflag &= ~(ECHO | ICANON | ISIG);
+        options.c_lflag &= ~(ECHO | ECHOE | ICANON | ISIG);
         cfsetispeed(&options, B115200); //Set the baud rates
         cfsetospeed(&options, B115200); //Set the baud rates
         tcsetattr(hSerial, TCSAFLUSH, &options); //set options, wait for operation to complete

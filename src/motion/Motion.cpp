@@ -17,6 +17,7 @@
 #include "../../inc/Puck.h"
 #include "../../inc/Settings.h"
 
+#pragma clang diagnostic ignored "-Wnarrowing"
 
 Motion::Motion() {
 
@@ -28,6 +29,8 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
     Camera& camera = Camera::getInstance();
     bool yHome = false; //set this to false
     bool xHome = false;
+    int yHomeDecay = 0;
+    int xHomeDecay = 0;
     cv::Point_<int> firstPosition = {0,0};
     bool first = false;
     cv::Mat calHomeGrabbed;
@@ -52,7 +55,7 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
             imshow("CalHome", calHomeSmall);
         }
         if (!mallet.found) {
-            printf("Mallet not found in calibrateHome y process!\n");
+            printf("Mallet not found in calibrateHome y run!\n");
             if (cv::waitKey(100) >= 0)
                 continue;
         }
@@ -65,15 +68,22 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
 
         int stepsPerPixel = 1;
         if (abs(Table::home.y - mallet.location.y) <= 5) {
-            //printf("Close enough\n");
-            yHome = true;
-            long finalCount = motorDriver.getSteps('y');
-            long countDif = finalCount - initCount;
-            //ratio = abs((double)countDif / (double)abs(Table::home.y - firstPosition.y));
+            if(yHomeDecay >= 5) {
+                //printf("Close enough\n");
+                yHome = true;
+                long finalCount = motorDriver.getSteps('y');
+                long countDif = finalCount - initCount;
+                //ratio = abs((double)countDif / (double)abs(Table::home.y - firstPosition.y));
 //            printf("ratio: %f\n", ratio);
-            // ask the drivers where it is and store as final count
+                // ask the drivers where it is and store as final count
 //            break;
+            }
+            else {
+                yHomeDecay++;
+            }
+
         } else {
+            yHomeDecay = 0;
             int difference = Table::home.y - mallet.location.y;
             long toMove = (long) (abs(stepsPerPixel) * difference);
             if(abs(toMove) <= 3) {
@@ -103,7 +113,7 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
             imshow("CalHome", calHomeSmall);
         }
         if (!mallet.found) {
-            printf("Mallet not found in calibrateHome x process!\n");
+            printf("Mallet not found in calibrateHome x run!\n");
             if (cv::waitKey(100) >= 0)
                 continue;
         }
@@ -117,14 +127,21 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
         int stepsPerPixel = 4;
         if (abs(Table::home.x - mallet.location.x) <= 5) {
             //printf("Close enough\n");
-            xHome = true;
-            long finalCount = motorDriver.getSteps('x');
-            long countDif = finalCount - initCount;
+            if(xHomeDecay >=5) {
+                xHome = true;
+                long finalCount = motorDriver.getSteps('x');
+                long countDif = finalCount - initCount;
+            }
+            else {
+                xHomeDecay++;
+            }
             //ratio = abs((double)countDif / (double)abs(Table::home.x - firstPosition.x));
 //            printf("ratio: %f\n", ratio);
             // ask the drivers where it is and store as final count
 //            break;
-        } else {
+        }
+        else {
+            xHomeDecay = 0;
             int difference = mallet.location.x - Table::home.x;
             long toMove = (long) (abs(stepsPerPixel) * difference);
             if(abs(toMove) <= 3) {
@@ -192,8 +209,9 @@ bool checkPastgoalFlags(std::vector<bool> goalFlagHistory) {
 }
 
 // TODO: come up with some way to ALWAYS prevent the robot from knocking the puck into its own goal
-void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
-    static cv::Point_<int> interceptSpot;
+cv::Point_<int> Motion::defend(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed) {
+    const auto defenseColor = cv::Scalar(225, 255, 255);
+    static cv::Point_<int> interceptSpot = Table::home;
     MotorDriver& motorDriver = MotorDriver::getInstance();
     cv::Point_<int> desiredLocation;
     if(puck.lostCnt < 10 && mallet.found) {
@@ -201,38 +219,108 @@ void Motion::defend(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
         // i dont know if this intersect check here is needed, just did it cause
         if (puck.rightGoal) {
             // move to the midpoint of the last trajectory vector
-            cv::putText(grabbed, "Goal!!", cvPoint(450, 320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            cv::putText(grabbed, "Goal!!", cvPoint(450, 320), cv::FONT_HERSHEY_SIMPLEX, 10, defenseColor, 7);
             desiredLocation = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0]) * 0.7;
             interceptSpot = desiredLocation;
         }
         else if(checkPastgoalFlags(puck.rightGoalHistory)) {
-            cv::putText(grabbed, "Goal!!", cvPoint(350, 320), cv::FONT_HERSHEY_SIMPLEX, 10, cv::Scalar(225, 255, 0), 7);
+            cv::putText(grabbed, "Goal!!", cvPoint(350, 320), cv::FONT_HERSHEY_SIMPLEX, 10, defenseColor, 7);
             desiredLocation =  interceptSpot;
         }
         else {
             desiredLocation = Table::home;
+            interceptSpot = Table::home;
         }
 
         // limit desired location to x and y boundaries if they exceed those boundaries
         desiredLocation = saturate(desiredLocation, table.motionLimitMin, table.motionLimitMax);
 //        if (puck.onTable && ((abs(desiredLocation.x - mallet.location.x) > motorDriver.deadband) || (abs(desiredLocation.y - mallet.location.y) > motorDriver.deadband)))
         if (puck.onTable) {
-            cv::putText(grabbed, "moving", cvPoint(1100, 665), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 255, 0), 2);
-            motorDriver.moveTo(desiredLocation);
+            cv::putText(grabbed, "moving", cvPoint(1100, 665), cv::FONT_HERSHEY_SIMPLEX, 1, defenseColor, 2);
+            if(mallet.location == desiredLocation) {
+                //printf("Motion::defend: mallet is where I want it, not moving\n");
+            }
+            else {
+                motorDriver.moveTo(desiredLocation);
+            }
+
         }
 
 //        printf("Desired Location: (%d, %d)\n", desiredLocation.x, desiredLocation.y);
 
-        cv::circle(grabbed, desiredLocation, 20, cv::Scalar(225, 255, 0), 6);
+        cv::circle(grabbed, desiredLocation, 20, defenseColor, 6);
     }
+    return desiredLocation;
 }
 
+void Motion::resetOffense() {
+    attackState = ATTACKDONE;
+}
 
 // TODO: test this
-void Motion::attack(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
+bool Motion::attack(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed) {
     MotorDriver& motorDriver = MotorDriver::getInstance();
+    bool toReturn = false;
+    const auto color = cv::Scalar(100, 255, 255);
+    const auto color1 = cv::Scalar(150, 255, 255);
+    cv::putText(grabbed, "attacking", cvPoint(1100, 665), cv::FONT_HERSHEY_SIMPLEX, 1, color, 2);
+    switch(attackState) {
+        case ATTACKDONE: {
+            // this is the fist call to attack
+            // calculate staging point and final point with findHitVector
+            hitVector = findHitVector(table, mallet, puck, grabbed);
+            // issue move command to staging point
+            auto desiredLocation = hitVector.front();
+            motorDriver.moveTo(desiredLocation);
+            cv::circle(grabbed, desiredLocation, 20, color, 8);
+            cv::circle(grabbed, hitVector.front(), 20, color, 6);
+            cv::circle(grabbed, hitVector.back(), 20, color1, 6);
+            // set attackState to staging
+            attackState = STAGING;
+            break;
+        }
+        case STAGING: {
+            // if the mallet is at the staging point
+            if (!stillStaging(mallet.location, hitVector.front())) {
+                // issue move command to attack point
+                auto desiredLocation = hitVector.back();
+                motorDriver.moveTo(desiredLocation);
+                cv::circle(grabbed, desiredLocation, 20, color, 8);
+                cv::circle(grabbed, hitVector.front(), 20, color, 6);
+                cv::circle(grabbed, hitVector.back(), 20, color1, 6);
+                // set attackState to Attacking
+                attackState = ATTACKING;
+            }
+            else {
+                auto desiredLocation = hitVector.front();
+                motorDriver.moveTo(desiredLocation);
+                cv::circle(grabbed, hitVector.front(), 20, color, 6);
+                cv::circle(grabbed, hitVector.back(), 20, color1, 6);
+            }
+            break;
+        }
+        case ATTACKING:
+            // if the mallet is at the final attack point
+            if (abs(mallet.location.x - hitVector.back().x) < 25 && abs(mallet.location.y - hitVector.back().y) < 25) {
+                attackState = ATTACKDONE;
+                toReturn = true;
+            }
+            else {
+                auto desiredLocation = hitVector.back();
+                motorDriver.moveTo(desiredLocation);
+                cv::circle(grabbed, hitVector.front(), 20, color, 6);
+                cv::circle(grabbed, hitVector.back(), 20, color1, 6);
+            }
 
-    if (within(puck.location, table.strikeLimitMin, table.strikeLimitMax)) {
+            break;
+        default:
+            // set attackState to done
+            attackState = ATTACKDONE;
+            toReturn = true;
+            break;
+    }
+
+    /*if (within(puck.location, table.strikeLimitMin, table.strikeLimitMax)) {
         if (!hitVectorFound) {
             hitVector = findHitVector(table, mallet, puck, grabbed);
             // tell the motors to move to the staging position
@@ -252,38 +340,31 @@ void Motion::attack(Table table, Mallet mallet, Puck puck, cv::Mat & grabbed) {
             // tell the motors to move to to the last point in hitVector
             motorDriver.moveTo(hitVector.back());
 
-        }
+        }*/
 
+/*     find a direct hit path from the current mallet location to a point some amount beyond the
+     puck predicted location and some amount from the puck back to the mallet's current location the same amount
+     use that location as the input lastLoc to calcAttackTraj and the location beyond as the location
+     does this end in a leftGoal?
+         yes, issue move command the the point beyond the puck, make sure to saturate it and return
+         no, first calculate a y distance on the player's wall from the center of the goal to the end point found
+         redo the above if the mallet's location is 40 px different in +/- y
+         do these end in a goal? if one of them does take that shot and return
+             if not which one resulted in less distance from center of player's goal to end point
+             move 40px in that direction and redo again until either a goal or a max of 3 moves is done
+             if reach 3 moves then just take that shot*/
 
-
-
-
-    }
-    // find a direct hit path from the current mallet location to a point some amount beyond the
-    // puck predicted location and some amount from the puck back to the mallet's current location the same amount
-    // use that location as the input lastLoc to calcAttackTraj and the location beyond as the location
-    // does this end in a leftGoal?
-        // yes, issue move command the the point beyond the puck, make sure to saturate it and return
-        // no, first calculate a y distance on the player's wall from the center of the goal to the end point found
-        // redo the above if the mallet's location is 40 px different in +/- y
-        // do these end in a goal? if one of them does take that shot and return
-            // if not which one resulted in less distance from center of player's goal to end point
-            // move 40px in that direction and redo again until either a goal or a max of 3 moves is done
-            // if reach 3 moves then just take that shot
+    return toReturn;
 }
 
 bool Motion::stillStaging (cv::Point_<int> malletloc, cv::Point_<int> staging) {
-    if (abs(malletloc.x - staging.x) > 5 || abs(malletloc.y - staging.y) > 5) {
-        return true;
-    } else {
-        return false;
-    }
+    auto diff = malletloc-staging;
+    return abs(diff.x) > 10 || abs(diff.y) > 10;
 }
 
-std::vector<cv::Point_<int>> Motion::findHitVector(Table table, Mallet mallet, Puck puck, cv::Mat grabbed) {
+std::vector<cv::Point_<int>> Motion::findHitVector(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed) {
     bool useNewTraj = false;
     double sf = 80;
-    cv::Point_<int> startPos = {0, 0};
     int yoff = 30;
     int offdir = 0;
     int i = 2;
@@ -293,12 +374,12 @@ std::vector<cv::Point_<int>> Motion::findHitVector(Table table, Mallet mallet, P
     cv::Point_<int> amountint = {round(amountdbl.x), round(amountdbl.y)};
     cv::Point_<int> puckplus = puck.location + amountint;
     cv::Point_<int> puckminus = puck.location - amountint;
-    puckplus = saturate(puckplus, table.motionLimitMin, table.motionLimitMax);
-//    cv::line(grabbed, puckplus, puckminus, cvScalar(55, 200, 200), 3);
-//    cv::circle(grabbed, puckplus, 10, cv::Scalar(55, 200, 200), 3);
-//    cv::circle(grabbed, puckminus, 10, cv::Scalar(5, 200, 200), 3);
-    std::vector<std::vector<cv::Point_<int>>> estTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
-    std::vector<std::vector<cv::Point_<int>>> newTraj;
+    puckplus = saturate(puckplus, Table::strikeLimitMin, Table::strikeLimitMax);
+    cv::line(grabbed, puckplus, puckminus, cvScalar(55, 200, 200), 3);
+    cv::circle(grabbed, puckplus, 10, cv::Scalar(55, 200, 200), 3);
+    cv::circle(grabbed, puckminus, 10, cv::Scalar(5, 200, 200), 3);
+    auto estTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+    auto newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
     if (!puck.leftGoalOffense) {
         useNewTraj = true;
         // determine which y-direction gets me closer to the goal
@@ -310,8 +391,7 @@ std::vector<cv::Point_<int>> Motion::findHitVector(Table table, Mallet mallet, P
         amountint = {round(amountdbl.x), round(amountdbl.y)};
         puckplus = puck.location + amountint;
         puckminus = puck.location - amountint;
-        puckplus = saturate(puckplus, table.motionLimitMin, table.motionLimitMax);
-        newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+        puckplus = saturate(puckplus, Table::strikeLimitMin, Table::strikeLimitMax);
         // if this new trajectory does not result in a goal or it takes us further away from the goal
         // immediately set the offset direction variable to 1 and start checking that direction else
         // if it results in a goal then take that shot but if not continue incrementing until a goal is found
@@ -321,11 +401,10 @@ std::vector<cv::Point_<int>> Motion::findHitVector(Table table, Mallet mallet, P
                 mallet2puck = puck.location - cv::Point(mallet.location.x, mallet.location.y + yoff*i);
                 mag = sqrt(pow(mallet2puck.x, 2) + pow(mallet2puck.y, 2));
                 amountdbl = (mallet2puck/mag)*sf;
-                amountint = {round(amountdbl.x), round(amountdbl.y)};
+                amountint = {static_cast<int>(round(amountdbl.x)), static_cast<int>(round(amountdbl.y))};
                 puckplus = puck.location + amountint;
                 puckminus = puck.location - amountint;
-                puckplus = saturate(puckplus, table.motionLimitMin, table.motionLimitMax);
-                newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+                puckplus = saturate(puckplus, Table::strikeLimitMin, Table::strikeLimitMax);
                 if (puck.leftGoalOffense) {
                     break;
                 }
@@ -341,13 +420,13 @@ std::vector<cv::Point_<int>> Motion::findHitVector(Table table, Mallet mallet, P
                 amountint = {round(amountdbl.x), round(amountdbl.y)};
                 puckplus = puck.location + amountint;
                 puckminus = puck.location - amountint;
-                puckplus = saturate(puckplus, table.motionLimitMin, table.motionLimitMax);
-                newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+                puckplus = saturate(puckplus, Table::strikeLimitMin, Table::strikeLimitMax);
                 if (puck.leftGoalOffense) {
                     break;
                 }
             }
         }
+        newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
     }
     cv::line(grabbed, puckplus, puckminus, cvScalar(55, 200, 200), 3);
     cv::circle(grabbed, puckplus, 10, cv::Scalar(55, 200, 200), 3);
@@ -359,11 +438,64 @@ std::vector<cv::Point_<int>> Motion::findHitVector(Table table, Mallet mallet, P
     }
     // return the staging position and the moveTo position
     cv::Point_<int> stage = {mallet.location.x, mallet.location.y + yoff * i * offdir};
-    cv::Point_<int> moveTo = puckplus;
+    stage = saturate(stage, Table::strikeLimitMin, Table::strikeLimitMax);
+    auto moveTo = saturate(puckplus, Table::strikeLimitMin, Table::strikeLimitMax);
     hitVectorFound = true;
     return {stage, moveTo};
 
+}
+
+void Motion::calcPuckRange(cv::Point_<double> mallet2puck, cv::Point_<int>& puckPlus, cv::Point_<int>& puckMinus) {
+
+}
 
 
+bool Motion::impulse(Table& table, Mallet& mallet, Puck& puck, cv::Mat &grabbed) {
+    MotorDriver& motorDriver = MotorDriver::getInstance();
+    bool toReturn = false;
 
+    /////
+
+    switch(impulseState) {
+        case IMPULSEDONE:
+            // calculate the impulse vector
+
+            // issue move command to stage1
+            impulseState = STAGING1;
+            break;
+        case STAGING1:
+            if (!stillStaging(mallet.location, impulseVector[0])) {
+                // issue move command to stage2
+                motorDriver.moveTo(impulseVector[1]);
+                // set attackState to Attacking
+                impulseState = STAGING2;
+            }
+            break;
+        case STAGING2:
+            if (!stillStaging(mallet.location, impulseVector[1])) {
+                // issue move command to hit
+                motorDriver.moveTo(impulseVector[2]);
+                impulseState = HITTING;
+            }
+            break;
+        case HITTING:
+            if (!stillStaging(mallet.location, impulseVector[2])) {
+                // set done state and return true
+                impulseState = IMPULSEDONE;
+                toReturn = true;
+            }
+            break;
+        default:
+            impulseState = IMPULSEDONE;
+            toReturn = true;
+            break;
+    }
+
+}
+
+std::vector<cv::Point_<int>> Motion::findImpulseVector(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed) {
+    // determine if the puck is 'stuck' on an x-wall or the y-wall
+        // if x-wall set a bool high that says its on an x-wall
+        // if y-wall set a bool high that says its on a y-wall
+    //
 }

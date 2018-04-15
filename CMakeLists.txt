@@ -10,7 +10,7 @@ set(OpenCV_DIR C:/opencv/mingw/install)
  #       ) # For some reason CMake uses its defaults before the above paths.)
 find_package( OpenCV REQUIRED )
 #INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS} )
-add_executable(AirHockeyRobot src/main.cpp src/Puck.cpp inc/Puck.h src/Table.cpp inc/Table.h src/Camera.cpp inc/Camera.h src/ViewFinder.cpp inc/ViewFinder.h inc/helpers.h src/Corners.cpp inc/Corners.h src/Serial.cpp inc/Serial.h src/MotorDriver.cpp inc/MotorDriver.h src/Config.cpp inc/Config.h src/Idle.cpp inc/Idle.h src/Mallet.cpp inc/Mallet.h src/ImageProcess.cpp inc/ImageProcess.h inc/Settings.h src/Thing.cpp inc/Thing.h src/motion/Motion.cpp inc/motion/Motion.h src/helpers.cpp inc/motion/Attack.h src/motion/Attack.cpp inc/motion/Attack.h inc/motion/Strategy.h inc/Serial_Linux.h PlayTime.cpp PlayTime.h)
+add_executable(AirHockeyRobot src/main.cpp src/Puck.cpp inc/Puck.h src/Table.cpp inc/Table.h src/Camera.cpp inc/Camera.h src/ViewFinder.cpp inc/ViewFinder.h inc/helpers.h src/Corners.cpp inc/Corners.h src/Serial.cpp inc/Serial.h src/MotorDriver.cpp inc/MotorDriver.h src/Config.cpp inc/Config.h src/Mallet.cpp inc/Mallet.h src/Supervisor.cpp inc/Supervisor.h inc/Settings.h src/Thing.cpp inc/Thing.h src/motion/Motion.cpp inc/motion/Motion.h src/helpers.cpp inc/motion/Attack.h src/motion/Attack.cpp inc/motion/Attack.h inc/motion/Strategy.h inc/Serial_Linux.h PlayTime.cpp PlayTime.h src/DoubleBuffer.cpp inc/DoubleBuffer.h)
 link_directories(${OpenCV_LIB_DIR})
 target_link_libraries( AirHockeyRobot ${OpenCV_LIBS} )
 

@@ -34,7 +34,7 @@ private:
 
     MotorDriver();
 public:
-    int deadband = 5;
+    int deadband = 0;
 //    Serial* SPx = new Serial("\\\\.\\COM4");
 //    Serial* SPy = new Serial("\\\\.\\COM5");
     static MotorDriver& getInstance() {
@@ -61,7 +61,6 @@ public:
     bool sendCMD(int steps, char axis);
     long getSteps(char axis);
     void setEnable(bool x, bool y);
-    void sendRaw(char msg);
     void readAll();
     bool moveTo(const cv::Point_<int> &in);
     bool moveBy(const cv::Point_<int> &in);

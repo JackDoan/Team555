@@ -98,10 +98,10 @@ public:
     double getMinArea();
     double getMaxArea();
     double getMinRoundness();
-    std::vector<cv::Point_<int>> find(cv::Mat in, Table table);    //Changed from int to pointer, returns coords
+    std::vector<cv::Point_<int>> find(cv::Mat& in, Table table);    //Changed from int to pointer, returns coords
     void findOne(cv::Mat in, Table table, bool isMallet);    //Changed from int to pointer, returns coords
-    void calcVector(cv::Mat in);
-    void drawVector(cv::Mat in);
+    void calcVector(cv::Mat& in);
+    void drawVector(cv::Mat& in);
     void calcTraj(Table table);
 
     void toggleDebugInfo() {
@@ -116,9 +116,9 @@ public:
         }
     }
     void setGoals(std::vector<cv::Point_<int>> sortedX);
-    void drawTraj(cv::Mat in, std::vector<std::vector<cv::Point_<int>>> traj);
+    void drawTraj(cv::Mat& in, std::vector<std::vector<cv::Point_<int>>> traj);
     std::vector<std::vector<cv::Point_<int>>> calcTraj(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);
-    std::vector<std::vector<cv::Point_<int>>> calcTrajOffense(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);
+    std::vector<std::vector<cv::Point_<int>>> calcTrajOffense(const Table& table, cv::Mat& grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);
     std::vector<bool> bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed, int bnccnt);
     cv::Point_<int> findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint);
     void goalDetect(cv::Point_<int> intersection, int xvelo);
@@ -128,18 +128,18 @@ public:
     void fillFoundHistory(bool found);
     std::vector<cv::Point_<int>> locationHistory;
     void fillLocationHistory(cv::Point_<int>);
-    void drawLocationHistory(cv::Mat in);
+    void drawLocationHistory(cv::Mat& in);
     std::vector<std::vector<std::vector<cv::Point_<int>>>> trajectoryHistory;
     bool drawWholeHistory;
     void fillTrajHistory();
-    void drawTrajHistory(cv::Mat in);
-    void drawTrajEndPointHistory(cv::Mat in);
-    void drawGoalVector(cv::Mat in);
-    //    void drawGoalVector(cv::Mat in, std::vector<cv::Point_<int>> sortedY);
+    void drawTrajHistory(cv::Mat& in);
+    void drawTrajEndPointHistory(cv::Mat& in);
+    void drawGoalVector(cv::Mat& in);
+    //    void drawGoalVector(cv::Mat& in, std::vector<cv::Point_<int>> sortedY);
 
     std::vector<double> magHistory;
     void fillVeloMagHistory();
-    void writeVeloMagHistory(cv::Mat in);
+    void writeVeloMagHistory(cv::Mat& in);
     std::vector<bool> rightGoalHistory;
     std::vector<bool> leftGoalHistory;
     void fillGoalFlagsHistory();

@@ -116,7 +116,7 @@ Thing::Thing() {
     drawWholeHistory = false;
 }
 
-std::vector<cv::Point_<int>> Thing::find(cv::Mat in, Table table) {
+std::vector<cv::Point_<int>> Thing::find(cv::Mat& in, Table table) {
     double area = 0;
     double perimeter = 0;
     double roundness = 0;
@@ -354,7 +354,7 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
 
 }
 
-void Thing::calcVector(cv::Mat in) {
+void Thing::calcVector(cv::Mat& in) {
 
 
     if (abs(location.x-lastLocation.x) < 3 && abs(location.y - lastLocation.y) < 3) {
@@ -390,7 +390,7 @@ void Thing::setGoals(std::vector<cv::Point_<int>> sortedX){
     Goals[3] = R_bottom;
 }
 
-void Thing::drawTraj(cv::Mat in, std::vector<std::vector<cv::Point_<int>>> traj) {
+void Thing::drawTraj(cv::Mat& in, std::vector<std::vector<cv::Point_<int>>> traj) {
     for (int i = 0; i < traj.size(); i++) {
         cv::line(in, traj[i][0], traj[i][1], cvScalar(165, 255, 255), 4);
     }
@@ -399,7 +399,7 @@ void Thing::drawTraj(cv::Mat in, std::vector<std::vector<cv::Point_<int>>> traj)
 
 // TODO: this needs to ensure that the last leg ends AT the last intersection point if bnccntmax is reached, predicted location should NEVER exceed the limits of the table
 // TODO: need to make a second version of calcTraj that does not set the classses goal flags so that offense doesn't mess up defense
-std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajOffense(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc) {
+std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajOffense(const Table& table, cv::Mat& grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc) {
     leftGoalOffense = false;
     rightGoalOffense = false;
     // need to set left and right goal flags to false at the start of this
@@ -826,7 +826,7 @@ void Thing::fillLocationHistory(cv::Point_<int>) {
     locationHistory.resize(historyDepth);
 }
 
-void Thing::drawLocationHistory(cv::Mat in){
+void Thing::drawLocationHistory(cv::Mat& in){
     for (int i = 0; i < historyDepth; i++) {
         if (foundHistory[i])
             cv::circle(in, locationHistory[i], 10, cv::Scalar(100, 200 - i*10, 0), 6);
@@ -838,7 +838,7 @@ void Thing::fillTrajHistory(){
     trajectoryHistory.resize(historyDepth);
 }
 
-void Thing::drawTrajHistory(cv::Mat in) {
+void Thing::drawTrajHistory(cv::Mat& in) {
     for (int i = historyDepth-1; i > 0; i--) {
         if (foundHistory[i]) {
             for (int j = 0; j < trajectoryHistory[i].size(); j++) {
@@ -851,7 +851,7 @@ void Thing::drawTrajHistory(cv::Mat in) {
     }
 }
 
-void Thing::drawTrajEndPointHistory(cv::Mat in) {
+void Thing::drawTrajEndPointHistory(cv::Mat& in) {
     for (int i = 1; i < historyDepth; i++) {
         if (foundHistory[i-1] && foundHistory[i]) {
             cv::circle(in, trajectoryHistory[i-1].back().back(), 10, cv::Scalar(210, 0, 210), 6);
@@ -868,7 +868,7 @@ void Thing::fillVeloMagHistory() {
     s = clock();
 }
 
-void Thing::writeVeloMagHistory(cv::Mat in) {
+void Thing::writeVeloMagHistory(cv::Mat& in) {
     char tempStr[80] = {};
     for (int i = 0; i < historyDepth; i++) {
         sprintf(tempStr, "Velo %d: %5.2f", i, magHistory[i]);
@@ -883,7 +883,7 @@ void Thing::fillGoalFlagsHistory() {
     leftGoalHistory.resize(historyDepth);
 }
 
-void Thing::drawGoalVector(cv::Mat in){
+void Thing::drawGoalVector(cv::Mat& in){
 
     cv::Point_<int> tempGoal = {30, 685/2};
     cv::line(in, tempGoal, location, cvScalar(20, 200, 20), 4);

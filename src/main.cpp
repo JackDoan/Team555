@@ -18,10 +18,9 @@
 #include "../inc/Corners.h"
 #include "../inc/Serial.h"
 #include "../inc/MotorDriver.h"
-#include "../inc/Idle.h"
 #include "../inc/Config.h"
 #include "../inc/Mallet.h"
-#include "../inc/ImageProcess.h"
+#include "../inc/Supervisor.h"
 
 #include <time.h>
 
@@ -33,7 +32,7 @@ int main(int argc, char* argv[]) {
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
             // TODO: Calibrate mode is broken, threshold is not working properly, cant see the pucks
-            if (std::string(argv[i]) == "-calibrate") {
+            if (std::string(argv[i]) == "--calibrate") {
                 settings.calibrateCorners = true;
                 printf("calibrateCorners set to true!\n");
             } else {
@@ -43,49 +42,13 @@ int main(int argc, char* argv[]) {
         }
 //        printf("%s\n", std::string(argv[2]));
     }
-//    if (argv[1] == "calibrate") {
-//        calibrateCorners = true;
-//    } else {
-//        calibrateCorners = false;
-//    }
+
 
 // TODO: need to create a debug mode that allows us to turn on and off every possible debugging feature we could use
 // like trackbars for thresholding, thresholded images, writing and not writing the video, maybe even wrap all
 // all of our printfs for debuggin in a debug version of printf?
 
 
-// TODO: need to make a process that identifies the goal areas on the left and right walls and creates 'ranges'
-// on the wall lines that are the goals         - Done
-
-// TODO: thread video writing to improve framerate
-
-
-//    cv::Mat grabbed;
-//    cv::Mat frame;
-//    cv::Mat imgHSV;
-//    cv::Mat imgThresh;
-    cv::VideoWriter record;
-
-// path to video: C:\AirHockeyRobot\cmake-build-debug
-//    bool RunIdle = false;       //Idle Process to show video.
-    if (settings.RunIdle) {
-        Idle::Idle_Process();
-        std::exit(0);
-    }
-
-//    time_t start = 0;
-//    time_t end = 0;
-//    double frameRate = 0;
-//    int FrameCounter = 0;
-//    double sec;
-//    int execs = 0;
-
-//    cv::Point_<int> location;        //Added
-//    cv::Point_<int> lastLocation;    //Added
-//
-//    cv::Point_<int> vectorXY;
-
-    Camera& camera = Camera::getInstance();
     Table table = Table();
     Puck puck = Puck();
     Mallet mallet = Mallet();
@@ -95,13 +58,16 @@ int main(int argc, char* argv[]) {
         table.setLimits(corners.sortedX, corners.sortedY);
         puck.setWalls(corners.sortedX, corners.sortedY);
     }
-    ImageProcess imageProcess = ImageProcess(table, puck, mallet, corners, settings);
+    Supervisor supervisor = Supervisor(table, puck, mallet, corners, settings);
 
+    if (settings.calibrateCorners) {
+        supervisor.runCalibrateCorners();
+    } else {
+        supervisor.run();
+    }
 
-    imageProcess.process();
     cvDestroyAllWindows();
-    record.release();
-    camera.close();
+    Camera::getInstance().close();
 
     return 0;
 }
