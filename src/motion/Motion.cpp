@@ -68,10 +68,10 @@ void Motion::calibrateSpeed(Mallet& mallet) {
 
     cv::namedWindow("CalSpeed");
     clock_t now;
-    calGoto(mallet, {Table::home.x, Table::motionLimitMax.y}, now, yHome2EdgeTime);
-    calGoto(mallet, {Table::home.x, Table::motionLimitMin.y}, now, yEdge2EdgeTime);
-    calGoto(mallet, {Table::motionLimitMax.x, Table::motionLimitMax.y}, now, xHome2EdgeTime);
-    calGoto(mallet, {Table::motionLimitMin.x, Table::motionLimitMax.y}, now, xEdge2EdgeTime);
+    calGoto(mallet, {Table::home.x, Table::strikeLimitMax.y}, now, yHome2EdgeTime);
+    calGoto(mallet, {Table::home.x, Table::strikeLimitMin.y}, now, yEdge2EdgeTime);
+    calGoto(mallet, {Table::strikeLimitMax.x, Table::strikeLimitMax.y}, now, xHome2EdgeTime);
+    calGoto(mallet, {Table::strikeLimitMin.x, Table::strikeLimitMax.y}, now, xEdge2EdgeTime);
     cvDestroyWindow("CalSpeed");
 }
 
@@ -381,7 +381,7 @@ bool Motion::offense(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& gr
 
 
 
-// old version of defense
+// old version of defense, its broke af
 cv::Point_<int> Motion::defend(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed) {
     const auto defenseColor = cv::Scalar(225, 255, 255);
     static cv::Point_<int> interceptSpot = Table::home;

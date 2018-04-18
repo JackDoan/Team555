@@ -65,7 +65,7 @@ void Supervisor::run() {
     motion.calibrateHome(table, mallet, settings);
 
     // calculate speed
-   // motion.calibrateSpeed(mallet);
+    motion.calibrateSpeed(mallet);
     printf("yHome2EdgeTime: %d\n", motion.getYHome2EdgeTime());
     printf("yEdge2EdgeTime: %d\n", motion.getYEdge2EdgeTime());
     printf("xHome2EdgeTime: %d\n", motion.getXHome2EdgeTime());
@@ -302,7 +302,7 @@ void Supervisor::makeDecision() {
                 break;
             }
             if (within(puck.predictLocation(table, 10), Table::strikeLimitMin, Table::strikeLimitMax)
-                && puck.magHistoryAvg < 300 && puck.location.x < mallet.location.x
+                && puck.magHistoryAvg < 500 && puck.location.x < mallet.location.x
                 && motion.defenseState == ATHOME) {
                 playMode = OFFENSE;
                 doneCheck = false;
@@ -320,7 +320,9 @@ void Supervisor::makeDecision() {
             }
             break;*/
         case OFFENDING:
-            if (motion.offenseState == OFFENSEDONE || puck.rightGoal) {
+            if (motion.offenseState == OFFENSEDONE || puck.rightGoal
+                || !within(puck.predictLocation(table, 10), Table::strikeLimitMin, Table::strikeLimitMax)
+                || puck.magHistoryAvg >= 500) {
                 motion.offenseState = OFFENSEDONE;
                 playMode = DEFENSE;
                 doneCheck = false;

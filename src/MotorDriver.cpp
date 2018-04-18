@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <opencv2/core/types.hpp>
 #include <cstdio>
+#include <iostream>
 #include "../inc/helpers.h"
 #include "../inc/MotorDriver.h"
 #include "../inc/Table.h"
@@ -79,15 +80,19 @@ bool MotorDriver::moveBy(const cv::Point_<int> &in) {
 bool MotorDriver::sendCMD(int steps, char cmd) {
     longbytes toSend;
     toSend.l = steps;
-    char bytes[7];
+    unsigned char bytes[7];
     bytes[0] = 0x69;
     bytes[1] = cmd;
     bytes[2] = toSend.b.highest;
+    std::cout << std::hex << bytes[2];
     bytes[3] = toSend.b.high;
+    std::cout << std::hex << bytes[3];
     bytes[4] = toSend.b.low;
+    std::cout << std::hex << bytes[4];
     bytes[5] = toSend.b.lowest;
+    std::cout << std::hex << bytes[5];
     bytes[6] = 0;
-    SPb->WriteData(bytes, sizeof(bytes));
+    SPb->WriteData((char*)*(&bytes), sizeof(bytes));
 }
 
 void MotorDriver::readAll() {

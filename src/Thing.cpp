@@ -938,15 +938,6 @@ void Thing::calcNextLoc() {
 
 
 cv::Point_<int> Thing::predictLocation(Table table, int frames) {
-    /*if (frames < 1 || frames > 15) {
-        return trajectory.back()[1];
-    }
-    cv::Point_<int> total = {abs(location.x - lastLocation.x), abs(location.y - lastLocation.y)};
-    if (trajectory.size() > 1) {
-        // need to account for bounces
-    } else {
-        // don't need to account for bounces
-    }*/
     cv::Point_<int> dist;
     cv::Point_<int> leftover;
     std::vector<std::vector<cv::Point_<int>>> trajs;
@@ -959,12 +950,7 @@ cv::Point_<int> Thing::predictLocation(Table table, int frames) {
     }
 
     auto prediction = location + ((location - lastLocation)*frames);
-//    prediction = location + vectorXY*vectorMult;
-
-
     std::vector<cv::Point_<int>> temp = {location, prediction};
-//    temp.emplace_back(location);
-//    temp.emplace_back(prediction);
     trajs.emplace_back(temp);
 #ifdef MIKE_DEBUG
     char tempStr[80];
@@ -977,22 +963,8 @@ cv::Point_<int> Thing::predictLocation(Table table, int frames) {
         cv::Point_<int> newEndPoint;
         // detect a bounce
         bounces = bounceDetectClean(table, trajs.back()[0], trajs.back()[1], bnccnt);
-        // if all of bounces are false, set done = true and break
         if (bounces[0] || bounces[1] || bounces[2] || bounces[3]) {
-            // determine from bounces which wall is going to be intersected
-            // and calculate the intersection point
             intersection = findIntersection(bounces, trajs.back()[0], trajs.back()[1]);
-/*
-            // draw the intersection on grabbed
-            cv::line(grabbed, cvPoint(intersection.x-25, intersection.y),
-                     cvPoint(intersection.x+25, intersection.y),
-                     cvScalar(0, 0, 255), 4);
-            cv::line(grabbed, cvPoint(intersection.x, intersection.y-25),
-                     cvPoint(intersection.x, intersection.y+25),
-                     cvScalar(0, 0, 255), 4);
-*/
-            // determine whether or not this is a goal
-            // depending on which goal is getting intersected
             if (bounces[0] || bounces[2]) {
                 goalDetectOffense(intersection, trajs.back()[1].x - trajs.back()[0].x);
                 if (leftGoal || rightGoal) {
@@ -1001,22 +973,15 @@ cv::Point_<int> Thing::predictLocation(Table table, int frames) {
                     break;
                 }
             }
-
-
-            // determine distance from location to intersect point, this becomes the length of the current leg
-            // subtract that from the original length and this becomes the length of the next leg
             dist = cvPoint(abs(intersection.x - trajs.back()[0].x),
                            abs(intersection.y - trajs.back()[0].y));
             leftover = cvPoint(abs(trajs.back()[1].x - dist.x),
                                abs(trajs.back()[1].y - dist.y));
-//             determine ratios of leftover/total
             double magorig = sqrt(pow(trajs.back()[1].x - trajs.back()[0].x, 2) +
                                   pow(trajs.back()[1].y - trajs.back()[0].y, 2));
             double magclipped = sqrt(pow(intersection.x - trajs.back()[0].x, 2) +
                                      pow(intersection.y - trajs.back()[0].y, 2));
             double magrat = magclipped / magorig;
-
-//             emplace back next trajs, which has start point at the point of intersect
             if (bounces[0] || bounces[2]) {
                 newEndPoint.x = (int)(round((trajs.back()[0].x - trajs.back()[1].x) * (1 - magrat))) + intersection.x;
                 newEndPoint.y = (int)(round((trajs.back()[1].y - trajs.back()[0].y) * (1 - magrat))) + intersection.y;
@@ -1024,9 +989,6 @@ cv::Point_<int> Thing::predictLocation(Table table, int frames) {
                 newEndPoint.x = (int)(round((trajs.back()[1].x - trajs.back()[0].x) * (1 - magrat))) + intersection.x;
                 newEndPoint.y = (int)(round((trajs.back()[0].y - trajs.back()[1].y) * (1 - magrat))) + intersection.y;
             }
-            // and appropriate endpoint
-
-            // set trajs.back()[1] to the point of intersection
             trajs.back()[1] = intersection;
             std::vector<cv::Point_<int>> pts = {intersection, newEndPoint};
             trajs.emplace_back(pts);
