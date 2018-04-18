@@ -7,6 +7,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv/cv.hpp>
 #include "../inc/Camera.h"
+#include "../inc/Settings.h"
 
 #include <time.h>
 
@@ -92,26 +93,15 @@ Camera::~Camera() {
 }
 
 
-cv::Mat Camera::getUndistortedFrame() {
-    // TODO: look at source code for capture.read and see if we can apply undistort to each pixel as its read from the camera to improve performance
-    // VideoCapture::read calls retrieve
-    auto result = capture.read(currentView);
-
-
-    cv::cvtColor(currentView, hsv, cv::COLOR_RGB2HSV);
-    //undistortedFrame = currentView.clone();
-    //cv::Mat undistortedFrame;// = currentView.clone();
-//    bitwise_not(hsv, hsv);
-    remap(hsv, undistortedFrame, map1, map2, cv::INTER_LINEAR);
-    return undistortedFrame;
-    //return currentView;
-}
 
 
 cv::Mat Camera::getFrame() {
     capture.read(currentView);
-    return currentView;
-    //return currentView;
+    cv::cvtColor(currentView, hsv, cv::COLOR_RGB2HSV);
+    if (Settings::undistort) {
+        remap(hsv, undistortedFrame, map1, map2, cv::INTER_LINEAR);
+    }
+    return undistortedFrame;
 }
 
 cv::Mat Camera::getHomography(std::vector<cv::Point_<int>> corners,

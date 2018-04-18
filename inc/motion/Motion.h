@@ -12,6 +12,7 @@
 #include "../Puck.h"
 #include "../Settings.h"
 #include "../states.h"
+#include "Calibration.h"
 
 class Motion {
 
@@ -35,13 +36,13 @@ private:
     clock_t xEdge2EdgeTime;
 public:
 
+    Calibration calibrate;
 
     void calibrateSpeed(Mallet& mallet);
     bool hitVectorFound = false;
     bool staging = false;
     bool striking = false;
     bool attackDone = false;
-    void calibrateHome(Table table, Mallet mallet, Settings settings);
     void trackPredictedY(Table table, Mallet mallet, Puck puck, cv::Mat grabbed);
 //    typedef enum defenseState_e {ATHOME, GOINGHOME, INTERCEPTING, ATINTERCEPT} defenseState_t;
     defenseState_t defenseState = ATHOME;

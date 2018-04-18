@@ -9,9 +9,9 @@
 class Settings {
 private:
 public:
-    bool video_output = false;   //can be shown through Idle Process
-    bool undistort = true;
-    bool calibrateCorners = false;
+    static bool video_output;   //can be shown through Idle Process
+    static bool undistort;
+    static bool calibrateCorners;
 
 
 

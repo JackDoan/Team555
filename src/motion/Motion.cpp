@@ -20,9 +20,8 @@
 
 #pragma clang diagnostic ignored "-Wnarrowing"
 
-Motion::Motion() {
+Motion::Motion() = default;
 
-}
 double Motion::calGoto(Mallet& mallet, const cv::Point_<int>& destination, clock_t& beginTime, clock_t& endTime) {
     Camera& camera = Camera::getInstance();
     MotorDriver& motorDriver = MotorDriver::getInstance();
@@ -33,9 +32,10 @@ double Motion::calGoto(Mallet& mallet, const cv::Point_<int>& destination, clock
     bool done = false;
     time(&beginTime);
     while(!done) {
-        calSpeedGrabbed = camera.getUndistortedFrame();
+        calSpeedGrabbed = camera.getFrame();
         if (calSpeedGrabbed.empty()) {
             printf("No Frames\n");
+            break;
         }
         mallet.findOne(calSpeedGrabbed, table, true);
         if (table.preview == 1) {
@@ -75,142 +75,6 @@ void Motion::calibrateSpeed(Mallet& mallet) {
     cvDestroyWindow("CalSpeed");
 }
 
-void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
-    Camera& camera = Camera::getInstance();
-    bool yHome = false; //set this to false
-    bool xHome = false;
-    int yHomeDecay = 0;
-    int xHomeDecay = 0;
-    cv::Point_<int> firstPosition = {0,0};
-    bool first = false;
-    cv::Mat calHomeGrabbed;
-    cv::Mat calHomeSmall;
-    cv::namedWindow("CalHome");
-    MotorDriver& motorDriver = MotorDriver::getInstance();
-
-    long initCount;
-    while (!yHome) {
-        if (!settings.undistort) {
-            calHomeGrabbed = camera.getFrame();
-        } else {
-            calHomeGrabbed = camera.getUndistortedFrame(); // Query a new frame
-        }
-        if (calHomeGrabbed.empty()) {
-            printf("No frames!\n");
-            break;
-        }
-        mallet.findOne(calHomeGrabbed, table, true);
-        if (table.preview == 1) {
-            cv::resize(calHomeGrabbed, calHomeSmall, cv::Size(), 0.5, 0.5);
-            imshow("CalHome", calHomeSmall);
-        }
-        if (!mallet.found) {
-            printf("Mallet not found in calibrateHome y run!\n");
-            if (cv::waitKey(100) >= 0)
-                continue;
-        }
-        if (!first) {
-            initCount = motorDriver.getSteps('y');
-            // as the drivers where it is and store it as initial count
-            firstPosition = mallet.location;
-            first = true;
-        }
-
-        int stepsPerPixel = 1;
-        if (abs(Table::home.y - mallet.location.y) <= 5) {
-            if(yHomeDecay >= 5) {
-                //printf("Close enough\n");
-                yHome = true;
-                long finalCount = motorDriver.getSteps('y');
-                long countDif = finalCount - initCount;
-                //ratio = abs((double)countDif / (double)abs(Table::home.y - firstPosition.y));
-//            printf("ratio: %f\n", ratio);
-                // ask the drivers where it is and store as final count
-//            break;
-            }
-            else {
-                yHomeDecay++;
-            }
-
-        } else {
-            yHomeDecay = 0;
-            int difference = Table::home.y - mallet.location.y;
-            long toMove = (long) (abs(stepsPerPixel) * difference);
-            if(abs(toMove) <= 3) {
-                //printf("not moving %ld steps\n", toMove);
-            }
-            else {
-//                printf("%ld steps\n", toMove);
-                motorDriver.sendCMD(toMove, 'y');
-            }
-        }
-        if (cv::waitKey(100) >= 0)
-            break;
-    }
-
-
-    while (!xHome) {
-        if (!settings.undistort) {
-            calHomeGrabbed = camera.getFrame();
-        } else {
-            calHomeGrabbed = camera.getUndistortedFrame(); // Query a new frame
-        }
-        if (calHomeGrabbed.empty()) {
-            printf("No frames!\n");
-            break;
-        }
-        mallet.findOne(calHomeGrabbed, table, true);
-        if (table.preview == 1) {
-            cv::resize(calHomeGrabbed, calHomeSmall, cv::Size(), 0.5, 0.5);
-            imshow("CalHome", calHomeSmall);
-        }
-        if (!mallet.found) {
-            printf("Mallet not found in calibrateHome x run!\n");
-            if (cv::waitKey(100) >= 0)
-                continue;
-        }
-        if (!first) {
-            initCount = motorDriver.getSteps('x');
-            // as the drivers where it is and store it as initial count
-            firstPosition = mallet.location;
-            first = true;
-        }
-
-        int stepsPerPixel = 4;
-        if (abs(Table::home.x - mallet.location.x) <= 5) {
-            //printf("Close enough\n");
-            if(xHomeDecay >=5) {
-                xHome = true;
-                long finalCount = motorDriver.getSteps('x');
-                long countDif = finalCount - initCount;
-            }
-            else {
-                xHomeDecay++;
-            }
-            //ratio = abs((double)countDif / (double)abs(Table::home.x - firstPosition.x));
-//            printf("ratio: %f\n", ratio);
-            // ask the drivers where it is and store as final count
-//            break;
-        }
-        else {
-            xHomeDecay = 0;
-            int difference = mallet.location.x - Table::home.x;
-            long toMove = (long) (abs(stepsPerPixel) * difference);
-            if(abs(toMove) <= 3) {
-                printf("not moving %ld steps\n", toMove);
-            }
-            else {
-//                printf("%ld steps\n", toMove);
-                motorDriver.sendCMD(toMove, 'x');
-            }
-        }
-        if (cv::waitKey(100) >= 0)
-            break;
-    }
-    // set the current position to the home position
-    motorDriver.setHome();
-    cvDestroyWindow("CalHome");
-}
 
 bool rollingCheck(bool in) {
     static int index = 0;

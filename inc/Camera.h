@@ -17,8 +17,6 @@ class Camera {
         cv::VideoCapture capture;
         //float cam_pix_to_mm = CAM_PIX_TO_MM; //todo replace this with an expression
         // application parameters
-
-
         Camera() : Camera(1280,720) {}
         Camera(int nwidth, int nheight);
         int preview = 1;
@@ -40,7 +38,7 @@ class Camera {
         ~Camera();
         void close();
         double getFrameRate();
-        cv::Mat getUndistortedFrame();
+
         cv::Mat getFrame();
         //double calcFPS(int counter, bool active);
         cv::Mat getHomography(std::vector<cv::Point_<int>> corners,

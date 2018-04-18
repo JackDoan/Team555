@@ -62,10 +62,10 @@ void Supervisor::run() {
     //cv::namedWindow("Video", CV_WINDOW_AUTOSIZE);
     cv::namedWindow("Video", CV_WINDOW_NORMAL);
     // calibrate the steppers home positions
-    motion.calibrateHome(table, mallet, settings);
+    motion.calibrate.home();
 
     // calculate speed
-    motion.calibrateSpeed(mallet);
+    //motion.calibrateSpeed(mallet);
     printf("yHome2EdgeTime: %d\n", motion.getYHome2EdgeTime());
     printf("yEdge2EdgeTime: %d\n", motion.getYEdge2EdgeTime());
     printf("xHome2EdgeTime: %d\n", motion.getXHome2EdgeTime());
@@ -83,13 +83,7 @@ void Supervisor::run() {
         // calculating FPS
         calcFPS();
 
-        // grabbing either an undistorted or distorted frame based on settings
-        if (!settings.undistort) {
-            frameBuf.active() = camera.getFrame();
-        }
-        else {
-            frameBuf.active() = camera.getUndistortedFrame(); // Query a new frame
-        }
+        frameBuf.active() = camera.getFrame();
 
         // checking if frames are there
         if (frameBuf.active().empty()) {
@@ -172,14 +166,9 @@ void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& p
         case 27: //ESC
             keepGoing = false;
             motorDriver.stop();
+            break;
         case 'j':
-//            motion.calibrateHome(table, mallet, settings);
-            break;
-        case 'q':
-            motorDriver.setEnable(false,false);
-            break;
-        case 'Q':
-            motorDriver.setEnable(true,true);
+            motion.calibrate.home();
             break;
         case 'p':
             threadIt = false;
@@ -193,8 +182,8 @@ void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& p
             mallet.toggleDebugInfo();
             break;
         case 'v':
-            settings.video_output = !settings.video_output;
-            printf("Video output: %d\n", settings.video_output);
+            Settings::video_output = !Settings::video_output;
+            printf("Video output: %d\n", Settings::video_output);
             break;
         case 'd':
             printf("Motion Mode = Defend\n");

@@ -15,6 +15,7 @@
 class Table {
 public:
 
+    typedef enum axes_e {X_AXIS, Y_AXIS} axis;
 
     static cv::Point_<int> max, min, motionLimitMin, motionLimitMax, strikeLimitMin, strikeLimitMax;
     static cv::Rect_<int> motionLimit;

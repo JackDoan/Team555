@@ -31,7 +31,7 @@ typedef struct thermal_s {
 class MotorDriver {
 private:
     int processPacket(char input[6]);
-
+    bool sendCMD(int steps, char axis);
     MotorDriver();
 public:
     int deadband = 1;
@@ -58,7 +58,7 @@ public:
     ~MotorDriver();
     bool initComPort(char comPort);
     void setHome();
-    bool sendCMD(int steps, char axis);
+
     long getSteps(char axis);
     void setEnable(bool x, bool y);
     void readAll();

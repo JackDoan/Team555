@@ -74,25 +74,25 @@ bool MotorDriver::moveTo(const cv::Point_<int> &in) { ///this takes pixels now!
 }
 
 bool MotorDriver::moveBy(const cv::Point_<int> &in) {
-    return sendCMD(in.x, 'y') && sendCMD(in.y, 'y');
+    return sendCMD(-in.x, 'x') && sendCMD(in.y, 'y');
 }
 
 bool MotorDriver::sendCMD(int steps, char cmd) {
     longbytes toSend;
     toSend.l = steps;
-    unsigned char bytes[7];
+    char bytes[7];
     bytes[0] = 0x69;
     bytes[1] = cmd;
     bytes[2] = toSend.b.highest;
-    std::cout << std::hex << bytes[2];
+    //std::cout << std::hex << bytes[2];
     bytes[3] = toSend.b.high;
-    std::cout << std::hex << bytes[3];
+    //std::cout << std::hex << bytes[3];
     bytes[4] = toSend.b.low;
-    std::cout << std::hex << bytes[4];
+    //std::cout << std::hex << bytes[4];
     bytes[5] = toSend.b.lowest;
-    std::cout << std::hex << bytes[5];
+    //std::cout << std::hex << bytes[5];
     bytes[6] = 0;
-    SPb->WriteData((char*)*(&bytes), sizeof(bytes));
+    SPb->WriteData(bytes, sizeof(bytes));
 }
 
 void MotorDriver::readAll() {

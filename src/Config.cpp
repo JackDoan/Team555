@@ -3,12 +3,16 @@
 //
 #include "../inc/Corners.h"
 #include "../inc/Config.h"
+#include "../inc/Settings.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <string>
 
+bool Settings::video_output = false;   //can be shown through Idle Process
+bool Settings::undistort = true;
+bool Settings::calibrateCorners = false;
 
 bool writeConfigValues(Corners corners) {
     std::fstream configFile;
