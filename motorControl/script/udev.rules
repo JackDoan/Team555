@@ -1,0 +1,2 @@
+SUBSYSTEMS=="usb", ATTRS{idProduct}=="2a03", ATTRS{idVendor}=="0042", SYMLINK+="arduinoMega_$attr{serial}"
+
