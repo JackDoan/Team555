@@ -48,7 +48,6 @@ void Supervisor::run() {
     // initializing class instances
     MotorDriver& motorDriver = MotorDriver::getInstance();
     motion = Motion();
-    Attack attack = Attack(table, motorDriver);
     Camera& camera = Camera::getInstance();
 
     // set the puck goal locations
@@ -63,20 +62,12 @@ void Supervisor::run() {
     cv::namedWindow("Video", CV_WINDOW_NORMAL);
     // calibrate the steppers home positions
     motion.calibrate.home();
-
     // calculate speed
-    //motion.calibrateSpeed(mallet);
-    printf("yHome2EdgeTime: %d\n", motion.getYHome2EdgeTime());
-    printf("yEdge2EdgeTime: %d\n", motion.getYEdge2EdgeTime());
-    printf("xHome2EdgeTime: %d\n", motion.getXHome2EdgeTime());
-    printf("xEdge2EdgeTime: %d\n", motion.getXEdge2EdgeTime());
-
-
+    motion.calibrate.speed();
 
     keepGoing = true;
     sendGetButtons = true;
     doneCheck = false;
-
 
     // main while loop that runs the robot
     while (keepGoing) {
@@ -93,14 +84,14 @@ void Supervisor::run() {
 
         // if threadIt is set high we thread the contour searching process
         if(threadIt) {
-            std::thread puckThread(&Puck::findOne, std::ref(puck), frameBuf.active(), table, false);
-            std::thread malletThread(&Mallet::findOne, std::ref(mallet), frameBuf.active(), table, true);
+            std::thread puckThread(&Puck::findOne, std::ref(puck), frameBuf.active(), false);
+            std::thread malletThread(&Mallet::findOne, std::ref(mallet), frameBuf.active(), true);
             puckThread.join();
             malletThread.join();
         }
         else {
-            puck.findOne(frameBuf.active(),table,false);
-            mallet.findOne(frameBuf.active(),table,true);
+            puck.findOne(frameBuf.active(),false);
+            mallet.findOne(frameBuf.active(),true);
         }
 
         int key = cv::waitKey(1);
@@ -290,7 +281,7 @@ void Supervisor::makeDecision() {
                 playMode = DEFENSE;
                 break;
             }
-            if (within(puck.predictLocation(table, 10), Table::strikeLimitMin, Table::strikeLimitMax)
+            if (within(puck.predictLocation(10), Table::strikeLimitMin, Table::strikeLimitMax)
                 && puck.magHistoryAvg < 500 && puck.location.x < mallet.location.x
                 && motion.defenseState == ATHOME) {
                 playMode = OFFENSE;
@@ -310,7 +301,7 @@ void Supervisor::makeDecision() {
             break;*/
         case OFFENDING:
             if (motion.offenseState == OFFENSEDONE || puck.rightGoal
-                || !within(puck.predictLocation(table, 10), Table::strikeLimitMin, Table::strikeLimitMax)
+                || !within(puck.predictLocation(10), Table::strikeLimitMin, Table::strikeLimitMax)
                 || puck.magHistoryAvg >= 500) {
                 motion.offenseState = OFFENSEDONE;
                 playMode = DEFENSE;
@@ -341,7 +332,8 @@ void Supervisor::decide() {
             // check the lostTimer if its greater than 3 seconds
                 // set playMode to impulse with argument lost set to true
                 // and set playmode to impulse'
-            if ((within(puck.location, Table::strikeLimitMin, Table::strikeLimitMax) || within(puck.predictLocation(table, 10), Table::strikeLimitMin, Table::strikeLimitMax))
+            if ((within(puck.location, Table::strikeLimitMin, Table::strikeLimitMax) ||
+                 within(puck.predictLocation(10), Table::strikeLimitMin, Table::strikeLimitMax))
                 && puck.magHistoryAvg < 300 && puck.location.x < mallet.location.x) {
                 playMode = OFFENSE;
                 doneCheck = false;

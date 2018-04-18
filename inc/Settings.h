@@ -12,7 +12,7 @@ public:
     static bool video_output;   //can be shown through Idle Process
     static bool undistort;
     static bool calibrateCorners;
-
+    static bool preview;
 
 
 

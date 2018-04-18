@@ -123,7 +123,7 @@ Corners::~Corners() = default;
 
  //TODO: set the offsets from a config file, right now it defaults to 40px out from each corner in each dimension as defined in the header file
 void Corners::calibrateCorners(cv::Mat in, cv::Mat previewSmall, Table table, Puck puck) {
-    tempCorners = puck.find(in, table);
+    tempCorners = puck.find(in);
 
     //printf("tempCorners size: %d\n", tempCorners.size());
     if (tempCorners.size() == 4) {

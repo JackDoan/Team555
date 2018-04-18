@@ -22,58 +22,8 @@
 
 Motion::Motion() = default;
 
-double Motion::calGoto(Mallet& mallet, const cv::Point_<int>& destination, clock_t& beginTime, clock_t& endTime) {
-    Camera& camera = Camera::getInstance();
-    MotorDriver& motorDriver = MotorDriver::getInstance();
-    Table table;
-    cv::Mat calSpeedGrabbed;
-    cv::Mat calSpeedSmall;
-    double timeDelta = 0.0;
-    bool done = false;
-    time(&beginTime);
-    while(!done) {
-        calSpeedGrabbed = camera.getFrame();
-        if (calSpeedGrabbed.empty()) {
-            printf("No Frames\n");
-            break;
-        }
-        mallet.findOne(calSpeedGrabbed, table, true);
-        if (table.preview == 1) {
-            cv::resize(calSpeedGrabbed, calSpeedSmall, cv::Size(), 0.5, 0.5);
-            imshow("CalSpeed", calSpeedSmall);
-        }
-        if (!mallet.found) {
-            printf("Mallet not found!\n");
-            if (cv::waitKey(100) >= 0)
-                continue;
-        }
-        else {
-            printf("Motion::calGoto: Moving to (%d,%d)\n", destination.x, destination.y);
-            motorDriver.moveTo(destination);
-        }
-        if (
-                abs(mallet.location.y - destination.y) <= 5 &&
-                abs(mallet.location.x - destination.x) <= 5) {
-            time(&endTime);
-            timeDelta = difftime(endTime, beginTime);
-            done = true;
-        }
-        if (cv::waitKey(100) >= 0)
-            break;
-    }
-    return timeDelta;
 
-}
-void Motion::calibrateSpeed(Mallet& mallet) {
 
-    cv::namedWindow("CalSpeed");
-    clock_t now;
-    calGoto(mallet, {Table::home.x, Table::strikeLimitMax.y}, now, yHome2EdgeTime);
-    calGoto(mallet, {Table::home.x, Table::strikeLimitMin.y}, now, yEdge2EdgeTime);
-    calGoto(mallet, {Table::strikeLimitMax.x, Table::strikeLimitMax.y}, now, xHome2EdgeTime);
-    calGoto(mallet, {Table::strikeLimitMin.x, Table::strikeLimitMax.y}, now, xEdge2EdgeTime);
-    cvDestroyWindow("CalSpeed");
-}
 
 
 bool rollingCheck(bool in) {
@@ -315,7 +265,7 @@ bool Motion::attack(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& gra
     const auto color1 = cv::Scalar(150, 255, 255);
     cv::putText(grabbed, "attacking", cvPoint(1100, 665), cv::FONT_HERSHEY_SIMPLEX, 1, color, 2);
 //    hitVector = findHitVector(table, mallet, puck, grabbed);
-    cv::circle(grabbed, puck.predictLocation(table, 10), 15, cv::Scalar(180, 255, 255), 6);
+    cv::circle(grabbed, puck.predictLocation(10), 15, cv::Scalar(180, 255, 255), 6);
     cv::line(grabbed, puckplus, puckminus, cvScalar(55, 200, 200), 3);
     cv::circle(grabbed, puckplus, 10, cv::Scalar(55, 200, 200), 3);
     cv::circle(grabbed, puckminus, 10, cv::Scalar(5, 200, 200), 3);
@@ -393,7 +343,7 @@ std::vector<cv::Point_<int>> Motion::findHitVector(const Table& table, Mallet& m
     int offdir = 0;
     int i = 2;
     //cv::Point_<double> mallet2puck = (puck.location + puck.vectorXY) - mallet.location;
-    cv::Point_<int> ffPuckLoc = (puck.predictLocation(table, ff));
+    cv::Point_<int> ffPuckLoc = (puck.predictLocation(ff));
     mallet2puck = ffPuckLoc - mallet.location;
     double mag = sqrt(pow(mallet2puck.x, 2) + pow(mallet2puck.y, 2));
     cv::Point_<double> amountdbl = (mallet2puck/mag)*sf;
@@ -402,8 +352,8 @@ std::vector<cv::Point_<int>> Motion::findHitVector(const Table& table, Mallet& m
     puckminus = ffPuckLoc - amountint;
     puckplus = saturate(puckplus, Table::strikeLimitMin, Table::strikeLimitMax);
 
-    auto estTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
-    auto newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+    auto estTraj = puck.calcTrajOffense(grabbed, puckminus, puckplus);
+    auto newTraj = puck.calcTrajOffense(grabbed, puckminus, puckplus);
     if (!puck.leftGoalOffense) {
         useNewTraj = true;
         // determine which y-direction gets me closer to the goal
@@ -416,7 +366,7 @@ std::vector<cv::Point_<int>> Motion::findHitVector(const Table& table, Mallet& m
         puckplus = ffPuckLoc + amountint;
         puckminus = ffPuckLoc - amountint;
         puckplus = saturate(puckplus, Table::strikeLimitMin, Table::strikeLimitMax);
-        newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+        newTraj = puck.calcTrajOffense(grabbed, puckminus, puckplus);
         // if this new trajectory does not result in a goal or it takes us further away from the goal
         // immediately set the offset direction variable to 1 and start checking that direction else
         // if it results in a goal then take that shot but if not continue incrementing until a goal is found
@@ -451,7 +401,7 @@ std::vector<cv::Point_<int>> Motion::findHitVector(const Table& table, Mallet& m
                 }
             }
         }
-        newTraj = puck.calcTrajOffense(table, grabbed, puckminus, puckplus);
+        newTraj = puck.calcTrajOffense(grabbed, puckminus, puckplus);
     }
     cv::line(grabbed, puckplus, puckminus, cvScalar(55, 200, 200), 3);
     cv::circle(grabbed, puckplus, 10, cv::Scalar(55, 200, 200), 3);
@@ -525,19 +475,3 @@ std::vector<cv::Point_<int>> Motion::findImpulseVector(const Table& table, Malle
     //
 }
 
-
-clock_t Motion::getYHome2EdgeTime() const {
-    return yHome2EdgeTime;
-}
-
-clock_t Motion::getYEdge2EdgeTime() const {
-    return yEdge2EdgeTime;
-}
-
-clock_t Motion::getXHome2EdgeTime() const {
-    return xHome2EdgeTime;
-}
-
-clock_t Motion::getXEdge2EdgeTime() const {
-    return xEdge2EdgeTime;
-}

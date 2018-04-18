@@ -28,17 +28,11 @@ public:
 
     clock_t getXEdge2EdgeTime() const;
 
-private:
-    double calGoto(Mallet& mallet, const cv::Point_<int>& destination, time_t& beginTime, time_t& endTime);
-    clock_t yHome2EdgeTime;
-    clock_t yEdge2EdgeTime;
-    clock_t xHome2EdgeTime;
-    clock_t xEdge2EdgeTime;
+
 public:
 
     Calibration calibrate;
 
-    void calibrateSpeed(Mallet& mallet);
     bool hitVectorFound = false;
     bool staging = false;
     bool striking = false;

@@ -5,6 +5,7 @@
 #include "../inc/Thing.h"
 #include "../inc/Table.h"
 #include "../inc/helpers.h"
+#include "../inc/Settings.h"
 
 #include <vector>
 #include <math.h>
@@ -116,7 +117,7 @@ Thing::Thing() {
     drawWholeHistory = false;
 }
 
-std::vector<cv::Point_<int>> Thing::find(cv::Mat& in, Table table) {
+std::vector<cv::Point_<int>> Thing::find(cv::Mat& in) {
     double area = 0;
     double perimeter = 0;
     double roundness = 0;
@@ -168,10 +169,10 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat& in, Table table) {
                 //pos.y = floor(moments.m01 * 2 / area + 0.5);
 
                 // limit the region of interest to the table
-//                if ((pos.x > table.max.x * 2) ||
-//                    (pos.x < table.min.x * 2) ||
-//                    (pos.y > table.max.y * 2) ||
-//                    (pos.y < table.min.y * 2)) {
+//                if ((pos.x > Table::max.x * 2) ||
+//                    (pos.x < Table::min.x * 2) ||
+//                    (pos.y > Table::max.y * 2) ||
+//                    (pos.y < Table::min.y * 2)) {
 //                    pos.x = 0;
 //                    pos.y = 0;
 //                    //contours = contours->h_next;
@@ -194,7 +195,7 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat& in, Table table) {
 //                }
 
                 // Draw contour
-                if (table.preview == 1) {
+                if (Settings::preview == 1) {
                     cv::drawContours(in, contours, i, cv::Scalar(255, 255, 255 ), 5, 8);
                     //printf("I GOT TO THE CONTOURS PRINTING THING!!\n\nYAY!!\n");
                 }
@@ -217,7 +218,7 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat& in, Table table) {
     return pointVec;
 }
 
-void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
+void Thing::findOne(cv::Mat in, bool isMallet) {
     onTable = false;
     goalFlag = false;
     trajectory.clear();
@@ -261,10 +262,10 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
 
 
                 // limit the region of interest to the table
-                if ((pos.x > table.max.x * 2) ||
-                    (pos.x < table.min.x * 2) ||
-                    (pos.y > table.max.y * 2) ||
-                    (pos.y < table.min.y * 2)) {
+                if ((pos.x > Table::max.x * 2) ||
+                    (pos.x < Table::min.x * 2) ||
+                    (pos.y > Table::max.y * 2) ||
+                    (pos.y < Table::min.y * 2)) {
                     pos.x = 0;
                     pos.y = 0;
                     continue;  // continue with other contour... (this is outside the table)
@@ -272,7 +273,7 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
                     location = pos/2;
 
                     // Draw contour
-                    if (table.preview == 1)
+                    if (Settings::preview == 1)
                         cv::drawContours(in, contours, i, outlineColor, 5, 4);
                     found = true;
                     break;
@@ -303,7 +304,7 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
     } else {
         calcVector(in);
         if (!isMallet) {
-            trajectory = calcTraj(table, in, lastLocation, location);
+            trajectory = calcTraj(in, lastLocation, location);
             predictedLocation = trajectory.back()[1];
             drawTraj(in, trajectory);
 //            calcTraj(table);
@@ -311,7 +312,7 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
         }
     }
 
-    onTable = within(location, table.min, table.max);
+    onTable = within(location, Table::min, Table::max);
 
 
 /*    if (predictedLocation.x < 0 || predictedLocation.y < 0) {
@@ -332,8 +333,8 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
            lastLocation.x, location.y,
            intersect.x, intersect.y,
            predictedLocation.x, predictedLocation.y);
-    if (predictedLocation.x > table.max.x || predictedLocation.x < table.min.x ||
-            predictedLocation.y > table.max.y || predictedLocation.y < table.min.y) {
+    if (predictedLocation.x > Table::max.x || predictedLocation.x < Table::min.x ||
+            predictedLocation.y > Table::max.y || predictedLocation.y < Table::min.y) {
         printf("broke\n");
     }*/
     if (!isMallet) {
@@ -398,7 +399,7 @@ void Thing::drawTraj(cv::Mat& in, std::vector<std::vector<cv::Point_<int>>> traj
 
 // TODO: this needs to ensure that the last leg ends AT the last intersection point if bnccntmax is reached, predicted location should NEVER exceed the limits of the table
 // TODO: need to make a second version of calcTraj that does not set the classses goal flags so that offense doesn't mess up defense
-std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajOffense(const Table& table, cv::Mat& grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc) {
+std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajOffense(cv::Mat& grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc) {
     leftGoalOffense = false;
     rightGoalOffense = false;
     // need to set left and right goal flags to false at the start of this
@@ -433,7 +434,7 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajOffense(const Table& ta
         cv::Point_<int> intersection;
         cv::Point_<int> newEndPoint;
         // detect a bounce
-        bounces = bounceDetect(table, trajs.back()[0], trajs.back()[1], grabbed, bnccnt);
+        bounces = bounceDetect(trajs.back()[0], trajs.back()[1], grabbed, bnccnt);
         // if all of bounces are false, set done = true and break
         if (bounces[0] || bounces[1] || bounces[2] || bounces[3]) {
             // determine from bounces which wall is going to be intersected
@@ -508,7 +509,7 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTrajOffense(const Table& ta
     }
 }
 
-std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc) {
+std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc) {
     // need to set left and right goal flags to false at the start of this
     // remove grabbed once done testing and debugging
     intersect = {0, 0};
@@ -541,7 +542,7 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat g
         cv::Point_<int> intersection;
         cv::Point_<int> newEndPoint;
         // detect a bounce
-        bounces = bounceDetect(table, trajs.back()[0], trajs.back()[1], grabbed, bnccnt);
+        bounces = bounceDetect(trajs.back()[0], trajs.back()[1], grabbed, bnccnt);
         // if all of bounces are false, set done = true and break
         if (bounces[0] || bounces[1] || bounces[2] || bounces[3]) {
             // determine from bounces which wall is going to be intersected
@@ -611,29 +612,29 @@ std::vector<std::vector<cv::Point_<int>>> Thing::calcTraj(Table table, cv::Mat g
     }
 }
 
-std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed, int bnccnt) {
+std::vector<bool> Thing::bounceDetect(cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed, int bnccnt) {
     //remove grabbed onced done testing and debugging
 
     std::vector<bool> output = {false, false, false, false};
     int truecnt = 0;
 
 
-     if (endPoint.x < table.min.x) {
+     if (endPoint.x < Table::min.x) {
          output[0] = true;
          truecnt++;
 //         printf("0\n");
-     } else if (endPoint.x > table.max.x) {
+     } else if (endPoint.x > Table::max.x) {
          output[2] = true;
          truecnt++;
 //         printf("2\n");
      }
 
      // if there is an intersect with a horizontal wall (bottom and top walls)
-     if (endPoint.y > table.max.y) {
+     if (endPoint.y > Table::max.y) {
          output[1] = true;
          truecnt++;
 //         printf("1\n");
-     } else if (endPoint.y < table.min.y) {
+     } else if (endPoint.y < Table::min.y) {
          output[3] = true;
          truecnt++;
 //         printf("3\n");
@@ -649,10 +650,10 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
     if (truecnt > 1) {
         // checking the top left condition
         if (output[0] && output[3]) {
-            int xdif = startPoint.x - table.min.x;
+            int xdif = startPoint.x - Table::min.x;
             int xvelo = abs(endPoint.x - startPoint.x);
             double xtime = (double)xdif/(double)xvelo;
-            int ydif = startPoint.y - table.min.y;
+            int ydif = startPoint.y - Table::min.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
@@ -667,10 +668,10 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
         }
         // checking the bottom left condition
         if (output[0] && output[1]) {
-            int xdif = startPoint.x - table.min.x;
+            int xdif = startPoint.x - Table::min.x;
             int xvelo = abs(endPoint.x - startPoint.x);
             double xtime = (double)xdif/(double)xvelo;
-            int ydif = table.max.y - startPoint.y;
+            int ydif = Table::max.y - startPoint.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
@@ -685,10 +686,10 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
         }
         // checking the bottom right condition
         if (output[1] && output[2]) {
-            int xdif = table.max.x - startPoint.x;
+            int xdif = Table::max.x - startPoint.x;
             int xvelo = abs(endPoint.x - startPoint.x);
             double xtime = (double)xdif/(double)xvelo;
-            int ydif = table.max.y - startPoint.y;
+            int ydif = Table::max.y - startPoint.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
@@ -703,10 +704,10 @@ std::vector<bool> Thing::bounceDetect(Table table, cv::Point_<int> startPoint, c
         }
         // checking the top right condition
         if (output[2] && output[3]) {
-            int xdif = table.max.x - startPoint.x;
+            int xdif = Table::max.x - startPoint.x;
             int xvelo = abs(endPoint.x - startPoint.x);
             double xtime = (double)xdif/(double)xvelo;
-            int ydif = startPoint.y - table.min.y;
+            int ydif = startPoint.y - Table::min.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
@@ -905,7 +906,7 @@ void Thing::drawGoalVector(cv::Mat& in){
 
 //    cv::Point_<int> malletMaxY = {0, (sortedY[3].y - 80)};      //todo: adjust to ratios
 //    cv::Point_<int> malletMinY = {0, (sortedY[0].y + 80)};
-//    cv::Point_<int> malletMinY = table.motionLimitMin;
+//    cv::Point_<int> malletMinY = Table::motionLimitMin;
 //
 //
 //    if(JshotSpot.y > malletMaxY.y){
@@ -937,7 +938,7 @@ void Thing::calcNextLoc() {
 }
 
 
-cv::Point_<int> Thing::predictLocation(Table table, int frames) {
+cv::Point_<int> Thing::predictLocation(int frames) {
     cv::Point_<int> dist;
     cv::Point_<int> leftover;
     std::vector<std::vector<cv::Point_<int>>> trajs;
@@ -962,7 +963,7 @@ cv::Point_<int> Thing::predictLocation(Table table, int frames) {
         cv::Point_<int> intersection;
         cv::Point_<int> newEndPoint;
         // detect a bounce
-        bounces = bounceDetectClean(table, trajs.back()[0], trajs.back()[1], bnccnt);
+        bounces = bounceDetectClean(trajs.back()[0], trajs.back()[1], bnccnt);
         if (bounces[0] || bounces[1] || bounces[2] || bounces[3]) {
             intersection = findIntersection(bounces, trajs.back()[0], trajs.back()[1]);
             if (bounces[0] || bounces[2]) {
@@ -1008,29 +1009,28 @@ cv::Point_<int> Thing::predictLocation(Table table, int frames) {
     }
 }
 
-std::vector<bool> Thing::bounceDetectClean(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, int bnccnt) {
-    //remove grabbed onced done testing and debugging
+std::vector<bool> Thing::bounceDetectClean(cv::Point_<int> startPoint, cv::Point_<int> endPoint, int bnccnt) {
 
     std::vector<bool> output = {false, false, false, false};
     int truecnt = 0;
 
 
-    if (endPoint.x < table.min.x) {
+    if (endPoint.x < Table::min.x) {
         output[0] = true;
         truecnt++;
 //         printf("0\n");
-    } else if (endPoint.x > table.max.x) {
+    } else if (endPoint.x > Table::max.x) {
         output[2] = true;
         truecnt++;
 //         printf("2\n");
     }
 
     // if there is an intersect with a horizontal wall (bottom and top walls)
-    if (endPoint.y > table.max.y) {
+    if (endPoint.y > Table::max.y) {
         output[1] = true;
         truecnt++;
 //         printf("1\n");
-    } else if (endPoint.y < table.min.y) {
+    } else if (endPoint.y < Table::min.y) {
         output[3] = true;
         truecnt++;
 //         printf("3\n");
@@ -1046,10 +1046,10 @@ std::vector<bool> Thing::bounceDetectClean(Table table, cv::Point_<int> startPoi
     if (truecnt > 1) {
         // checking the top left condition
         if (output[0] && output[3]) {
-            int xdif = startPoint.x - table.min.x;
+            int xdif = startPoint.x - Table::min.x;
             int xvelo = abs(endPoint.x - startPoint.x);
             double xtime = (double)xdif/(double)xvelo;
-            int ydif = startPoint.y - table.min.y;
+            int ydif = startPoint.y - Table::min.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
@@ -1064,10 +1064,10 @@ std::vector<bool> Thing::bounceDetectClean(Table table, cv::Point_<int> startPoi
         }
         // checking the bottom left condition
         if (output[0] && output[1]) {
-            int xdif = startPoint.x - table.min.x;
+            int xdif = startPoint.x - Table::min.x;
             int xvelo = abs(endPoint.x - startPoint.x);
             double xtime = (double)xdif/(double)xvelo;
-            int ydif = table.max.y - startPoint.y;
+            int ydif = Table::max.y - startPoint.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
@@ -1082,10 +1082,10 @@ std::vector<bool> Thing::bounceDetectClean(Table table, cv::Point_<int> startPoi
         }
         // checking the bottom right condition
         if (output[1] && output[2]) {
-            int xdif = table.max.x - startPoint.x;
+            int xdif = Table::max.x - startPoint.x;
             int xvelo = abs(endPoint.x - startPoint.x);
             double xtime = (double)xdif/(double)xvelo;
-            int ydif = table.max.y - startPoint.y;
+            int ydif = Table::max.y - startPoint.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
@@ -1100,10 +1100,10 @@ std::vector<bool> Thing::bounceDetectClean(Table table, cv::Point_<int> startPoi
         }
         // checking the top right condition
         if (output[2] && output[3]) {
-            int xdif = table.max.x - startPoint.x;
+            int xdif = Table::max.x - startPoint.x;
             int xvelo = abs(endPoint.x - startPoint.x);
             double xtime = (double)xdif/(double)xvelo;
-            int ydif = startPoint.y - table.min.y;
+            int ydif = startPoint.y - Table::min.y;
             int yvelo = abs(endPoint.y - startPoint.y);
             double ytime = (double)ydif/(double)yvelo;
             /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,

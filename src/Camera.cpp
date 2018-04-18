@@ -36,12 +36,15 @@ Camera::Camera(int nwidth, int nheight) {
 #else
 
 //gst-launch-1.0 tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance ! bayer2rgb ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! xvimagesink
-    //tcam-ctrl -p -s "Exposure=5000" 42614274
-    //tcam-ctrl -p -s "Gain=96" 42614274
+    system("tcam-ctrl -p -s \"Exposure=5000\" 42614274");
+    system("tcam-ctrl -p -s \"Gain=96\" 42614274");
+    system("tcam-ctrl -p -s \"Brightness=25\" 42614274");
     capture.open("tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance ! bayer2rgb ! video/x-raw,format=RGBx ! videoconvert ! appsink" );
     /*autovideosink*/
     //capture.open("tcambin ! video/x-raw,format=RGBx,width=1280,height=720,framerate=80/1 ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! appsink" );
                  /*autovideosink*/
+
+
 
 #endif
 //    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");

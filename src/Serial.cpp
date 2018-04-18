@@ -154,9 +154,6 @@ bool Serial::IsConnected() {
 
 //#define SERIALDEBUG 1
 
-
-
-
 Serial::Serial(const char *portName)  {
 
     this->connected = false; //We're not yet connected
@@ -167,7 +164,12 @@ Serial::Serial(const char *portName)  {
 #else
     char file[] = "/dev/ttyACM0";
 #endif
+    //todo why do we need this?!
+    system("stty -F /dev/ttyACM0 raw");
+    system("stty -F /dev/ttyACM0 -echo -echoe -echok -hupcl");
+    system("stty -F /dev/ttyACM0 115200");
 
+    sleep(1);
 
     this->hSerial =  open(file, O_RDWR|O_NONBLOCK|O_NOCTTY|O_SYNC); //open(file, O_RDWR | O_NOCTTY | O_NDELAY);
     if(this->hSerial == 0) {
@@ -180,7 +182,7 @@ Serial::Serial(const char *portName)  {
         tcgetattr(hSerial, &options); //Get the current options for the port
         cfmakeraw(&options);
         options.c_cflag |= (CLOCAL | CREAD); //Enable the receiver and set local mode ///pretty sure this isnt needed
-        options.c_lflag &= ~(ECHO | ECHOE | ICANON | ISIG);
+        options.c_lflag &= ~(ECHO | ECHOE | ECHOK | HUPCL | ICANON | ISIG);
         cfsetispeed(&options, B115200); //Set the baud rates
         cfsetospeed(&options, B115200); //Set the baud rates
         tcsetattr(hSerial, TCSAFLUSH, &options); //set options, wait for operation to complete
