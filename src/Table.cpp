@@ -13,7 +13,7 @@
 
 
 Table::~Table() = default;
-const cv::Point_<int> Table::home = cv::Point_<int>(1160,340);
+const cv::Point_<int> Table::home = cv::Point_<int>(1160,370);
 cv::Point_<int> Table::max;
 cv::Point_<int> Table::min;
 cv::Point_<int> Table::strikeLimitMin;
@@ -31,8 +31,8 @@ void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Poin
     //todo make these ratios                adjust drawGoalVector after made into ratios
     motionLimitMin.y = min.y + 80;
     motionLimitMax.y = max.y - 80;
-    motionLimitMin.x = min.x + 680;
-    motionLimitMax.x = max.x - 25;
+    motionLimitMin.x = min.x + 780;
+    motionLimitMax.x = max.x - 30;
     motionLimit = cv::Rect_<int>(motionLimitMin,motionLimitMax);
 
     strikeLimitMin.y = motionLimitMin.y + 30;

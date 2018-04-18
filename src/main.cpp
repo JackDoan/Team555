@@ -28,6 +28,7 @@
 ///Exposure: 1/170, Gain: 6.59db, Sharpness: 3, Gamma: 66, Denoise: 25, Sat: 255
 
 int main(int argc, char* argv[]) {
+
     Settings settings;
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {

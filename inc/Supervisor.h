@@ -22,6 +22,7 @@
 #include "MotorDriver.h"
 #include "motion/Motion.h"
 #include "DoubleBuffer.h"
+#include "states.h"
 
 
 class Supervisor {
@@ -32,13 +33,14 @@ private:
     typedef enum resetState_e {RESETDONE, CHECKING, DONECHECKING, RESETTING} resetState_t;
     typedef enum difficulty_e {EASY, MEDIUM, HARD} difficulty_t;
     typedef enum decisionMode_e {AUTOMATIC, MANUAL} decisionMode_t;
-
-
     mode_t mode = IDLE;
     playMode_t playMode = DEFENSE;
     playState_t playState = DEFENDING;
     resetState_t resetState = RESETDONE;
     decisionMode_t decisionMode = AUTOMATIC;
+
+
+
 
     DoubleBuffer frameBuf;
 
@@ -68,7 +70,7 @@ private:
     bool keepGoing;
     bool doneCheck;
     cv::Mat idleImage;
-    static void decorate(cv::Mat in, double frameRate, cv::Point_<int> puckLastLoc, cv::Point_<int> puckLoc, cv::Point_<int> tableMax, cv::Point_<int> tableMin, Corners corners, std::vector<cv::Point_<int>> goals, cv::Point_<int> movingTo);
+    void decorate(cv::Mat in, double frameRate, cv::Point_<int> puckLastLoc, cv::Point_<int> puckLoc, cv::Point_<int> tableMax, cv::Point_<int> tableMin, Corners corners, std::vector<cv::Point_<int>> goals, cv::Point_<int> movingTo);
     static cv::Mat& preview;
     static DoubleBuffer previewBuf;
     static bool pushFrame();
@@ -77,6 +79,7 @@ private:
 
 
 public:
+
     double frameRate = 0;
     static cv::VideoWriter video;
     Supervisor(Table& table, Puck& puck, Mallet& mallet, Corners& corners, Settings& settings);
@@ -87,6 +90,7 @@ public:
     void calcFPS();
     void checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& puck, Mallet& mallet, Settings& settings);
     void idle();
+    void makeDecision();
     void decide();
     void play();
     void defense();

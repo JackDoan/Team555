@@ -4,10 +4,10 @@
 
 #include "../inc/Serial.h"
 #include "../inc/MotorDriver.h"
-#include <string.h>
+#include <cstring>
 #include <cstdint>
 #include <opencv2/core/types.hpp>
-#include "stdio.h"
+#include <cstdio>
 #include "../inc/helpers.h"
 #include "../inc/MotorDriver.h"
 #include "../inc/Table.h"
@@ -66,7 +66,7 @@ bool MotorDriver::moveTo(const cv::Point_<int> &in) { ///this takes pixels now!
     if (abs(toMove.y) <= deadband) {
         toMove.y = 0;
     }
-    printf("MotorDriver: Going to %d,%d\n", toMove.x, toMove.y);
+//    printf("MotorDriver: Going to %d,%d\n", toMove.x, toMove.y);
     return sendCMD(-1 * toMove.x, 'X') && sendCMD(toMove.y, 'Y');
 }
 

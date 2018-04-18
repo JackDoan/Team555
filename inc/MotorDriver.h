@@ -34,7 +34,7 @@ private:
 
     MotorDriver();
 public:
-    int deadband = 0;
+    int deadband = 1;
 //    Serial* SPx = new Serial("\\\\.\\COM4");
 //    Serial* SPy = new Serial("\\\\.\\COM5");
     static MotorDriver& getInstance() {

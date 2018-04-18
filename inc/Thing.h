@@ -90,6 +90,7 @@ public:
     std::vector<std::vector<cv::Point_<int>>> trajectory;
 
 
+
     bool onTable = false;
     bool doBars = false;
     Thing();
@@ -103,6 +104,7 @@ public:
     void calcVector(cv::Mat& in);
     void drawVector(cv::Mat& in);
     void calcTraj(Table table);
+    double magHistoryAvg;
 
     void toggleDebugInfo() {
         debugWindows = !debugWindows;
@@ -144,6 +146,8 @@ public:
     std::vector<bool> leftGoalHistory;
     void fillGoalFlagsHistory();
     void calcNextLoc();
+    cv::Point_<int> predictLocation(Table table, int frames);
+    std::vector<bool> bounceDetectClean(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, int bnccnt);
 
 };
 

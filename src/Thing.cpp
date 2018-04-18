@@ -245,7 +245,6 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
     found = false;
     lastLocation = location;
     for (int i = 0; i < contours.size(); i++) {
-        //todo: shrink the image to the table area, THEN search for contours.
         area = cv::contourArea(contours[i]);
         if ((area > getMinArea()) && (area < getMaxArea())) {  // Min and Max size of object
             //Detecting roundness   roundness = perimeter^2 / (2*pi*area)
@@ -344,7 +343,7 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
         fillTrajHistory();
 //        drawTrajHistory(in);
         //drawTrajEndPointHistory(in);
-//        fillVeloMagHistory();
+        fillVeloMagHistory();
 //        writeVeloMagHistory(in);
         fillGoalFlagsHistory();
         //drawGoalVector(in);               todo: convince Mike to use this
@@ -356,12 +355,12 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
 
 void Thing::calcVector(cv::Mat& in) {
 
-
-    if (abs(location.x-lastLocation.x) < 3 && abs(location.y - lastLocation.y) < 3) {
+    vectorXY = location - lastLocation;
+    /*if (abs(location.x-lastLocation.x) < 3 && abs(location.y - lastLocation.y) < 3) {
         vectorXY = {0,0};
     } else {
         vectorXY = location - lastLocation;
-    }
+    }*/
 
 }
 
@@ -859,6 +858,14 @@ void Thing::drawTrajEndPointHistory(cv::Mat& in) {
     }
 }
 
+double meanVector(const std::vector<double>& in) {
+    double out = 0;
+    for (int i = 0; i < in.size()/2; i++) {
+        out = in[i] + out;
+    }
+    return (out/in.size());
+}
+
 void Thing::fillVeloMagHistory() {
     e = clock();
     double el = double(e - s) / CLOCKS_PER_SEC;
@@ -866,7 +873,10 @@ void Thing::fillVeloMagHistory() {
     magHistory.insert(magHistory.begin(), sqrt(pow(vectorXY.x, 2) + pow(vectorXY.y, 2)) / el);
     magHistory.resize(historyDepth);
     s = clock();
+    magHistoryAvg = meanVector(magHistory);
 }
+
+
 
 void Thing::writeVeloMagHistory(cv::Mat& in) {
     char tempStr[80] = {};
@@ -926,3 +936,226 @@ void Thing::calcNextLoc() {
     }
 }
 
+
+cv::Point_<int> Thing::predictLocation(Table table, int frames) {
+    /*if (frames < 1 || frames > 15) {
+        return trajectory.back()[1];
+    }
+    cv::Point_<int> total = {abs(location.x - lastLocation.x), abs(location.y - lastLocation.y)};
+    if (trajectory.size() > 1) {
+        // need to account for bounces
+    } else {
+        // don't need to account for bounces
+    }*/
+    cv::Point_<int> dist;
+    cv::Point_<int> leftover;
+    std::vector<std::vector<cv::Point_<int>>> trajs;
+    int bnccnt = 0;
+    int bnccntmax;
+    if (lostCnt > 0) {
+        bnccntmax = 1;
+    } else {
+        bnccntmax = 3;
+    }
+
+    auto prediction = location + ((location - lastLocation)*frames);
+//    prediction = location + vectorXY*vectorMult;
+
+
+    std::vector<cv::Point_<int>> temp = {location, prediction};
+//    temp.emplace_back(location);
+//    temp.emplace_back(prediction);
+    trajs.emplace_back(temp);
+#ifdef MIKE_DEBUG
+    char tempStr[80];
+     sprintf(tempStr, "Leg: %d = (%d, %d) -> (%d, %d)\n", -1, trajs.back()[0].x, trajs.back()[0].y, trajs.back()[1].x, trajs.back()[1].y);
+     cv::putText(grabbed, tempStr, cvPoint(30, 410), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);
+#endif
+    while (bnccnt <= bnccntmax) {
+        std::vector<bool> bounces = {false, false, false, false};
+        cv::Point_<int> intersection;
+        cv::Point_<int> newEndPoint;
+        // detect a bounce
+        bounces = bounceDetectClean(table, trajs.back()[0], trajs.back()[1], bnccnt);
+        // if all of bounces are false, set done = true and break
+        if (bounces[0] || bounces[1] || bounces[2] || bounces[3]) {
+            // determine from bounces which wall is going to be intersected
+            // and calculate the intersection point
+            intersection = findIntersection(bounces, trajs.back()[0], trajs.back()[1]);
+/*
+            // draw the intersection on grabbed
+            cv::line(grabbed, cvPoint(intersection.x-25, intersection.y),
+                     cvPoint(intersection.x+25, intersection.y),
+                     cvScalar(0, 0, 255), 4);
+            cv::line(grabbed, cvPoint(intersection.x, intersection.y-25),
+                     cvPoint(intersection.x, intersection.y+25),
+                     cvScalar(0, 0, 255), 4);
+*/
+            // determine whether or not this is a goal
+            // depending on which goal is getting intersected
+            if (bounces[0] || bounces[2]) {
+                goalDetectOffense(intersection, trajs.back()[1].x - trajs.back()[0].x);
+                if (leftGoal || rightGoal) {
+                    // set endPoint equal to intersection and break
+                    trajs.back()[1] = intersection;
+                    break;
+                }
+            }
+
+
+            // determine distance from location to intersect point, this becomes the length of the current leg
+            // subtract that from the original length and this becomes the length of the next leg
+            dist = cvPoint(abs(intersection.x - trajs.back()[0].x),
+                           abs(intersection.y - trajs.back()[0].y));
+            leftover = cvPoint(abs(trajs.back()[1].x - dist.x),
+                               abs(trajs.back()[1].y - dist.y));
+//             determine ratios of leftover/total
+            double magorig = sqrt(pow(trajs.back()[1].x - trajs.back()[0].x, 2) +
+                                  pow(trajs.back()[1].y - trajs.back()[0].y, 2));
+            double magclipped = sqrt(pow(intersection.x - trajs.back()[0].x, 2) +
+                                     pow(intersection.y - trajs.back()[0].y, 2));
+            double magrat = magclipped / magorig;
+
+//             emplace back next trajs, which has start point at the point of intersect
+            if (bounces[0] || bounces[2]) {
+                newEndPoint.x = (int)(round((trajs.back()[0].x - trajs.back()[1].x) * (1 - magrat))) + intersection.x;
+                newEndPoint.y = (int)(round((trajs.back()[1].y - trajs.back()[0].y) * (1 - magrat))) + intersection.y;
+            } else if (bounces[1] || bounces[3]) {
+                newEndPoint.x = (int)(round((trajs.back()[1].x - trajs.back()[0].x) * (1 - magrat))) + intersection.x;
+                newEndPoint.y = (int)(round((trajs.back()[0].y - trajs.back()[1].y) * (1 - magrat))) + intersection.y;
+            }
+            // and appropriate endpoint
+
+            // set trajs.back()[1] to the point of intersection
+            trajs.back()[1] = intersection;
+            std::vector<cv::Point_<int>> pts = {intersection, newEndPoint};
+            trajs.emplace_back(pts);
+        }
+        /*char tempStr[80];
+        sprintf(tempStr, "Leg: %d = (%d, %d) -> (%d, %d)\n", bnccnt+1, trajs.back()[0].x, trajs.back()[0].y, trajs.back()[1].x, trajs.back()[1].y);
+        cv::putText(grabbed, tempStr, cvPoint(30, 450 + 40 * bnccnt+1), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
+        bnccnt++;
+    }
+
+    if(trajs.size() >= bnccntmax+1 && lostCnt < 1) { ///if we have an 'extra' bounce, clip it
+        std::vector<std::vector<cv::Point_<int>>> toReturn = {trajs[0],trajs[1],trajs[2],trajs[3]};
+        return toReturn.back()[1];
+    }
+    else {
+        return trajs.back()[1];
+    }
+}
+
+std::vector<bool> Thing::bounceDetectClean(Table table, cv::Point_<int> startPoint, cv::Point_<int> endPoint, int bnccnt) {
+    //remove grabbed onced done testing and debugging
+
+    std::vector<bool> output = {false, false, false, false};
+    int truecnt = 0;
+
+
+    if (endPoint.x < table.min.x) {
+        output[0] = true;
+        truecnt++;
+//         printf("0\n");
+    } else if (endPoint.x > table.max.x) {
+        output[2] = true;
+        truecnt++;
+//         printf("2\n");
+    }
+
+    // if there is an intersect with a horizontal wall (bottom and top walls)
+    if (endPoint.y > table.max.y) {
+        output[1] = true;
+        truecnt++;
+//         printf("1\n");
+    } else if (endPoint.y < table.min.y) {
+        output[3] = true;
+        truecnt++;
+//         printf("3\n");
+    }
+
+    // need to check if both a vertical and horizontal bounce are detected
+
+    if (truecnt > 2) {
+        printf("bounceDetect error, truecnt >2\n");
+        return {false, false, false, false};
+    }
+//    char tempStr[80];
+    if (truecnt > 1) {
+        // checking the top left condition
+        if (output[0] && output[3]) {
+            int xdif = startPoint.x - table.min.x;
+            int xvelo = abs(endPoint.x - startPoint.x);
+            double xtime = (double)xdif/(double)xvelo;
+            int ydif = startPoint.y - table.min.y;
+            int yvelo = abs(endPoint.y - startPoint.y);
+            double ytime = (double)ydif/(double)yvelo;
+            /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
+                                    output[0]?"1":"0", output[1]?"1":"0",
+                                    output[2]?"1":"0", output[3]?"1":"0");
+            cv::putText(grabbed, tempStr, cvPoint(30, 80  + 40 * bnccnt), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
+            if (ytime > xtime) {
+                output[3] = false;
+            } else {
+                output[0] = false;
+            }
+        }
+        // checking the bottom left condition
+        if (output[0] && output[1]) {
+            int xdif = startPoint.x - table.min.x;
+            int xvelo = abs(endPoint.x - startPoint.x);
+            double xtime = (double)xdif/(double)xvelo;
+            int ydif = table.max.y - startPoint.y;
+            int yvelo = abs(endPoint.y - startPoint.y);
+            double ytime = (double)ydif/(double)yvelo;
+            /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
+                    output[0]?"1":"0", output[1]?"1":"0",
+                    output[2]?"1":"0", output[3]?"1":"0");
+            cv::putText(grabbed, tempStr, cvPoint(30, 80 + 40 * bnccnt), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
+            if (ytime > xtime) {
+                output[1] = false;
+            } else {
+                output[0] = false;
+            }
+        }
+        // checking the bottom right condition
+        if (output[1] && output[2]) {
+            int xdif = table.max.x - startPoint.x;
+            int xvelo = abs(endPoint.x - startPoint.x);
+            double xtime = (double)xdif/(double)xvelo;
+            int ydif = table.max.y - startPoint.y;
+            int yvelo = abs(endPoint.y - startPoint.y);
+            double ytime = (double)ydif/(double)yvelo;
+            /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
+                    output[0]?"1":"0", output[1]?"1":"0",
+                    output[2]?"1":"0", output[3]?"1":"0");
+            cv::putText(grabbed, tempStr, cvPoint(30, 80 + 40 * bnccnt), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
+            if (ytime > xtime) {
+                output[1] = false;
+            } else {
+                output[2] = false;
+            }
+        }
+        // checking the top right condition
+        if (output[2] && output[3]) {
+            int xdif = table.max.x - startPoint.x;
+            int xvelo = abs(endPoint.x - startPoint.x);
+            double xtime = (double)xdif/(double)xvelo;
+            int ydif = startPoint.y - table.min.y;
+            int yvelo = abs(endPoint.y - startPoint.y);
+            double ytime = (double)ydif/(double)yvelo;
+            /*sprintf(tempStr,"(xtime, ytime): (%f, %f) walls: (%s, %s, %s, %s)\n", xtime, ytime,
+                    output[0]?"1":"0", output[1]?"1":"0",
+                    output[2]?"1":"0", output[3]?"1":"0");
+            cv::putText(grabbed, tempStr, cvPoint(30, 80 + 40 * bnccnt), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(225, 225, 50), 2);*/
+            if (ytime > xtime) {
+                output[3] = false;
+            } else {
+                output[2] = false;
+            }
+        }
+
+    }
+    return output;
+
+}

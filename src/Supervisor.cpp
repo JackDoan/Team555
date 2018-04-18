@@ -110,23 +110,29 @@ void Supervisor::run() {
         if (mode == PLAY) {
            // call the decide function that will set the playMode enum and then play
             if (decisionMode == AUTOMATIC) {
-                decide();
+                makeDecision();
             }
             switch(playMode) {
                 case DEFENSE:
                     // call defense
-                    movingTo = motion.defend(table, mallet, puck, frameBuf.active());
+                    playState = DEFENDING;
+//                    movingTo = motion.defend(table, mallet, puck, frameBuf.active());
+                    movingTo = motion.defense(table, mallet, puck, frameBuf.active());
                     break;
                 case OFFENSE:
                     // call offense
-                    doneCheck = motion.attack(table, mallet, puck, frameBuf.active());
+                    playState = OFFENDING;
+                    doneCheck = motion.offense(table, mallet, puck, frameBuf.active());
                     break;
                 case FIX:
                     // call impulse
+                    playState = FIXING;
                     doneCheck = resetPuck(motion, table, mallet, puck, frameBuf.active());
                     break;
                 default:
                     // call defense
+                    playState = DEFENDING;
+                    movingTo = motion.defense(table, mallet, puck, frameBuf.active());
                     break;
 
             }
@@ -157,6 +163,9 @@ void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& p
         case 27: //ESC
             keepGoing = false;
             motorDriver.stop();
+        case 'j':
+//            motion.calibrateHome(table, mallet, settings);
+            break;
         case 'q':
             motorDriver.setEnable(false,false);
             break;
@@ -185,12 +194,15 @@ void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& p
         case 'a':
             printf("Motion Mode = Attack\n");
             playMode = OFFENSE;
+            motion.resetOffense();
             break;
         case 'w':
             mode = PLAY;
+            printf("Play Mode set to PLAY\n");
             break;
         case 'r':
             mode = IDLE;
+            printf("Play Mode set to IDLE\n");
             break;
         case 'e':
             difficulty = EASY;
@@ -204,8 +216,10 @@ void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& p
         case 197:
             if (decisionMode == AUTOMATIC) {
                 decisionMode = MANUAL;
+                printf("Decision Mode set to MANUAL\n");
             } else if (decisionMode = MANUAL) {
                 decisionMode = AUTOMATIC;
+                printf("Decision Mode set to AUTOMATIC\n");
             }
             break;
         case 200: //F11 = toggle fullscreen
@@ -271,6 +285,46 @@ void Supervisor::idle() {
     }
 }
 
+void Supervisor::makeDecision() {
+    switch (playState) {
+        case DEFENDING:
+            if (puck.rightGoal) {
+                playMode = DEFENSE;
+                break;
+            }
+            if (within(puck.predictLocation(table, 10), Table::strikeLimitMin, Table::strikeLimitMax)
+                && puck.magHistoryAvg < 300 && puck.location.x < mallet.location.x
+                && motion.defenseState == ATHOME) {
+                playMode = OFFENSE;
+                doneCheck = false;
+            } else {
+                playMode = DEFENSE;
+            }
+            break;
+        // literally does nothing right now
+        /*case FIXING:
+            if (doneCheck|| puck.rightGoal) {
+                playMode = DEFENSE;
+                doneCheck = false;
+            } else {
+                playMode = FIX;
+            }
+            break;*/
+        case OFFENDING:
+            if (motion.offenseState == OFFENSEDONE || puck.rightGoal) {
+                motion.offenseState = OFFENSEDONE;
+                playMode = DEFENSE;
+                doneCheck = false;
+            } else {
+                playMode = OFFENSE;
+            }
+            break;
+        default:
+            playMode = DEFENSE;
+            break;
+    }
+}
+
 void Supervisor::decide() {
     // if puck.foundHistory is completely false and last predicted location and location was on our side of the table
         // start a timer
@@ -287,7 +341,8 @@ void Supervisor::decide() {
             // check the lostTimer if its greater than 3 seconds
                 // set playMode to impulse with argument lost set to true
                 // and set playmode to impulse'
-            if (within(puck.location, Table::strikeLimitMin, Table::strikeLimitMax) && puck.vectorXY.x <= 0) {
+            if ((within(puck.location, Table::strikeLimitMin, Table::strikeLimitMax) || within(puck.predictLocation(table, 10), Table::strikeLimitMin, Table::strikeLimitMax))
+                && puck.magHistoryAvg < 300 && puck.location.x < mallet.location.x) {
                 playMode = OFFENSE;
                 doneCheck = false;
             } else {
@@ -295,7 +350,7 @@ void Supervisor::decide() {
             }
             break;
         case FIXING:
-            if (doneCheck) {
+            if (doneCheck|| puck.rightGoal) {
                 playMode = DEFENSE;
                 doneCheck = false;
             } else {
@@ -303,7 +358,7 @@ void Supervisor::decide() {
             }
             break;
         case OFFENDING:
-            if (doneCheck) {
+            if (doneCheck || puck.rightGoal) {
                 playMode = DEFENSE;
                 motion.resetOffense();
                 doneCheck = false;
@@ -315,16 +370,9 @@ void Supervisor::decide() {
             playMode = DEFENSE;
             break;
     }
-
-
-
-    // check playMode and call the corresponding function with a switch statement
-
-
-
-
-    //switch(mode)
 }
+
+
 
 void Supervisor::findPuck() {
     // did we come into this call with FINDINGPUCK high or low?
@@ -416,6 +464,20 @@ void Supervisor::decorate(cv::Mat in, double frameRate, cv::Point_<int> puckLast
     cv::line(previewBuf.active(), goals[0]/2, goals[1]/2, cv::Scalar(180, 255, 255), 4);
     cv::line(previewBuf.active(), goals[2]/2, goals[3]/2, cv::Scalar(180, 255, 255), 4);
     cv::putText(previewBuf.active(), tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+    switch(playMode) {
+        case DEFENSE:
+            cv::putText(previewBuf.active(), "Defending", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+            break;
+        case OFFENSE:
+            cv::putText(previewBuf.active(), "Attacking", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+            break;
+        case FIX:
+            cv::putText(previewBuf.active(), "Resetting", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+            break;
+        default:
+            cv::putText(previewBuf.active(), "defending", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+            break;
+    }
     timeToPushFrame = true;
     previewBuf.toggle();
 }
