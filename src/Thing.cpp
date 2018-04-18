@@ -339,10 +339,10 @@ void Thing::findOne(cv::Mat in, Table table, bool isMallet) {
     if (!isMallet) {
         fillFoundHistory(found);
         fillLocationHistory(location);
-        //drawLocationHistory(in);
+        drawLocationHistory(in);
         fillTrajHistory();
-//        drawTrajHistory(in);
-        //drawTrajEndPointHistory(in);
+        //drawTrajHistory(in);
+        drawTrajEndPointHistory(in);
         fillVeloMagHistory();
 //        writeVeloMagHistory(in);
         fillGoalFlagsHistory();
@@ -826,9 +826,9 @@ void Thing::fillLocationHistory(cv::Point_<int>) {
 }
 
 void Thing::drawLocationHistory(cv::Mat& in){
-    for (int i = 0; i < historyDepth; i++) {
+    for (int i = 0; i < historyDepth/3; i++) {
         if (foundHistory[i])
-            cv::circle(in, locationHistory[i], 10, cv::Scalar(100, 200 - i*10, 0), 6);
+            cv::circle(in, locationHistory[i], 10, cv::Scalar(50, 255, 200 - i*5), 3);
     }
 }
 
@@ -838,7 +838,7 @@ void Thing::fillTrajHistory(){
 }
 
 void Thing::drawTrajHistory(cv::Mat& in) {
-    for (int i = historyDepth-1; i > 0; i--) {
+    for (int i = historyDepth/3-1; i > 0; i--) {
         if (foundHistory[i]) {
             for (int j = 0; j < trajectoryHistory[i].size(); j++) {
                 cv::line(in, trajectoryHistory[i][j][0], trajectoryHistory[i][j][1], cvScalar(165, 255, 255), 4);
@@ -851,9 +851,9 @@ void Thing::drawTrajHistory(cv::Mat& in) {
 }
 
 void Thing::drawTrajEndPointHistory(cv::Mat& in) {
-    for (int i = 1; i < historyDepth; i++) {
+    for (int i = 1; i < historyDepth/3; i++) {
         if (foundHistory[i-1] && foundHistory[i]) {
-            cv::circle(in, trajectoryHistory[i-1].back().back(), 10, cv::Scalar(210, 0, 210), 6);
+            cv::circle(in, trajectoryHistory[i-1].back().back(), 10, cv::Scalar(150, 255, 100 - i*5), 3);
         }
     }
 }

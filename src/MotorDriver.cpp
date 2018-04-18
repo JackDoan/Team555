@@ -60,14 +60,16 @@ bool MotorDriver::stop() {
 
 bool MotorDriver::moveTo(const cv::Point_<int> &in) { ///this takes pixels now!
     cv::Point_<int> toMove = Table::pixelsToSteps(saturate(in, Table::motionLimitMin, Table::motionLimitMax));
-    if (abs(toMove.x) <= deadband) {
-        toMove.x = 0;
-    }
-    if (abs(toMove.y) <= deadband) {
-        toMove.y = 0;
-    }
+//    if (abs(toMove.x) <= deadband) {
+//        toMove.x = 0;
+//    }
+//    if (abs(toMove.y) <= deadband) {
+//        toMove.y = 0;
+//    }
 //    printf("MotorDriver: Going to %d,%d\n", toMove.x, toMove.y);
-    return sendCMD(-1 * toMove.x, 'X') && sendCMD(toMove.y, 'Y');
+    sendCMD(toMove.y, 'Y');
+    sendCMD(-1 * toMove.x, 'X');
+    return true; //sendCMD(-1 * toMove.x, 'X') && sendCMD(toMove.y, 'Y');
 }
 
 bool MotorDriver::moveBy(const cv::Point_<int> &in) {

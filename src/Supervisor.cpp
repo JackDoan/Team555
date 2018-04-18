@@ -64,6 +64,15 @@ void Supervisor::run() {
     // calibrate the steppers home positions
     motion.calibrateHome(table, mallet, settings);
 
+    // calculate speed
+   // motion.calibrateSpeed(mallet);
+    printf("yHome2EdgeTime: %d\n", motion.getYHome2EdgeTime());
+    printf("yEdge2EdgeTime: %d\n", motion.getYEdge2EdgeTime());
+    printf("xHome2EdgeTime: %d\n", motion.getXHome2EdgeTime());
+    printf("xEdge2EdgeTime: %d\n", motion.getXEdge2EdgeTime());
+
+
+
     keepGoing = true;
     sendGetButtons = true;
     doneCheck = false;
@@ -117,7 +126,7 @@ void Supervisor::run() {
                     // call defense
                     playState = DEFENDING;
 //                    movingTo = motion.defend(table, mallet, puck, frameBuf.active());
-                    movingTo = motion.defense(table, mallet, puck, frameBuf.active());
+                    movingTo = motion.defense(mallet, puck, frameBuf.active());
                     break;
                 case OFFENSE:
                     // call offense
@@ -132,7 +141,7 @@ void Supervisor::run() {
                 default:
                     // call defense
                     playState = DEFENDING;
-                    movingTo = motion.defense(table, mallet, puck, frameBuf.active());
+                    movingTo = motion.defense(mallet, puck, frameBuf.active());
                     break;
 
             }

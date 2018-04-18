@@ -48,15 +48,13 @@ int main(int argc, char* argv[]) {
 // TODO: need to create a debug mode that allows us to turn on and off every possible debugging feature we could use
 // like trackbars for thresholding, thresholded images, writing and not writing the video, maybe even wrap all
 // all of our printfs for debuggin in a debug version of printf?
-
-
-    Table table = Table();
+    Table table;
     Puck puck = Puck();
     Mallet mallet = Mallet();
     //MotorDriver motorDriver = MotorDriver();
     Corners corners = Corners(settings.calibrateCorners);
     if (!settings.calibrateCorners) {
-        table.setLimits(corners.sortedX, corners.sortedY);
+        Table::setLimits(corners.sortedX, corners.sortedY);
         puck.setWalls(corners.sortedX, corners.sortedY);
     }
     Supervisor supervisor = Supervisor(table, puck, mallet, corners, settings);

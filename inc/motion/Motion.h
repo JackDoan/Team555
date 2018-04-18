@@ -16,9 +16,27 @@
 class Motion {
 
 private:
-
 public:
-    void calibrateSpeed(Table table, Mallet mallet, Settings settings);
+    clock_t getTmpClk() const;
+
+    clock_t getYHome2EdgeTime() const;
+
+    clock_t getYEdge2EdgeTime() const;
+
+    clock_t getXHome2EdgeTime() const;
+
+    clock_t getXEdge2EdgeTime() const;
+
+private:
+    double calGoto(Mallet& mallet, const cv::Point_<int>& destination, time_t& beginTime, time_t& endTime);
+    clock_t yHome2EdgeTime;
+    clock_t yEdge2EdgeTime;
+    clock_t xHome2EdgeTime;
+    clock_t xEdge2EdgeTime;
+public:
+
+
+    void calibrateSpeed(Mallet& mallet);
     bool hitVectorFound = false;
     bool staging = false;
     bool striking = false;
@@ -28,12 +46,12 @@ public:
 //    typedef enum defenseState_e {ATHOME, GOINGHOME, INTERCEPTING, ATINTERCEPT} defenseState_t;
     defenseState_t defenseState = ATHOME;
     typedef enum defenseDecision_e {GOHOME, INTERCEPT} defenseDecision_t;
-    defenseDecision_t defenseDecision = GOHOME;
+
 //    typedef enum offenseState_e {OFFENSEDONE, GOINGTOSTAGE, STRIKING} offenseState_t;
     offenseState_t offenseState = OFFENSEDONE;
     typedef enum offenseDecision_e {STAGE, STRIKE} offenseDecision_t;
     offenseDecision_t offenseDecision = STAGE;
-    cv::Point_<int> defense(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed);
+    cv::Point_<int> defense(Mallet& mallet, Puck& puck, cv::Mat& grabbed);
     bool offense(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed);
     cv::Point_<int> defend(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed);
     bool attack(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed);

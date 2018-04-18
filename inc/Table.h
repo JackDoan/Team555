@@ -25,8 +25,6 @@ public:
     static void setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY);
     int preview = 1;
 
-
-    void annotate(cv::Mat);
     Table() =default;
     ~Table();
 };

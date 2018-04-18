@@ -23,14 +23,15 @@
 Motion::Motion() {
 
 }
-
-void Motion::calibrateSpeed(Table table, Mallet mallet, Settings settings) {
+double Motion::calGoto(Mallet& mallet, const cv::Point_<int>& destination, clock_t& beginTime, clock_t& endTime) {
     Camera& camera = Camera::getInstance();
+    MotorDriver& motorDriver = MotorDriver::getInstance();
+    Table table;
     cv::Mat calSpeedGrabbed;
     cv::Mat calSpeedSmall;
-    cv::namedWindow("CalSpeed");
-    MotorDriver& motorDriver = MotorDriver::getInstance();
+    double timeDelta = 0.0;
     bool done = false;
+    time(&beginTime);
     while(!done) {
         calSpeedGrabbed = camera.getUndistortedFrame();
         if (calSpeedGrabbed.empty()) {
@@ -42,13 +43,36 @@ void Motion::calibrateSpeed(Table table, Mallet mallet, Settings settings) {
             imshow("CalSpeed", calSpeedSmall);
         }
         if (!mallet.found) {
-            printf("Mallet not found in calibrateHome y run!\n");
+            printf("Mallet not found!\n");
             if (cv::waitKey(100) >= 0)
                 continue;
         }
-        motorDriver.moveTo(table.motionLimitMin);
+        else {
+            printf("Motion::calGoto: Moving to (%d,%d)\n", destination.x, destination.y);
+            motorDriver.moveTo(destination);
+        }
+        if (
+                abs(mallet.location.y - destination.y) <= 5 &&
+                abs(mallet.location.x - destination.x) <= 5) {
+            time(&endTime);
+            timeDelta = difftime(endTime, beginTime);
+            done = true;
+        }
+        if (cv::waitKey(100) >= 0)
+            break;
     }
+    return timeDelta;
 
+}
+void Motion::calibrateSpeed(Mallet& mallet) {
+
+    cv::namedWindow("CalSpeed");
+    clock_t now;
+    calGoto(mallet, {Table::home.x, Table::motionLimitMax.y}, now, yHome2EdgeTime);
+    calGoto(mallet, {Table::home.x, Table::motionLimitMin.y}, now, yEdge2EdgeTime);
+    calGoto(mallet, {Table::motionLimitMax.x, Table::motionLimitMax.y}, now, xHome2EdgeTime);
+    calGoto(mallet, {Table::motionLimitMin.x, Table::motionLimitMax.y}, now, xEdge2EdgeTime);
+    cvDestroyWindow("CalSpeed");
 }
 
 void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
@@ -123,6 +147,8 @@ void Motion::calibrateHome(Table table, Mallet mallet, Settings settings) {
         if (cv::waitKey(100) >= 0)
             break;
     }
+
+
     while (!xHome) {
         if (!settings.undistort) {
             calHomeGrabbed = camera.getFrame();
@@ -242,22 +268,23 @@ bool notAt(cv::Point_<int> at, cv::Point_<int> desired, int tolerance) {
     }
 }
 
-cv::Point_<int> Motion::defense(const Table& table, Mallet& mallet, Puck& puck, cv::Mat& grabbed) {
+cv::Point_<int> Motion::defense(Mallet& mallet, Puck& puck, cv::Mat& grabbed) {
     const auto defenseColor = cv::Scalar(225, 255, 255);
     static cv::Point_<int> interceptSpot = Table::home;
-    cv::Point_<int> desiredLocation;
+    cv::Point_<int> desiredLocation = Table::home;
     MotorDriver& motorDriver = MotorDriver::getInstance();
-
-
-    //calculate an intercept spot right off the bat if in THIS frame we think we are being scored on
-    if (puck.rightGoal) {
-        interceptSpot = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0]) * 0.7;
-    }
+    defenseDecision_t defenseDecision;
 
     // make defense decision based on current states and other inputs
     if (checkPastgoalFlags(puck.rightGoalHistory)) {
         defenseDecision = INTERCEPT;
-    } else {
+        //calculate an intercept spot right off the bat if in THIS frame we think we are being scored on
+        if (puck.rightGoal) { ///you need this or you segfault
+            interceptSpot = puck.trajectory.back()[0] + (puck.trajectory.back()[1] - puck.trajectory.back()[0]) * 0.7;
+        }
+    }
+    else {
+        interceptSpot = Table::home; //just in case
         defenseDecision = GOHOME;
     }
 
@@ -265,31 +292,41 @@ cv::Point_<int> Motion::defense(const Table& table, Mallet& mallet, Puck& puck, 
     if (defenseDecision == INTERCEPT) {
         if (notAt(mallet.location, interceptSpot, 10)) {
             defenseState = INTERCEPTING;
-        } else {
+        }
+        else {
             defenseState = ATINTERCEPT;
         }
-    } else {
+    }
+    else {
         if (notAt(mallet.location, Table::home, 10)) {
             defenseState = GOINGHOME;
-        } else {
+        }
+        else {
             defenseState = ATHOME;
         }
     }
 
     // based on decision state and current state issue move commands
-    if (defenseState == INTERCEPTING) {
-        desiredLocation = interceptSpot;
-        cv::putText(grabbed, "moving", cvPoint(1100, 665), cv::FONT_HERSHEY_SIMPLEX, 1, defenseColor, 2);
-    } else if (defenseState == GOINGHOME) {
-        desiredLocation = Table::home;
-        cv::putText(grabbed, "moving", cvPoint(1100, 665), cv::FONT_HERSHEY_SIMPLEX, 1, defenseColor, 2);
-    } else if (defenseState == ATINTERCEPT) {
-        desiredLocation = interceptSpot;
-    } else if (defenseState == ATHOME) {
-        desiredLocation = Table::home;
+    switch (defenseState) {
+        case INTERCEPTING:
+            desiredLocation = interceptSpot;
+            cv::putText(grabbed, "moving", cvPoint(1100, 665), cv::FONT_HERSHEY_SIMPLEX, 1, defenseColor, 2);
+            break;
+        case ATINTERCEPT:
+            desiredLocation = interceptSpot;
+            break;
+
+        case GOINGHOME:
+            desiredLocation = Table::home;
+            cv::putText(grabbed, "moving", cvPoint(1100, 665), cv::FONT_HERSHEY_SIMPLEX, 1, defenseColor, 2);
+            break;
+        default:
+        case ATHOME:
+            desiredLocation = Table::home;
+            break;
     }
 
-    desiredLocation = saturate(desiredLocation, table.motionLimitMin, table.motionLimitMax);
+    desiredLocation = saturate(desiredLocation, Table::motionLimitMin, Table::motionLimitMax);
     if (mallet.onTable) {
         motorDriver.moveTo(desiredLocation);
     }
@@ -622,4 +659,21 @@ std::vector<cv::Point_<int>> Motion::findImpulseVector(const Table& table, Malle
         // if x-wall set a bool high that says its on an x-wall
         // if y-wall set a bool high that says its on a y-wall
     //
+}
+
+
+clock_t Motion::getYHome2EdgeTime() const {
+    return yHome2EdgeTime;
+}
+
+clock_t Motion::getYEdge2EdgeTime() const {
+    return yEdge2EdgeTime;
+}
+
+clock_t Motion::getXHome2EdgeTime() const {
+    return xHome2EdgeTime;
+}
+
+clock_t Motion::getXEdge2EdgeTime() const {
+    return xEdge2EdgeTime;
 }
