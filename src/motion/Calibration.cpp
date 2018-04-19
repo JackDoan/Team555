@@ -62,6 +62,8 @@ void Calibration::home() {
             homeDecay = 0;
             auto difference = Table::home - mallet.location;
             motorDriver.moveBy(difference);
+            printf("Calibration::home at (%d,%d), going to (%d,%d), off by (%d,%d)\n",
+                   mallet.location.x, mallet.location.y,  Table::home.x, Table::home.y, difference.x, difference.y);
         }
 
         display();
@@ -70,14 +72,14 @@ void Calibration::home() {
     printf("Homing complete!\n");
 }
 
-double Calibration::moveTo(Mallet& mallet, const cv::Point_<int>& destination) {
+std::vector<Calibration::pointAndTime> Calibration::moveTo(Mallet& mallet, const cv::Point_<int>& destination) {
     MotorDriver& motorDriver = MotorDriver::getInstance();
     double timeDelta = 0.0;
     clock_t start, end;
     bool done = false;
     start = clock();
-    std::vector<struct pointAndTime> locsTimes;
-    struct pointAndTime tmp;
+    std::vector<Calibration::pointAndTime> locsTimes;
+    Calibration::pointAndTime tmp;
     while(!done) {
 
         if(!getFrame()) { break; }
@@ -91,7 +93,7 @@ double Calibration::moveTo(Mallet& mallet, const cv::Point_<int>& destination) {
                 continue;
         }
         else {
-            printf("Motion::calGoto: Moving from (%d,%d) to (%d,%d)\n",mallet.location.x, mallet.location.y,  destination.x, destination.y);
+            //printf("Motion::calGoto: Moving from (%d,%d) to (%d,%d)\n",mallet.location.x, mallet.location.y,  destination.x, destination.y);
             motorDriver.moveTo(destination);
         }
         if (isAt(mallet.location, destination, 8)) {
@@ -101,9 +103,7 @@ double Calibration::moveTo(Mallet& mallet, const cv::Point_<int>& destination) {
         display();
         if (cv::waitKey(1) >= 0) { break; }
     }
-    end = clock();
-    double toReturn = ((end - start) / (double) CLOCKS_PER_SEC);
-    return toReturn;
+    return locsTimes;
 }
 
 void Calibration::speed() {
@@ -116,10 +116,10 @@ void Calibration::speed() {
 
     // todo: test this
     moveTo(mallet, Table::strikeLimitMax);
-    upTime = moveTo(mallet, {Table::strikeLimitMax.x, Table::strikeLimitMin.y});
-    leftTime = moveTo(mallet, Table::strikeLimitMin);
-    downTime = moveTo(mallet, {Table::strikeLimitMin.x, Table::strikeLimitMax.y});
-    rightTime = moveTo(mallet, Table::strikeLimitMax);
+    up = moveTo(mallet, {Table::strikeLimitMax.x, Table::strikeLimitMin.y});
+    left = moveTo(mallet, Table::strikeLimitMin);
+    down = moveTo(mallet, {Table::strikeLimitMin.x, Table::strikeLimitMax.y});
+    right = moveTo(mallet, Table::strikeLimitMax);
     home2Top = moveTo(mallet, {Table::home.x, Table::strikeLimitMin.y});
     moveTo(mallet, Table::home);
     home2Left = moveTo(mallet, {Table::strikeLimitMin.x, Table::home.y});
@@ -129,12 +129,12 @@ void Calibration::speed() {
     home2Right = moveTo(mallet, {Table::strikeLimitMax.x, Table::home.y});
     moveTo(mallet, Table::home);
 
-    printf("up: %f\nleft: %f\ndown: %f\nright: %f\n", upTime, leftTime, downTime, rightTime);
-    printf("home2Top: %f\nhome2Left: %f\nhome2Bottom: %f\nhome2Right: %f\n", home2Top, home2Left, home2Bottom, home2Right);
+    printf("up: %f\nleft: %f\ndown: %f\nright: %f\n", up.back().time, left.back().time, down.back().time, right.back().time);
+    printf("home2Top: %f\nhome2Left: %f\nhome2Bottom: %f\nhome2Right: %f\n", home2Top.back().time, home2Left.back().time, home2Bottom.back().time, home2Right.back().time);
 
 
     // todo: test this
-    double delay1 = calcTXDelay(leftTime, home2Left, abs(Table::strikeLimitMax.x - Table::strikeLimitMin.x), abs(Table::home.x - Table::strikeLimitMin.x));
+    double delay1 = calcTXDelay(left.back().time, home2Left.back().time, abs(Table::strikeLimitMax.x - Table::strikeLimitMin.x), abs(Table::home.x - Table::strikeLimitMin.x));
 }
 
 double Calibration::calcTXDelay(double edge2EdgeTime, double home2EdgeTime, double edge2EdgeDist, double home2EdgeDist) {

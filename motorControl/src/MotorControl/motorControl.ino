@@ -26,6 +26,8 @@ void setup() {
 	stepperY.setMaxSpeed(200000.0); //200000
 	stepperY.setAcceleration(50000.0); //30000
 	Serial.begin(115200);
+	pinMode(10,OUTPUT);
+	digitalWrite(10, 1);
 }
 
 void loop() {
@@ -86,7 +88,10 @@ void processCMD(char cmd, longbytes rx) {
         case 'W':
             rx.l = stepperY.distanceToGo();
             break;
-        case '?':
+        case 'f':
+		digitalWrite(10, !digitalRead(10));
+		break;
+	case '?':
             if (rx.b.lowest == 'y') {
                 stepCount.l = stepperY.currentPosition();
             } else {

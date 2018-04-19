@@ -158,6 +158,9 @@ void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& p
             keepGoing = false;
             motorDriver.stop();
             break;
+        case 'f':
+            motorDriver.toggleFan();
+            break;
         case 'j':
             motion.calibrate.home();
             break;

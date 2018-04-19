@@ -67,6 +67,8 @@ public:
     bool stop();
     void getButtonsCmd();
     long getButtonsResult();
+    void toggleFan() { sendCMD(0,'f');
+    }
 
 };
 
