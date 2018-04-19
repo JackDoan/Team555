@@ -22,6 +22,20 @@ private:
 public:
     void speed();
     void home();
+    double calcTXDelay(double edge2EdgeTime, double home2EdgeTime, double edge2EdgeDist, double home2EdgeDist);
+
+    struct pointAndTime {
+        cv::Point_<int> location;
+        double time;
+    };
+    double upTime;
+    double leftTime;
+    double downTime;
+    double rightTime;
+    double home2Top;
+    double home2Left;
+    double home2Bottom;
+    double home2Right;
 };
 
 
