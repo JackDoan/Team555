@@ -22,7 +22,7 @@ AccelStepper stepperY(AccelStepper::DRIVER, 23, 22);
 void setup() {
 	// put your setup code here, to run once:
 	stepperX.setMaxSpeed(400000.0);
-	stepperX.setAcceleration(6500.0);
+	stepperX.setAcceleration(10000.0);
 	stepperY.setMaxSpeed(200000.0); //200000
 	stepperY.setAcceleration(50000.0); //30000
 	Serial.begin(115200);

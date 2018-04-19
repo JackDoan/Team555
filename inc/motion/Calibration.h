@@ -29,7 +29,7 @@ public:
         double time;
     } pointAndTime;
     std::vector<pointAndTime> moveTo(Mallet& mallet, const cv::Point_<int>& destination);
-
+    double calculateTXDelay(std::vector<Calibration::pointAndTime> input);
 
 
     std::vector<pointAndTime> up;

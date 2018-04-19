@@ -75,7 +75,7 @@ void Calibration::home() {
 std::vector<Calibration::pointAndTime> Calibration::moveTo(Mallet& mallet, const cv::Point_<int>& destination) {
     MotorDriver& motorDriver = MotorDriver::getInstance();
     double timeDelta = 0.0;
-    clock_t start, end;
+    clock_t start;
     bool done = false;
     start = clock();
     std::vector<Calibration::pointAndTime> locsTimes;
@@ -106,15 +106,29 @@ std::vector<Calibration::pointAndTime> Calibration::moveTo(Mallet& mallet, const
     return locsTimes;
 }
 
+void pATtoCSV(const std::vector<Calibration::pointAndTime>& in, const char* name) {
+    auto f = fopen(name, "w");
+    char b[256];
+    //for(int i = 0; i < in.size(); i++) {
+    for(const Calibration::pointAndTime& i : in) {
+        //std::cout << in[i].time << "," << in[i].location.x << "," << in[i].location.y << std::endl;
+        snprintf(b, sizeof(b), "%f,%d,%d\n", i.time, i.location.x, i.location.y);
+        //printf(b);
+//        fwrite(b, sizeof(char), strlen(b), f);
+        fprintf(f, "%f,%d,%d\n", i.time, i.location.x, i.location.y);
+    }
+    fflush(f);
+    fclose(f);
+}
+
 void Calibration::speed() {
     Mallet mallet;
-    clock_t now;
 //    moveTo(mallet, {Table::home.x, Table::strikeLimitMax.y});
 //    moveTo(mallet, {Table::home.x, Table::strikeLimitMin.y});
 //    moveTo(mallet, {Table::strikeLimitMax.x, Table::strikeLimitMax.y});
 //    moveTo(mallet, {Table::strikeLimitMin.x, Table::strikeLimitMax.y});
-
-    // todo: test this
+    const std::vector<Calibration::pointAndTime>* things[] = {&up, &left, &down, &right, &home2Top, &home2Left, &home2Bottom, &home2Right};
+    std::vector<const char*> thingNames = {"Up", "Left", "Down", "Right", "home2Top", "home2Left", "home2Bottom", "home2Right"};
     moveTo(mallet, Table::strikeLimitMax);
     up = moveTo(mallet, {Table::strikeLimitMax.x, Table::strikeLimitMin.y});
     left = moveTo(mallet, Table::strikeLimitMin);
@@ -129,32 +143,29 @@ void Calibration::speed() {
     home2Right = moveTo(mallet, {Table::strikeLimitMax.x, Table::home.y});
     moveTo(mallet, Table::home);
 
+    for (int i = 0; i < 8; i++) {
+        char name[64];
+        snprintf(name, sizeof(name), "%s.csv", thingNames[i]);
+        pATtoCSV(*things[i], name);
+    }
+
     printf("up: %f\nleft: %f\ndown: %f\nright: %f\n", up.back().time, left.back().time, down.back().time, right.back().time);
     printf("home2Top: %f\nhome2Left: %f\nhome2Bottom: %f\nhome2Right: %f\n", home2Top.back().time, home2Left.back().time, home2Bottom.back().time, home2Right.back().time);
 
-
     // todo: test this
-    double delay1 = calcTXDelay(left.back().time, home2Left.back().time, abs(Table::strikeLimitMax.x - Table::strikeLimitMin.x), abs(Table::home.x - Table::strikeLimitMin.x));
+    double upDelay = calculateTXDelay(up);
+    printf("up TX delay = %f\n", upDelay);
+    double leftDelay = calculateTXDelay(left);
+    printf("left TX delay = %f\n", leftDelay);
 }
 
-double Calibration::calcTXDelay(double edge2EdgeTime, double home2EdgeTime, double edge2EdgeDist, double home2EdgeDist) {
-    double eq1[4];
-    double eq2[4];
-    double velo;
-    double delay;
-    eq1[0] = edge2EdgeTime;
-    eq1[1] = 1;
-    eq1[2] = edge2EdgeDist;
-    eq2[0] = home2EdgeTime;
-    eq2[1] = 1;
-    eq2[2] = home2EdgeDist;
-    velo = (eq1[0] - eq2[0]) / (eq1[2] - eq2[2]);
-    eq1[3] = velo;
-    eq2[3] = velo;
-    double d1 = (eq1[0] - eq1[2]*eq1[3]);
-    double d2 = (eq2[0] - eq2[2]*eq2[3]);
-    delay = (d1+d2)/2;
 
-    printf("Velocity: %f\nDelay: %f\n", velo, delay);
-    return delay;
+double Calibration::calculateTXDelay(std::vector<Calibration::pointAndTime> input) {
+    for (int i = 1; i < input.size(); i++) {
+        if (abs(input[i].location.x - input[i-1].location.x) > 5 || abs(input[i].location.y - input[i-1].location.y) > 5) {
+            return input[i].time;
+        }
+    }
+    return input.back().time;
 }
+
