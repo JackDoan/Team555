@@ -11,10 +11,7 @@
 #include "../../inc/Table.h"
 #include "../../inc/Settings.h"
 #include "../../inc/Mallet.h"
-
-const bool isAt(const cv::Point_<int>& at, const cv::Point_<int>& desired, const int& tolerance) {
-    return abs(at.x - desired.x) < tolerance && abs(at.y - desired.y) < tolerance;
-}
+#include "../../inc/motion/Motion.h"
 
 void Calibration::display() {
     cv::resize(calGrabbed, calSmall, cv::Size(), 0.5, 0.5);
@@ -52,7 +49,7 @@ void Calibration::home() {
             if (cv::waitKey(100) >= 0)
                 continue;
         }
-        else if(isAt(mallet.location,Table::home, 3)) {
+        else if(Motion::isAt(mallet.location,Table::home, 3)) {
             if(++homeDecay >= homeDecayMax) {
                 home = true;
                 motorDriver.setHome();
@@ -96,7 +93,7 @@ std::vector<Calibration::pointAndTime> Calibration::moveTo(Mallet& mallet, const
             //printf("Motion::calGoto: Moving from (%d,%d) to (%d,%d)\n",mallet.location.x, mallet.location.y,  destination.x, destination.y);
             motorDriver.moveTo(destination);
         }
-        if (isAt(mallet.location, destination, 8)) {
+        if (Motion::isAt(mallet.location, destination, 8)) {
             done = true;
         }
 

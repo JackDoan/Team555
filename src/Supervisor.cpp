@@ -22,7 +22,7 @@
 #include "../inc/Settings.h"
 #include "../inc/MotorDriver.h"
 #include "../inc/motion/Motion.h"
-#include "../inc/motion/Attack.h"
+#include "../inc/motion/Offense.h"
 
 cv::VideoWriter Supervisor::video = cv::VideoWriter("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
 DoubleBuffer Supervisor::previewBuf;
@@ -107,28 +107,22 @@ void Supervisor::run() {
                 makeDecision();
             }
             switch(playMode) {
-                case DEFENSE:
-                    // call defense
-                    playState = DEFENDING;
-//                    movingTo = motion.defend(table, mallet, puck, frameBuf.active());
-                    movingTo = motion.defense(mallet, puck, frameBuf.active());
-                    break;
                 case OFFENSE:
                     // call offense
                     playState = OFFENDING;
-                    doneCheck = motion.offense(table, mallet, puck, frameBuf.active());
+                    doneCheck = motion.offense.run(mallet, puck, frameBuf.active());
                     break;
                 case FIX:
                     // call impulse
                     playState = FIXING;
                     doneCheck = resetPuck(motion, table, mallet, puck, frameBuf.active());
                     break;
+                case DEFENSE:
                 default:
                     // call defense
                     playState = DEFENDING;
-                    movingTo = motion.defense(mallet, puck, frameBuf.active());
+                    movingTo = motion.defense.run(mallet, puck, frameBuf.active());
                     break;
-
             }
             if (table.preview == 1) {
                 display(movingTo);
@@ -186,7 +180,7 @@ void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& p
         case 'a':
             printf("Motion Mode = Attack\n");
             playMode = OFFENSE;
-            motion.resetOffense();
+            motion.offense.reset();
             break;
         case 'w':
             mode = PLAY;
@@ -286,7 +280,7 @@ void Supervisor::makeDecision() {
             }
             if (within(puck.predictLocation(10), Table::strikeLimitMin, Table::strikeLimitMax)
                 && puck.magHistoryAvg < 500 && puck.location.x < mallet.location.x
-                && motion.defenseState == ATHOME) {
+                && motion.defense.getState() == ATHOME) {
                 playMode = OFFENSE;
                 doneCheck = false;
             } else {
@@ -303,10 +297,10 @@ void Supervisor::makeDecision() {
             }
             break;*/
         case OFFENDING:
-            if (motion.offenseState == OFFENSEDONE || puck.rightGoal
+            if (motion.offense.getState() == OFFENSEDONE || puck.rightGoal
                 || !within(puck.predictLocation(10), Table::strikeLimitMin, Table::strikeLimitMax)
                 || puck.magHistoryAvg >= 500) {
-                motion.offenseState = OFFENSEDONE;
+                motion.offense.setDone();
                 playMode = DEFENSE;
                 doneCheck = false;
             } else {
@@ -355,7 +349,7 @@ void Supervisor::decide() {
         case OFFENDING:
             if (doneCheck || puck.rightGoal) {
                 playMode = DEFENSE;
-                motion.resetOffense();
+                motion.offense.reset();
                 doneCheck = false;
             } else {
                 playMode = OFFENSE;
@@ -411,7 +405,7 @@ bool Supervisor::resetPuck(Motion motion, Table table, Mallet mallet, Puck puck,
     }
 
     if (resetState == RESETTING) {
-        impulseDone = motion.impulse(table, mallet, puck, frameBuf.active());
+        impulseDone = motion.impulse.run(mallet, puck, frameBuf.active());
         if (impulseDone) {
             resetState = RESETDONE;
             toReturn = true;
