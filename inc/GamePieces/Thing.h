@@ -7,7 +7,8 @@
 
 
 #include <opencv2/opencv.hpp>
-#include "Table.h"
+#include "../Table.h"
+#include "History.h"
 #include <vector>
 #include <math.h>
 #include <thread>
@@ -37,6 +38,7 @@ protected:
     int minAreaCalib = 800;
     int maxAreaCalib = 4000;
     int minRoundnessCalib = 320;
+    bool doBars = false;
     char* settingWindowName = const_cast<char *>("Settings");
     char* previewWindowName = const_cast<char *>("Thing");
     bool debug = false;
@@ -62,6 +64,11 @@ protected:
     }
     char TrackbarName[9][50] = { "MinH","MaxH","MinS","MaxS","MinV","MaxV","MinArea","MaxArea","MinRound" };
     int historyDepth;
+
+    void goalDetect(cv::Point_<int> intersection, int xvelo);
+    void goalDetectOffense(cv::Point_<int> intersection, int xvelo);
+
+
 public:
     cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
 
@@ -92,7 +99,7 @@ public:
 
 
     bool onTable = false;
-    bool doBars = false;
+
     Thing();
     ~Thing() = default;
     void setupTrackbars();
@@ -102,8 +109,7 @@ public:
     std::vector<cv::Point_<int>> find(cv::Mat& in);    //Changed from int to pointer, returns coords
     void findOne(cv::Mat in, bool isMallet);    //Changed from int to pointer, returns coords
     void calcVector(cv::Mat& in);
-    void drawVector(cv::Mat& in);
-    void calcTraj();
+
     double magHistoryAvg;
 
     void toggleDebugInfo() {
@@ -123,14 +129,20 @@ public:
     std::vector<std::vector<cv::Point_<int>>> calcTrajOffense(cv::Mat& grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);
     std::vector<bool> bounceDetect(cv::Point_<int> startPoint, cv::Point_<int> endPoint, cv::Mat grabbed, int bnccnt);
     cv::Point_<int> findIntersection(std::vector<bool> bounces, cv::Point_<int> startPoint, cv::Point_<int> endPoint);
-    void goalDetect(cv::Point_<int> intersection, int xvelo);
-    void goalDetectOffense(cv::Point_<int> intersection, int xvelo);
+
 
     std::vector<bool> foundHistory;
+    std::vector<double> magHistory;
+
+    std::vector<bool> rightGoalHistory;
+    std::vector<bool> leftGoalHistory;
+
     void fillFoundHistory(bool found);
-    std::vector<cv::Point_<int>> locationHistory;
-    void fillLocationHistory(cv::Point_<int>);
-    void drawLocationHistory(cv::Mat& in);
+
+    History<cv::Point_<int>> locHist = History<cv::Point_<int>>(cv::Scalar(50, 255, 200), 3);
+
+
+
     std::vector<std::vector<std::vector<cv::Point_<int>>>> trajectoryHistory;
     bool drawWholeHistory;
     void fillTrajHistory();
@@ -139,16 +151,17 @@ public:
     void drawGoalVector(cv::Mat& in);
     //    void drawGoalVector(cv::Mat& in, std::vector<cv::Point_<int>> sortedY);
 
-    std::vector<double> magHistory;
+
     void fillVeloMagHistory();
     void writeVeloMagHistory(cv::Mat& in);
-    std::vector<bool> rightGoalHistory;
-    std::vector<bool> leftGoalHistory;
+
     void fillGoalFlagsHistory();
     void calcNextLoc();
     cv::Point_<int> predictLocation(int frames);
     std::vector<bool> bounceDetectClean(cv::Point_<int> startPoint, cv::Point_<int> endPoint, int bnccnt);
 
 };
+
+
 
 #endif //TEAM555_THING_H

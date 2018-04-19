@@ -2,10 +2,10 @@
 // Created by jad140230 on 3/17/2018.
 //
 
-#include "../inc/Thing.h"
-#include "../inc/Table.h"
-#include "../inc/helpers.h"
-#include "../inc/Settings.h"
+#include "../../inc/GamePieces/Thing.h"
+#include "../../inc/Table.h"
+#include "../../inc/helpers.h"
+#include "../../inc/Settings.h"
 
 #include <vector>
 #include <math.h>
@@ -339,8 +339,16 @@ void Thing::findOne(cv::Mat in, bool isMallet) {
     }*/
     if (!isMallet) {
         fillFoundHistory(found);
-        fillLocationHistory(location);
-        drawLocationHistory(in);
+        locHist.insert(location);
+        {
+            int i = 0;
+            for(const auto& loc : locHist.data) {
+                cv::circle(in, loc, 10, locHist.color - cv::Scalar(0,0,(i++)*5), locHist.diameter);
+            }
+        }
+
+//        fillLocationHistory(location);
+//        drawLocationHistory(in);
         fillTrajHistory();
         //drawTrajHistory(in);
         drawTrajEndPointHistory(in);
@@ -819,18 +827,6 @@ void Thing::goalDetectOffense(cv::Point_<int> intersection, int xvelo) {
 void Thing::fillFoundHistory(bool found) {
     foundHistory.insert(foundHistory.begin(), found);
     foundHistory.resize(historyDepth);
-}
-
-void Thing::fillLocationHistory(cv::Point_<int>) {
-    locationHistory.insert(locationHistory.begin(), location);
-    locationHistory.resize(historyDepth);
-}
-
-void Thing::drawLocationHistory(cv::Mat& in){
-    for (int i = 0; i < historyDepth/3; i++) {
-        if (foundHistory[i])
-            cv::circle(in, locationHistory[i], 10, cv::Scalar(50, 255, 200 - i*5), 3);
-    }
 }
 
 void Thing::fillTrajHistory(){

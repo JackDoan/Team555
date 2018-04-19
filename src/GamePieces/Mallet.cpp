@@ -2,8 +2,8 @@
 // Created by mdl150330 on 3/14/2018.
 //
 
-#include "../inc/Mallet.h"
-#include "../inc/Table.h"
+#include "../../inc/GamePieces/Mallet.h"
+#include "../../inc/Table.h"
 #include <vector>
 #include <math.h>
 #include <thread>

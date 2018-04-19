@@ -5,7 +5,7 @@
 #ifndef TEAM555_MALLET_H
 #define TEAM555_MALLET_H
 #include <opencv2/opencv.hpp>
-#include "Table.h"
+#include "../Table.h"
 #include "Thing.h"
 #include <vector>
 #include <math.h>

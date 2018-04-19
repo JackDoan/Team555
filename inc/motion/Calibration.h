@@ -5,7 +5,7 @@
 #ifndef TEAM555_CALIBRATION_H
 #define TEAM555_CALIBRATION_H
 
-#include "../Mallet.h"
+#include "../GamePieces/Mallet.h"
 
 class Calibration {
 

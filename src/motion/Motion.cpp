@@ -12,8 +12,8 @@
 #include "../../inc/MotorDriver.h"
 #include "../../inc/Camera.h"
 #include "../../inc/Table.h"
-#include "../../inc/Mallet.h"
-#include "../../inc/Puck.h"
+#include "../../inc/GamePieces/Mallet.h"
+#include "../../inc/GamePieces/Puck.h"
 #include "../../inc/Settings.h"
 
 const bool Motion::notAt(const cv::Point_<int>& at, const cv::Point_<int>& desired, const int& tolerance) {

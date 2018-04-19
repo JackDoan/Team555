@@ -7,8 +7,8 @@
 
 
 #include "../states.h"
-#include "../Mallet.h"
-#include "../Puck.h"
+#include "../GamePieces/Mallet.h"
+#include "../GamePieces/Puck.h"
 
 class Offense {
 private:

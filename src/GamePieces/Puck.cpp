@@ -2,9 +2,9 @@
 // Created by jad140230 on 1/21/2018.
 //
 
-#include "../inc/Puck.h"
-#include "../inc/Table.h"
-#include "../inc/helpers.h"
+#include "../../inc/GamePieces/Puck.h"
+#include "../../inc/Table.h"
+#include "../../inc/helpers.h"
 #include <vector>
 #include <math.h>
 #include <thread>

@@ -5,7 +5,7 @@
 #ifndef AIRHOCKEYROBOT_PUCK_H
 #define AIRHOCKEYROBOT_PUCK_H
 #include <opencv2/opencv.hpp>
-#include "Table.h"
+#include "../Table.h"
 #include "Thing.h"
 #include <vector>
 #include <math.h>

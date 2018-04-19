@@ -7,9 +7,9 @@
 
 
 #include <opencv2/core/mat.hpp>
-#include "../Mallet.h"
+#include "../GamePieces/Mallet.h"
 #include "../states.h"
-#include "../Puck.h"
+#include "../GamePieces/Puck.h"
 
 class Impulse {
 private:

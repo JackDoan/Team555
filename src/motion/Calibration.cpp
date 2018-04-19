@@ -10,7 +10,7 @@
 #include "../../inc/MotorDriver.h"
 #include "../../inc/Table.h"
 #include "../../inc/Settings.h"
-#include "../../inc/Mallet.h"
+#include "../../inc/GamePieces/Mallet.h"
 #include "../../inc/motion/Motion.h"
 
 void Calibration::display() {

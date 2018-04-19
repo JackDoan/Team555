@@ -14,8 +14,8 @@
 
 #include "../inc/Supervisor.h"
 #include "../inc/Table.h"
-#include "../inc/Mallet.h"
-#include "../inc/Puck.h"
+#include "../inc/GamePieces/Mallet.h"
+#include "../inc/GamePieces/Puck.h"
 #include "../inc/Config.h"
 #include "../inc/Corners.h"
 #include "../inc/Camera.h"

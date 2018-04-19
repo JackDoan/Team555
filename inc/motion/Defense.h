@@ -7,8 +7,8 @@
 
 
 #include <opencv2/core/types.hpp>
-#include "../Mallet.h"
-#include "../Puck.h"
+#include "../GamePieces/Mallet.h"
+#include "../GamePieces/Puck.h"
 #include "../states.h"
 
 class Defense {

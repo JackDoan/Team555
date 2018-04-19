@@ -7,7 +7,7 @@
 
 #include "Camera.h"
 #include "helpers.h"
-#include "Puck.h"
+#include "GamePieces/Puck.h"
 #include "Table.h"
 
 #include <opencv2/opencv.hpp>

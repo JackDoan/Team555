@@ -13,8 +13,8 @@
 
 
 #include "Table.h"
-#include "Puck.h"
-#include "Mallet.h"
+#include "GamePieces/Puck.h"
+#include "GamePieces/Mallet.h"
 #include "Config.h"
 #include "Corners.h"
 #include "Camera.h"

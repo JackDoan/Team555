@@ -4,7 +4,7 @@
 #include "../inc/Corners.h"
 #include "../inc/Camera.h"
 #include "../inc/Table.h"
-#include "../inc/Puck.h"
+#include "../inc/GamePieces/Puck.h"
 #include "../inc/Config.h"
 #include <fstream>
 #include <string>
