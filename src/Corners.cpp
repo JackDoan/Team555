@@ -4,20 +4,13 @@
 #include "../inc/Corners.h"
 #include "../inc/Camera.h"
 #include "../inc/Table.h"
-#include "../inc/GamePieces/Puck.h"
 #include "../inc/Config.h"
 #include <fstream>
 #include <string>
 #include <iostream>
 
 
-//std::vector<cv::Point_<int>> corners;
-
-
-
-
-
-Corners::Corners(bool calibrate) {
+Table::Corners::Corners(bool calibrate) {
     std::fstream configFile;
     char buffer[2000];
     std::vector<cv::Point_<int>> calibratedCornersVector;
@@ -118,47 +111,47 @@ Corners::Corners(bool calibrate) {
     }
 }
 
-Corners::~Corners() = default;
+Table::Corners::~Corners() = default;
 
 
  //TODO: set the offsets from a config file, right now it defaults to 40px out from each corner in each dimension as defined in the header file
-void Corners::calibrateCorners(cv::Mat in, cv::Mat previewSmall, Table table, Puck puck) {
-    tempCorners = puck.find(in);
-
-    //printf("tempCorners size: %d\n", tempCorners.size());
-    if (tempCorners.size() == 4) {
-        drawSquareOld(previewSmall, tempCorners, getOffsets());
-//        drawSquare(previewSmall, tempCorners, getOffsets());
-        drawLabels(previewSmall, tempCorners);
-        setCorners(tempCorners);
-//        printf("4 Corners Identified!\n1: (%d, %d)\n2: (%d, %d)\n3: (%d, %d)\n4: (%d, %d)\n",
+//void Table::Corners::calibrateCorners(cv::Mat in, cv::Mat previewSmall, Table table, Puck puck) {
+//    tempCorners = puck.find(in);
+//
+//    //printf("tempCorners size: %d\n", tempCorners.size());
+//    if (tempCorners.size() == 4) {
+//        drawSquareOld(previewSmall, tempCorners, getOffsets());
+////        drawSquare(previewSmall, tempCorners, getOffsets());
+//        drawLabels(previewSmall, tempCorners);
+//        setCorners(tempCorners);
+////        printf("4 Corners Identified!\n1: (%d, %d)\n2: (%d, %d)\n3: (%d, %d)\n4: (%d, %d)\n",
+////               corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y,
+////               corners[3].x, corners[3].y);
+//
+//        printf("4 Corners Identified!\t1: (%d, %d)\t2: (%d, %d)\t3: (%d, %d)\t4: (%d, %d)\n",
 //               corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y,
 //               corners[3].x, corners[3].y);
-
-        printf("4 Corners Identified!\t1: (%d, %d)\t2: (%d, %d)\t3: (%d, %d)\t4: (%d, %d)\n",
-               corners[0].x, corners[0].y, corners[1].x, corners[1].y, corners[2].x, corners[2].y,
-               corners[3].x, corners[3].y);
-
-        /* Do not call setCalibratedCorners() here anymore, this now gets set when running
-         * the program outside of calibrate mode */
-
-
-        //setOffsets(tempCorners);
-//        setCalibratedCorners();
-        // printf("Enter Y to save these values, enter N to continue, enter X to exit");
-
-    } else {
-        if (tempCorners.size() != 0) {
-            drawLabels(previewSmall, tempCorners);
-        } else {
-            printf("CALIBRATE MODE - NO PUCKS DETECTED!\n");
-        }
-
-    }
-}
+//
+//        /* Do not call setCalibratedCorners() here anymore, this now gets set when running
+//         * the program outside of calibrate mode */
+//
+//
+//        //setOffsets(tempCorners);
+////        setCalibratedCorners();
+//        // printf("Enter Y to save these values, enter N to continue, enter X to exit");
+//
+//    } else {
+//        if (tempCorners.size() != 0) {
+//            drawLabels(previewSmall, tempCorners);
+//        } else {
+//            printf("CALIBRATE MODE - NO PUCKS DETECTED!\n");
+//        }
+//
+//    }
+//}
 
 
-void Corners::drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector) {
+void Table::Corners::drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector) {
     switch(tempCorners.size()) {
         case 1 : cv::putText(previewSmall, "1", tempCorners[0]/2, cv::FONT_HERSHEY_COMPLEX_SMALL,
                              2.8, cv::Scalar(255, 0, 255), 2, cv::LINE_8, false);
@@ -195,7 +188,7 @@ void Corners::drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> corn
 
 }
 
-void Corners::drawSquareOld(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector) {
+void Table::Corners::drawSquareOld(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector) {
     cv::Point_<int> zero; zero.x = cornersVector[0].x + offsetsVector[0].x; zero.y = cornersVector[0].y + offsetsVector[0].y;
     cv::Point_<int> one; one.x = cornersVector[1].x + offsetsVector[1].x; one.y = cornersVector[1].y + offsetsVector[1].y;
     cv::Point_<int> two; two.x = cornersVector[2].x + offsetsVector[2].x; two.y = cornersVector[2].y + offsetsVector[2].y;
@@ -209,7 +202,7 @@ void Corners::drawSquareOld(cv::Mat previewSmall, std::vector<cv::Point_<int>> c
 
 }
 
-void Corners::drawSquareNew(cv::Mat previewSmall, std::vector<cv::Point_<int>> calibratedVector) {
+void Table::Corners::drawSquareNew(cv::Mat previewSmall, std::vector<cv::Point_<int>> calibratedVector) {
 //    std::sort (calibratedVector.begin(), calibratedVector.end());
 
 
@@ -229,7 +222,7 @@ void Corners::drawSquareNew(cv::Mat previewSmall, std::vector<cv::Point_<int>> c
     //cv::line(previewSmall, midY1, G_offset, cv::Scalar(255,0,0), 4);
 }
 
-std::vector<cv::Point_<int>> Corners::getSortedX(std::vector<cv::Point_<int>> calibrated) {
+std::vector<cv::Point_<int>> Table::Corners::getSortedX(std::vector<cv::Point_<int>> calibrated) {
     std::vector<cv::Point_<int>> sortedX = calibrated;
     cv::Point_<int> temp;
     for (int i = 0; i <= 3; i++) {
@@ -244,7 +237,7 @@ std::vector<cv::Point_<int>> Corners::getSortedX(std::vector<cv::Point_<int>> ca
     return sortedX;
 }
 
-std::vector<cv::Point_<int>> Corners::getSortedY(std::vector<cv::Point_<int>> calibrated) {
+std::vector<cv::Point_<int>> Table::Corners::getSortedY(std::vector<cv::Point_<int>> calibrated) {
     std::vector<cv::Point_<int>> sortedY = calibrated;
     cv::Point_<int> temp;
     for (int i = 0; i <= 3; i++) {
@@ -263,7 +256,7 @@ std::vector<cv::Point_<int>> getSortedY() {
 
 }
 
-void Corners::setCorners(std::vector<cv::Point_<int>> cornersVector) {
+void Table::Corners::setCorners(std::vector<cv::Point_<int>> cornersVector) {
     /*for (int i = 0; i <= 3; i++) {
         corners[i] = cornersVector[i];
     }*/
@@ -272,30 +265,30 @@ void Corners::setCorners(std::vector<cv::Point_<int>> cornersVector) {
     corners = cornersVector;
 }
 
-std::vector<cv::Point_<int>> Corners::getCorners() {
+std::vector<cv::Point_<int>> Table::Corners::getCorners() {
     return corners;
 }
 
 
 
-void Corners::setOffsets(std::vector<cv::Point_<int>> offsetsVector) {
+void Table::Corners::setOffsets(std::vector<cv::Point_<int>> offsetsVector) {
     /*for (int i = 0; i <= 3; i++) {
         offsets[i] = offsetsVector[i];
     }*/
     offsets = offsetsVector;
 }
 
-std::vector<cv::Point_<int>> Corners::getOffsets() {
+std::vector<cv::Point_<int>> Table::Corners::getOffsets() {
 
     return offsets;
 }
 
-void Corners::setCalibratedCorners(std::vector<cv::Point_<int>> calibratedVector) {
+void Table::Corners::setCalibratedCorners(std::vector<cv::Point_<int>> calibratedVector) {
     CalibratedCorners = calibratedVector;
 }
 
 
-std::vector<cv::Point_<int>> Corners::getCalibratedCorners() {
+std::vector<cv::Point_<int>> Table::Corners::getCalibratedCorners() {
 
     return CalibratedCorners;
 }

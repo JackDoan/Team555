@@ -8,8 +8,6 @@
 #include "../MotorDriver.h"
 #include "../Camera.h"
 #include "../Table.h"
-#include "../GamePieces/Mallet.h"
-#include "../GamePieces/Puck.h"
 #include "../Settings.h"
 #include "../states.h"
 #include "Calibration.h"
@@ -29,7 +27,6 @@ public:
     Impulse impulse;
 
     static hitVector_t findHitVector(GameState& gs, int ff);
-    static hitVector_t findHitVector(Mallet& mallet, Puck& puck, cv::Mat& grabbed, int ff);
     void calcPuckRange(cv::Point_<double> mallet2puck, cv::Point_<int>& puckPlus, cv::Point_<int>& puckMinus);
 
     Motion() = default;

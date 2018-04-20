@@ -12,53 +12,88 @@
 #include "helpers.h"
 #include "Corners.h"
 
-// TODO: programatically determine the mid points from corners, why 720/2 and 700/2?
-class Goals {
-public:
-
-    typedef enum goal_e {NO_GOAL, RIGHT_GOAL, LEFT_GOAL} goal_t;
-
-    cv::Point_<int> goals[4];
-    cv::Point_<int> L_mid;
-    cv::Point_<int> R_mid;
-
-    cv::Point_<int> L_top;
-    cv::Point_<int> L_bottom;
-
-    cv::Point_<int> R_top;
-    cv::Point_<int> R_bottom;
-
-    const int goalScale = 50;
-    const int goalPush = 0;
-
-    explicit Goals(const Corners& corners) {
-        L_mid = {corners.sortedX[1].x, 715/2};
-        R_mid = {corners.sortedX[2].x, 740/2};
-        L_top = {L_mid.x, L_mid.y + 30 + goalScale};
-        L_bottom = {L_mid.x, L_mid.y - 30 - goalScale};
-        R_top = {R_mid.x+goalPush, R_mid.y + 40 + goalScale};
-        R_bottom = {R_mid.x+goalPush, R_mid.y - 40 - goalScale};
-        goals[0] = L_top;
-        goals[1] = L_bottom;
-        goals[2] = R_top;
-        goals[3] = R_bottom;
-    }
-
-    const goal_t Goals::detect(const cv::Point_<int>& intersection, const int& xvelo) {
-        if (xvelo > 0 && intersection.y >= goals[3].y && intersection.y <= goals[2].y) {
-            return RIGHT_GOAL;
-        }
-        else if (xvelo < 0 && intersection.y >= goals[1].y && intersection.y <= goals[2].y) {
-            return LEFT_GOAL;
-        }
-        else {
-            return NO_GOAL;
-        }
-    }
-};
 
 class Table {
 public:
+
+    class Corners {
+        std::vector<cv::Point_<int>> corners;
+        std::vector<cv::Point_<int>> tempCorners;
+        std::vector<cv::Point_<int>> CalibratedCorners;
+//    std::vector<cv::Point_<int>> offsets{{40, 40}, {-40, 40}, {40, -40}, {-40, -40}};
+        std::vector<cv::Point_<int>> offsets{{40, 40}, {-40, 40}, {-40, -40}, {40, -40}};
+
+
+
+
+        std::vector<cv::Point_<int>> tempXa;
+        std::vector<cv::Point_<int>> tempYa;
+        std::vector<cv::Point_<int>> fcorners;
+
+
+    public:
+        std::vector<cv::Point_<int>> sortedX;
+        std::vector<cv::Point_<int>> sortedY;
+//    static std::vector<cv::Point_<int>> corners;
+//    static std::vector<cv::Point_<int>> tempCorners;
+//    static std::vector<cv::Point_<int>> CalibratedCorners;
+//    static std::vector<cv::Point_<int>> offsets{ {40, 40}, {-40, 40}, {40, -40}, {-40, -40}};
+        void drawSquareOld(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector);
+        void drawSquareNew(cv::Mat previewSmall, std::vector<cv::Point_<int>> calibratedVector);
+        void drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector);
+        void setCorners(std::vector<cv::Point_<int>> cornersVector);
+        std::vector<cv::Point_<int>> getCorners();
+        void setOffsets(std::vector<cv::Point_<int>>);
+        std::vector<cv::Point_<int>> getOffsets();
+        //void calibrateCorners(cv::Mat frame, cv::Mat previewSmall, Table table, Puck puck);
+        void setCalibratedCorners(std::vector<cv::Point_<int>> calibratedVector);
+        std::vector<cv::Point_<int>> getCalibratedCorners();
+        std::vector<cv::Point_<int>> getSortedX(std::vector<cv::Point_<int>> calibrated);
+        std::vector<cv::Point_<int>> getSortedY(std::vector<cv::Point_<int>> calibrated);
+        Corners() {
+            Corners(false);
+        }
+        explicit Corners(bool calibrate);
+        ~Corners();
+    };
+
+
+// TODO: programatically determine the mid points from corners, why 720/2 and 700/2?
+    class Goals {
+    public:
+
+        typedef enum goal_e {NO_GOAL, RIGHT_GOAL, LEFT_GOAL} goal_t;
+
+        cv::Point_<int> goals[4];
+        cv::Point_<int> L_mid;
+        cv::Point_<int> R_mid;
+
+        cv::Point_<int> L_top;
+        cv::Point_<int> L_bottom;
+
+        cv::Point_<int> R_top;
+        cv::Point_<int> R_bottom;
+
+        const int goalScale = 50;
+        const int goalPush = 0;
+
+        explicit Goals(const Corners& corners) {
+            L_mid = cvPoint(corners.sortedX[1].x, 715/2);
+            R_mid = cvPoint(corners.sortedX[2].x, 740/2);
+            L_top = {L_mid.x, L_mid.y + 30 + goalScale};
+            L_bottom = {L_mid.x, L_mid.y - 30 - goalScale};
+            R_top = {R_mid.x+goalPush, R_mid.y + 40 + goalScale};
+            R_bottom = {R_mid.x+goalPush, R_mid.y - 40 - goalScale};
+            goals[0] = L_top;
+            goals[1] = L_bottom;
+            goals[2] = R_top;
+            goals[3] = R_bottom;
+        }
+
+        const goal_t detect(const cv::Point_<int>& intersection, const int& xvelo);
+    };
+
+
 
     typedef enum axes_e {X_AXIS, Y_AXIS} axis;
 
@@ -68,9 +103,10 @@ public:
     static const cv::Point_<int> pixelsToSteps(const cv::Point_<int>& pixels);
     static const cv::Point_<int> stepsToPixels(const cv::Point_<int>& steps);
     static void setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY);
-
+    static void setWalls(const std::vector<cv::Point_<int>>& sortedX, const std::vector<cv::Point_<int>>& sortedY);
     static Corners corners;
     static Goals goals;
+    static double walls[4][3];
 
 
     Table() =default;

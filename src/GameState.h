@@ -16,13 +16,16 @@ public:
 
     bool found = false;
     bool onTable = false;
+    GamePiece() = default;
 
 };
 
 class GameState {
 public:
-    cv::Mat& frame;
+    Table::Goals::goal_t goalFlag = Table::Goals::NO_GOAL;
+    cv::Mat frame = cv::Mat();
     GamePiece mallet, puck;
+    GameState() = default;
 
 };
 
@@ -39,10 +42,6 @@ private:
     static std::vector<GameState> history;
     static const unsigned long maxLen;
     static int lostCnt;
-public:
-    static int getLostCnt();
-
-private:
     static const unsigned int maxLostCnt;
     static void setStateInfo(GameState& gs);
 
@@ -61,6 +60,17 @@ public:
     static void update(const GameState& in) {
         history.insert(history.begin(), in);
         history.resize(maxLen);
+    }
+
+    static int getLostCnt();
+
+    static int getMagHistoryAvg() {
+        double magHist = 0;
+        for(auto item : history) {
+            auto vectorXY = (item.puck.location - item.puck.lastLocation);
+            magHist += sqrt((vectorXY.x * vectorXY.x) + (vectorXY.y * vectorXY.y));
+        }
+        return static_cast<int>(magHist/history.size());
     }
 
 

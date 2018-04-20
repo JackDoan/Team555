@@ -6,6 +6,36 @@
 #define TEAM555_SETTINGS_H
 
 struct threshold_s {
+    threshold_s(bool isMallet) {
+        if(isMallet) {
+            minH = 31;
+            maxH = 61;
+            minS = 53;
+            maxS = 160;
+            minV = 0;
+            maxV = 255;
+            minArea = 1200;
+            maxArea = 3600;
+            minRoundness = 100;
+            doBars = false;
+            outlineColor = cv::Scalar(40, 255, 255);
+        }
+        else {
+            minH = 63;
+            maxH = 109;
+            minS = 80;
+            maxS = 203;
+            minV = 0;
+            maxV = 255;
+            minArea = 1548;
+            maxArea = 4500;
+            minRoundness = 800;
+            doBars = false;
+            outlineColor = cv::Scalar(210, 255, 255);
+        }
+
+    }
+
     int minH = 26;
     int maxH = 128;
     int minS = 69;
@@ -27,34 +57,8 @@ public:
     static bool calibrateCorners;
     static bool preview;
 
-    static struct threshold_s puckLimits = {
-            .minH = 31,
-            .maxH = 61,
-            .minS = 53,
-            .maxS = 160,
-            .minV = 0,
-            .maxV = 255,
-            .minArea = 1200,
-            .maxArea = 3600,
-            .minRoundness = 100,
-            .doBars = false,
-            .outlineColor = cv::Scalar(40, 255, 255),
-    };
-
-    static struct threshold_s malletLimits = {
-            .minH = 63,
-            .maxH = 109,
-            .minS = 80,
-            .maxS = 203,
-            .minV = 0,
-            .maxV = 255,
-            .minArea = 1548,
-            .maxArea = 4500,
-            .minRoundness = 800,
-            .doBars = false,
-            .outlineColor = cv::Scalar(210, 255, 255),
-    };
-
+    static struct threshold_s puckLimits;
+    static struct threshold_s malletLimits;
     static bool threadFindingThings;
 
 

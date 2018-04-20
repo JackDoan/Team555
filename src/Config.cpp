@@ -15,9 +15,10 @@ bool Settings::undistort = true;
 bool Settings::calibrateCorners = false;
 bool Settings::preview = true;
 bool Settings::threadFindingThings = true;
+struct threshold_s Settings::puckLimits = threshold_s(false);
+struct threshold_s Settings::malletLimits = threshold_s(true);
 
-
-bool writeConfigValues(Corners corners) {
+bool writeConfigValues(Table::Corners corners) {
     std::fstream configFile;
     char buffer[50];
     std::vector<cv::Point_<int>> cornersVector = corners.getCorners();

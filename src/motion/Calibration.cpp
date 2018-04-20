@@ -10,7 +10,6 @@
 #include "../../inc/MotorDriver.h"
 #include "../../inc/Table.h"
 #include "../../inc/Settings.h"
-#include "../../inc/GamePieces/Mallet.h"
 #include "../../inc/motion/Motion.h"
 
 void Calibration::display() {
@@ -32,11 +31,14 @@ bool Calibration::getFrame() {
     return toReturn;
 }
 
+void Calibration::run() {
+
+}
+
 void Calibration::home() {
 
     MotorDriver& motorDriver = MotorDriver::getInstance();
     const int homeDecayMax = 5;
-    Mallet mallet = Mallet();
     bool home = false;
     int homeDecay = 0;
 

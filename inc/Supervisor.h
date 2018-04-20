@@ -13,8 +13,6 @@
 
 
 #include "Table.h"
-#include "GamePieces/Puck.h"
-#include "GamePieces/Mallet.h"
 #include "Config.h"
 #include "Corners.h"
 #include "Camera.h"
@@ -39,12 +37,7 @@ private:
     resetState_t resetState = RESETDONE;
     decisionMode_t decisionMode = AUTOMATIC;
 
-
-
-
     DoubleBuffer frameBuf;
-
-
 
     long firstTimestamp = 0;
     cv::Mat& grabbed = frameBuf.active();
@@ -60,17 +53,12 @@ private:
     Motion motion;
     difficulty_t difficulty = HARD;
     bool threadIt = true;
-    Table table;
-    Puck puck;
-    Mallet mallet;
-    Corners corners;
-    static Settings settings;
     long FrameCounter = 0;
     bool sendGetButtons;
     bool keepGoing;
     bool doneCheck;
     cv::Mat idleImage;
-    void decorate(cv::Mat in, double frameRate, cv::Point_<int> puckLastLoc, cv::Point_<int> puckLoc, cv::Point_<int> tableMax, cv::Point_<int> tableMin, Corners corners, std::vector<cv::Point_<int>> goals, cv::Point_<int> movingTo);
+    void decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo);
     static cv::Mat& preview;
     static DoubleBuffer previewBuf;
     static bool pushFrame();
@@ -82,7 +70,7 @@ public:
 
     double frameRate = 0;
     static cv::VideoWriter video;
-    Supervisor(Table& table, Puck& puck, Mallet& mallet, Corners& corners, Settings& settings);
+    Supervisor();
     ~Supervisor() = default;
     void runCalibrateCorners();
     void run();
@@ -90,15 +78,11 @@ public:
     void calcFPS();
     void checkKeyboard();
     void idle();
-    void makeDecision();
-    void decide();
-    void play();
-    void defense();
-    void offense();
+    void makeDecision(GameState& gs);
     void findPuck();
-    bool resetPuck(Motion motion, Table table, Mallet mallet, Puck puck, cv::Mat &grabbed);
+    bool resetPuck(const GameState& gs);
     bool stillMovingToCheck();
-    void display(cv::Point_<int> movingTo);
+    void display(const GameState gs, const cv::Point_<int> movingTo);
 
 };
 

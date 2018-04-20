@@ -5,7 +5,7 @@
 #ifndef TEAM555_CALIBRATION_H
 #define TEAM555_CALIBRATION_H
 
-#include "../GamePieces/Mallet.h"
+#include "../../src/GameState.h"
 
 class Calibration {
 
@@ -28,9 +28,9 @@ public:
         cv::Point_<int> location;
         double time;
     } pointAndTime;
-    std::vector<pointAndTime> moveTo(Mallet& mallet, const cv::Point_<int>& destination);
+    std::vector<pointAndTime> moveTo(GamePiece& mallet, const cv::Point_<int>& destination);
     double calculateTXDelay(std::vector<Calibration::pointAndTime> input);
-
+    void run();
 
     std::vector<pointAndTime> up;
     std::vector<pointAndTime> left;

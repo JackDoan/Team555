@@ -7,18 +7,17 @@
 
 
 #include <opencv2/core/mat.hpp>
-#include "../GamePieces/Mallet.h"
 #include "../states.h"
-#include "../GamePieces/Puck.h"
+#include "../../src/GameState.h"
 
 class Impulse {
 private:
     std::vector<cv::Point_<int>> impulseVector;
 public:
 
-    bool run(Mallet& mallet, Puck& puck, cv::Mat& grabbed);
+    bool run(GameState& gs);
     impulseState_t impulseState = IMPULSEDONE;
-    std::vector<cv::Point_<int>> findImpulseVector(Mallet& mallet, Puck& puck, cv::Mat& grabbed);
+    std::vector<cv::Point_<int>> findImpulseVector(GameState& gs);
 };
 
 
