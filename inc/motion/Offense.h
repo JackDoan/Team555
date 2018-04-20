@@ -13,13 +13,14 @@
 
 class Offense {
 private:
-    offenseState_t state = OFFENSEDONE;
+    offenseState_t state = TRACKING;
+    bool ready();
 
 
 
 private:
-    typedef enum offenseDecision_e {STAGE, STRIKE} offenseDecision_t;
-    offenseDecision_t offenseDecision = STAGE;
+    typedef enum offenseDecision_e {TRACK, STRIKE} offenseDecision_t;
+    offenseDecision_t offenseDecision = TRACK;
     hitVector_t hitVector;
 
 

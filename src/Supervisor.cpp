@@ -257,38 +257,27 @@ void Supervisor::idle() {
 void Supervisor::makeDecision() {
     switch (playState) {
         case DEFENDING:
-            if (puck.rightGoal) {
-                playMode = DEFENSE;
-                break;
-            }
-            if (within(puck.predictLocation(10), Table::strikeLimitMin, Table::strikeLimitMax)
-                && puck.magHistoryAvg < 500 && puck.location.x < mallet.location.x
-                && motion.defense.getState() == ATHOME) {
-                playMode = OFFENSE;
-                doneCheck = false;
-            } else {
-                playMode = DEFENSE;
-            }
+            /*
+             * if(puck.rightGoal || checkGoalHistoy(puck.rightGoalHistory) {
+             *      playMode = DEFENSE;
+             *      break;
+             * }
+             * if (puck.location.x < mallet.location.x) {
+             *      playMode = OFFENSE;
+             * } else {
+             *      playMode = DEFENSE;
+             * }
+             */
             break;
-        // literally does nothing right now
-        /*case FIXING:
-            if (doneCheck|| puck.rightGoal) {
-                playMode = DEFENSE;
-                doneCheck = false;
-            } else {
-                playMode = FIX;
-            }
-            break;*/
         case OFFENDING:
-            if (motion.offense.getState() == OFFENSEDONE || puck.rightGoal
-                || !within(puck.predictLocation(10), Table::strikeLimitMin, Table::strikeLimitMax)
-                || puck.magHistoryAvg >= 500) {
-                motion.offense.setDone();
-                playMode = DEFENSE;
-                doneCheck = false;
-            } else {
-                playMode = OFFENSE;
-            }
+            /*
+             * if(puck.rightGoal || checkGoalHistory(puck.rightGoalHistory) {
+             *      playMode = DEFENSE;
+             *      break;
+             * } if (puck
+             */
+            break;
+        case FIXING:
             break;
         default:
             playMode = DEFENSE;

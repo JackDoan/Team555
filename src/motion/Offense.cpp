@@ -56,30 +56,23 @@ bool Offense::run(GameState& gs) {
 
     bool toReturn = false;
 
-
+    // make offense decision
     switch(state) {
-        case OFFENSEDONE:
-            hitVector = Motion::findHitVector(mallet, puck, gs.frame, 10);
-            motorDriver.moveTo(hitVector.data.front());
-            state = GOINGTOSTAGE;
-            break;
-        case GOINGTOSTAGE:
-            if(Motion::notAt(gs.mallet.location, hitVector.data.front(), 10)) {
-                motorDriver.moveTo(hitVector.data.front());
-            }
-            else {
-                state = STRIKING;
-            }
+        case TRACKING:
+            // if predicted puck x location ~3 frames from now is 'close' (<40px) decide to strike
+            // else keep tracking
             break;
         case STRIKING:
-            if (Motion::notAt(gs.mallet.location, hitVector.data.back(), 10)) {
-                motorDriver.moveTo(hitVector.data.back());
-            }
-            else {
-                state = OFFENSEDONE;
-                motorDriver.moveTo(Table::home);
-                toReturn = true;
-            }
+            // if mallet is at Table::home then set state back to tracking and return to home
+            // else keep striking
+            break;
+    }
+    switch(offenseDecision) {
+        case TRACKING:
+            // issue moveTo command to Table::home.x, puck.predictLocation.y (3 frames in the future)
+            break;
+        case STRIKING:
+            // issue moveTo command to Table::home.x, puck.predictLocation.y (3 frames in the future)
             break;
     }
 
@@ -100,3 +93,10 @@ void Offense::setDone() {
     Offense::state = OFFENSEDONE;
 }
 
+bool read(){
+    if (state == STRIKING) {
+        return false;
+    } else {
+        return true;
+    }
+}

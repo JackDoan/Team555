@@ -7,7 +7,7 @@
 #include <opencv2/core/types.hpp>
 
 typedef enum defenseState_e {ATHOME, GOINGHOME, INTERCEPTING, ATINTERCEPT} defenseState_t;
-typedef enum offenseState_e {OFFENSEDONE, GOINGTOSTAGE, STRIKING} offenseState_t;
+typedef enum offenseState_e {TRACKING, STRIKING} offenseState_t;
 typedef enum impulseState_e {IMPULSEDONE, STAGING1, STAGING2, HITTING} impulseState_t;
 
 typedef struct hitVector_s {
