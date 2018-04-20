@@ -6,8 +6,8 @@
 #define TEAM555_SETTINGS_H
 
 struct threshold_s {
-    threshold_s(bool isMallet) {
-        if(isMallet) {
+    explicit threshold_s(bool isMallet) {
+        if(!isMallet) {
             minH = 31;
             maxH = 61;
             minS = 53;
@@ -17,8 +17,9 @@ struct threshold_s {
             minArea = 1200;
             maxArea = 3600;
             minRoundness = 100;
-            doBars = false;
+            doBars = true;
             outlineColor = cv::Scalar(40, 255, 255);
+            windowName[4] = '\0';
         }
         else {
             minH = 63;
@@ -30,8 +31,9 @@ struct threshold_s {
             minArea = 1548;
             maxArea = 4500;
             minRoundness = 800;
-            doBars = false;
+            doBars = true;
             outlineColor = cv::Scalar(210, 255, 255);
+
         }
 
     }
@@ -46,7 +48,9 @@ struct threshold_s {
     int maxArea = 10000;
     int minRoundness = 100;
     bool doBars = true;
-    cv::Scalar outlineColor = cv::Scalar(40, 255, 255);;
+    bool debug = false;
+    cv::Scalar outlineColor = cv::Scalar(40, 255, 255);
+    char windowName[16] = "Mallet";
 };
 
 class Settings {

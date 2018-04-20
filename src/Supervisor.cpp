@@ -50,14 +50,12 @@ void Supervisor::run() {
     time(&idleStart);
     //cv::namedWindow("Video", CV_WINDOW_AUTOSIZE);
     cv::namedWindow("Video", CV_WINDOW_NORMAL);
-    // calibrate the steppers home positions
-    motion.calibrate.home();
-    // calculate speed
-    motion.calibrate.speed();
+
 
     keepGoing = true;
     sendGetButtons = true;
     doneCheck = false;
+    mode = CALIBRATE;
 
     // main while loop that runs the robot
     while (keepGoing) {
@@ -81,7 +79,11 @@ void Supervisor::run() {
         }
 
         cv::Point_<int> movingTo;
-        if (mode == PLAY) {
+        if(mode == CALIBRATE) {
+            motion.calibrate.run();
+            mode = PLAY;
+        }
+        else if(mode == PLAY) {
            // call the decide function that will set the playMode enum and then play
             if (decisionMode == AUTOMATIC) {
                 makeDecision(gameState);
@@ -137,7 +139,7 @@ void Supervisor::checkKeyboard() {
             MotorDriver::getInstance().toggleFan();
             break;
         case 'j':
-            motion.calibrate.home();
+            mode = CALIBRATE;
             break;
 //        case 'p':
 //            Settings::threadFindingThings = false;

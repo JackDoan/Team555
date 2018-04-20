@@ -27,15 +27,14 @@
 
 int main(int argc, char* argv[]) {
 
-    Settings settings;
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
             // TODO: Calibrate mode is broken, threshold is not working properly, cant see the pucks
             if (std::string(argv[i]) == "--calibrate") {
-                settings.calibrateCorners = true;
+                Settings::calibrateCorners = true;
                 printf("calibrateCorners set to true!\n");
             } else {
-                settings.calibrateCorners = false;
+                Settings::calibrateCorners = false;
                 printf("calibrateCorners set to false!\n");
             }
         }
@@ -46,13 +45,10 @@ int main(int argc, char* argv[]) {
 // TODO: need to create a debug mode that allows us to turn on and off every possible debugging feature we could use
 // like trackbars for thresholding, thresholded images, writing and not writing the video, maybe even wrap all
 // all of our printfs for debuggin in a debug version of printf?
-    auto corners = Table::Corners(Settings::calibrateCorners);
-    if (!Settings::calibrateCorners) {
-        Table::setLimits(corners.sortedX, corners.sortedY);
-    }
+    Table::setLimits();
     Supervisor supervisor = Supervisor();
 
-    if (settings.calibrateCorners) {
+    if (Settings::calibrateCorners) {
         supervisor.runCalibrateCorners();
     } else {
         supervisor.run();

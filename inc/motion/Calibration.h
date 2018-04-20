@@ -10,10 +10,10 @@
 class Calibration {
 
 private:
-    cv::Mat calGrabbed, calSmall;
+    cv::Mat calSmall;
     bool getFrame();
     void display();
-
+    GameState gs;
 
     clock_t yHome2EdgeTime;
     clock_t yEdge2EdgeTime;
@@ -28,7 +28,7 @@ public:
         cv::Point_<int> location;
         double time;
     } pointAndTime;
-    std::vector<pointAndTime> moveTo(GamePiece& mallet, const cv::Point_<int>& destination);
+    std::vector<pointAndTime> moveTo(const cv::Point_<int>& destination);
     double calculateTXDelay(std::vector<Calibration::pointAndTime> input);
     void run();
 

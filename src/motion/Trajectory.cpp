@@ -135,9 +135,7 @@ const cv::Point_<int> Trajectory::findIntersection(const std::vector<bool>& boun
         determinant = prediction[0] * Table::walls[2][1] - Table::walls[2][0] * prediction[1];
         if (determinant != 0) {
             intersection.x = static_cast<int>((Table::walls[2][1] * prediction[2] - prediction[1] * Table::walls[2][2])/determinant);
-            intersection.x = (int)tempx;
             intersection.y = static_cast<int>((prediction[0] * Table::walls[2][2] - Table::walls[2][0] * prediction[2])/determinant);
-            intersection.y = (int)tempy;
         }
     }
     // if we are intersecting wall 3 (top)

@@ -22,6 +22,7 @@ public:
 
 class GameState {
 public:
+    std::vector<std::vector<cv::Point_<int>>> puckTraj;
     Table::Goals::goal_t goalFlag = Table::Goals::NO_GOAL;
     cv::Mat frame = cv::Mat();
     GamePiece mallet, puck;
@@ -32,9 +33,9 @@ public:
 class GameStateFactory {
 public:
     static GameState build(cv::Mat& in);
-    static void findPiece(GamePiece& out, cv::Mat& in, const struct threshold_s& limits);
-    static GamePiece findPiece(cv::Mat& in, const struct threshold_s& limits);
-    const static cv::Mat getThresholdImage(const cv::Mat& in, const struct threshold_s& limits);
+    static void findPieceThread(GamePiece& out, cv::Mat& in, struct threshold_s& limits);
+    static GamePiece findPiece(cv::Mat& in, struct threshold_s& limits);
+    const static cv::Mat getThresholdImage(const cv::Mat& in, struct threshold_s& limits);
 };
 
 class GameStateManager {
@@ -71,6 +72,13 @@ public:
             magHist += sqrt((vectorXY.x * vectorXY.x) + (vectorXY.y * vectorXY.y));
         }
         return static_cast<int>(magHist/history.size());
+    }
+
+    static bool checkPastGoalFlags() {
+        for(auto item : history) {
+            if(item.goalFlag == Table::Goals::RIGHT_GOAL) {return true;}
+        }
+        return false;
     }
 
 

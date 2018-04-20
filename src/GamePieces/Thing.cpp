@@ -14,24 +14,6 @@
 #include <string>
 
 
-//void Thing::setupTrackbars() {
-//    doBars = false;
-//        int slidermax = 255;
-//        int sslidermax = 5000;
-//        cv::namedWindow(settingWindowName, 1);
-//        cv::createTrackbar(TrackbarName[0], settingWindowName, &(limits.minH), slidermax, onChange, this);
-//        cv::createTrackbar(TrackbarName[1], settingWindowName, &(limits.maxH), slidermax, onChange, this);
-//        cv::createTrackbar(TrackbarName[2], settingWindowName, &(limits.minS), slidermax, onChange, this);
-//        cv::createTrackbar(TrackbarName[3], settingWindowName, &(limits.maxS), slidermax, onChange, this);
-//        cv::createTrackbar(TrackbarName[4], settingWindowName, &(limits.minV), slidermax, onChange, this);
-//        cv::createTrackbar(TrackbarName[5], settingWindowName, &(limits.maxV), slidermax, onChange, this);
-//        cv::createTrackbar(TrackbarName[6], settingWindowName, &minArea, sslidermax, onChange, this);
-//        cv::createTrackbar(TrackbarName[7], settingWindowName, &maxArea, sslidermax, onChange, this);
-//        cv::createTrackbar(TrackbarName[8], settingWindowName, &minRoundness, sslidermax, onChange, this);
-//        //cv::resizeWindow(settingWindowName, 500, 800);
-//        //TableCalibrate.setupTrackbars();
-//}
-
 
 
 

@@ -102,7 +102,7 @@ public:
     static const cv::Point_<int> home;
     static const cv::Point_<int> pixelsToSteps(const cv::Point_<int>& pixels);
     static const cv::Point_<int> stepsToPixels(const cv::Point_<int>& steps);
-    static void setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY);
+    static void setLimits();
     static void setWalls(const std::vector<cv::Point_<int>>& sortedX, const std::vector<cv::Point_<int>>& sortedY);
     static Corners corners;
     static Goals goals;

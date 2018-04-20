@@ -6,6 +6,7 @@
 #include <opencv/cv.hpp>
 #include "../inc/Camera.h"
 #include "../inc/Table.h"
+#include "../inc/Settings.h"
 #include <vector>
 
 
@@ -21,17 +22,19 @@ cv::Point_<int> Table::strikeLimitMax;
 cv::Point_<int> Table::motionLimitMin;
 cv::Point_<int> Table::motionLimitMax;
 cv::Rect Table::motionLimit;
-Table::Corners Table::corners;
+Table::Corners Table::corners = Table::Corners(Settings::calibrateCorners);
+
+
+
 Table::Goals Table::goals = Goals(Table::corners);
 double Table::walls[4][3];
 
-void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY) {
+void Table::setLimits() {
 
-
-    min.x = sortedX[0].x; printf("Setting min X: %d\n", min.x);
-    max.x = sortedX[3].x; printf("Setting max X: %d\n", max.x);
-    min.y = sortedY[0].y; printf("Setting min Y: %d\n", min.y);
-    max.y = sortedY[3].y; printf("Setting max Y: %d\n", max.y);
+    min.x = corners.sortedX[0].x; printf("Setting min X: %d\n", min.x);
+    max.x = corners.sortedX[3].x; printf("Setting max X: %d\n", max.x);
+    min.y = corners.sortedY[0].y; printf("Setting min Y: %d\n", min.y);
+    max.y = corners.sortedY[3].y; printf("Setting max Y: %d\n", max.y);
 
     //todo make these ratios                adjust drawGoalVector after made into ratios
     motionLimitMin.y = min.y + 80;
@@ -46,6 +49,7 @@ void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Poin
     strikeLimitMax.x = motionLimitMax.x - 30;
 
     setWalls(corners.sortedX, corners.sortedY);
+
 
 
 }

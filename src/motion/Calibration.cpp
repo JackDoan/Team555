@@ -13,7 +13,7 @@
 #include "../../inc/motion/Motion.h"
 
 void Calibration::display() {
-    cv::resize(calGrabbed, calSmall, cv::Size(), 0.5, 0.5);
+    cv::resize(gs.frame, calSmall, cv::Size(), 0.5, 0.5);
     cv::cvtColor(calSmall, calSmall, cv::COLOR_HSV2RGB);
     imshow("Video", calSmall);
 }
@@ -21,9 +21,11 @@ void Calibration::display() {
 bool Calibration::getFrame() {
     Camera& camera = Camera::getInstance();
     bool toReturn = true;
-    calGrabbed = camera.getFrame();
 
-    if (calGrabbed.empty()) {
+    auto mat = camera.getFrame();
+    gs = GameStateManager::get(mat);
+
+    if (gs.frame.empty()) {
         printf("No frames!\n");
         toReturn = false;
     }
@@ -32,7 +34,12 @@ bool Calibration::getFrame() {
 }
 
 void Calibration::run() {
-
+    static bool speedDone = false;
+    home();
+    if(!speedDone) {
+        speed();
+        speedDone = true;
+    }
 }
 
 void Calibration::home() {
@@ -45,13 +52,12 @@ void Calibration::home() {
     while (!home) {
 
         if(!getFrame()) { break; }
-        mallet.findOne(calGrabbed, true);
-        if (!mallet.found) {
+        if (!gs.mallet.found) {
             printf("Mallet not found in calibrateHome run!\n");
             if (cv::waitKey(100) >= 0)
                 continue;
         }
-        else if(Motion::isAt(mallet.location,Table::home, 3)) {
+        else if(Motion::isAt(gs.mallet.location,Table::home, 3)) {
             if(++homeDecay >= homeDecayMax) {
                 home = true;
                 motorDriver.setHome();
@@ -59,10 +65,10 @@ void Calibration::home() {
         }
         else {
             homeDecay = 0;
-            auto difference = Table::home - mallet.location;
+            auto difference = Table::home - gs.mallet.location;
             motorDriver.moveBy(difference);
             printf("Calibration::home at (%d,%d), going to (%d,%d), off by (%d,%d)\n",
-                   mallet.location.x, mallet.location.y,  Table::home.x, Table::home.y, difference.x, difference.y);
+                   gs.mallet.location.x, gs.mallet.location.y,  Table::home.x, Table::home.y, difference.x, difference.y);
         }
 
         display();
@@ -71,7 +77,7 @@ void Calibration::home() {
     printf("Homing complete!\n");
 }
 
-std::vector<Calibration::pointAndTime> Calibration::moveTo(Mallet& mallet, const cv::Point_<int>& destination) {
+std::vector<Calibration::pointAndTime> Calibration::moveTo(const cv::Point_<int>& destination) {
     MotorDriver& motorDriver = MotorDriver::getInstance();
     double timeDelta = 0.0;
     clock_t start;
@@ -82,11 +88,10 @@ std::vector<Calibration::pointAndTime> Calibration::moveTo(Mallet& mallet, const
     while(!done) {
 
         if(!getFrame()) { break; }
-        mallet.findOne(calGrabbed, true);
-        tmp.location = mallet.location;
+        tmp.location = gs.mallet.location;
         tmp.time = ((clock() - start) / (double) CLOCKS_PER_SEC);
         locsTimes.emplace_back(tmp);
-        if (!mallet.found) {
+        if (!gs.mallet.found) {
             printf("Mallet not found!\n");
             if (cv::waitKey(1) >= 0)
                 continue;
@@ -95,7 +100,7 @@ std::vector<Calibration::pointAndTime> Calibration::moveTo(Mallet& mallet, const
             //printf("Motion::calGoto: Moving from (%d,%d) to (%d,%d)\n",mallet.location.x, mallet.location.y,  destination.x, destination.y);
             motorDriver.moveTo(destination);
         }
-        if (Motion::isAt(mallet.location, destination, 8)) {
+        if (Motion::isAt(gs.mallet.location, destination, 8)) {
             done = true;
         }
 
@@ -121,26 +126,25 @@ void pATtoCSV(const std::vector<Calibration::pointAndTime>& in, const char* name
 }
 
 void Calibration::speed() {
-    Mallet mallet;
 //    moveTo(mallet, {Table::home.x, Table::strikeLimitMax.y});
 //    moveTo(mallet, {Table::home.x, Table::strikeLimitMin.y});
 //    moveTo(mallet, {Table::strikeLimitMax.x, Table::strikeLimitMax.y});
 //    moveTo(mallet, {Table::strikeLimitMin.x, Table::strikeLimitMax.y});
     const std::vector<Calibration::pointAndTime>* things[] = {&up, &left, &down, &right, &home2Top, &home2Left, &home2Bottom, &home2Right};
     std::vector<const char*> thingNames = {"Up", "Left", "Down", "Right", "home2Top", "home2Left", "home2Bottom", "home2Right"};
-    moveTo(mallet, Table::strikeLimitMax);
-    up = moveTo(mallet, {Table::strikeLimitMax.x, Table::strikeLimitMin.y});
-    left = moveTo(mallet, Table::strikeLimitMin);
-    down = moveTo(mallet, {Table::strikeLimitMin.x, Table::strikeLimitMax.y});
-    right = moveTo(mallet, Table::strikeLimitMax);
-    home2Top = moveTo(mallet, {Table::home.x, Table::strikeLimitMin.y});
-    moveTo(mallet, Table::home);
-    home2Left = moveTo(mallet, {Table::strikeLimitMin.x, Table::home.y});
-    moveTo(mallet, Table::home);
-    home2Bottom = moveTo(mallet, {Table::home.x, Table::strikeLimitMax.y});
-    moveTo(mallet, Table::home);
-    home2Right = moveTo(mallet, {Table::strikeLimitMax.x, Table::home.y});
-    moveTo(mallet, Table::home);
+    moveTo(Table::strikeLimitMax);
+    up = moveTo({Table::strikeLimitMax.x, Table::strikeLimitMin.y});
+    left = moveTo(Table::strikeLimitMin);
+    down = moveTo({Table::strikeLimitMin.x, Table::strikeLimitMax.y});
+    right = moveTo(Table::strikeLimitMax);
+    home2Top = moveTo({Table::home.x, Table::strikeLimitMin.y});
+    moveTo(Table::home);
+    home2Left = moveTo({Table::strikeLimitMin.x, Table::home.y});
+    moveTo(Table::home);
+    home2Bottom = moveTo({Table::home.x, Table::strikeLimitMax.y});
+    moveTo(Table::home);
+    home2Right = moveTo({Table::strikeLimitMax.x, Table::home.y});
+    moveTo(Table::home);
 
     for (int i = 0; i < 8; i++) {
         char name[64];

@@ -25,7 +25,7 @@
 
 class Supervisor {
 private:
-    typedef enum mode_e {IDLE, PLAY} mode_t;
+    typedef enum mode_e {IDLE, PLAY, CALIBRATE} mode_t;
     typedef enum playMode_e {DEFENSE, OFFENSE, FIX} playMode_t;
     typedef enum playState_e {DEFENDING, OFFENDING, FIXING} playState_t;
     typedef enum resetState_e {RESETDONE, CHECKING, DONECHECKING, RESETTING} resetState_t;
