@@ -7,7 +7,7 @@
 
 
 #include "../states.h"
-#include "../../src/GameState.h"
+#include "../GameState.h"
 
 class Offense {
 private:

@@ -8,7 +8,7 @@
 
 #include <opencv2/core/mat.hpp>
 #include "../states.h"
-#include "../../src/GameState.h"
+#include "../GameState.h"
 
 class Impulse {
 private:

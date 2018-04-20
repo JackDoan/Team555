@@ -5,7 +5,7 @@
 #include <opencv2/core/types.hpp>
 #include "../../inc/motion/Trajectory.h"
 #include "../../inc/Table.h"
-#include "../GameState.h"
+#include "../../inc/GameState.h"
 
 const int Trajectory::vectorMult = 15;
 

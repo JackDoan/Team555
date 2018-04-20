@@ -5,7 +5,7 @@
 #ifndef TEAM555_CALIBRATION_H
 #define TEAM555_CALIBRATION_H
 
-#include "../../src/GameState.h"
+#include "../GameState.h"
 
 class Calibration {
 

@@ -6,7 +6,7 @@
 #define TEAM555_TRAJECTORY_H
 
 
-#include "../../src/GameState.h"
+#include "../GameState.h"
 
 class Trajectory {
 private:

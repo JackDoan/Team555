@@ -4,7 +4,7 @@
 
 #include <opencv/cv.hpp>
 #include <thread>
-#include "GameState.h"
+#include "../inc/GameState.h"
 #include "../inc/Settings.h"
 #include "../inc/motion/Trajectory.h"
 

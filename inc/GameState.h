@@ -7,7 +7,7 @@
 
 
 #include <opencv2/core/mat.hpp>
-#include "../inc/Table.h"
+#include "Table.h"
 
 class GamePiece {
 public:

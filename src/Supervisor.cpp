@@ -21,7 +21,7 @@
 #include "../inc/MotorDriver.h"
 #include "../inc/motion/Motion.h"
 #include "../inc/motion/Offense.h"
-#include "GameState.h"
+#include "../inc/GameState.h"
 #include "../inc/motion/Trajectory.h"
 
 cv::VideoWriter Supervisor::video = cv::VideoWriter("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
