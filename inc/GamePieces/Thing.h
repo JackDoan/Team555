@@ -51,7 +51,6 @@ protected:
     char TrackbarName[9][50] = { "MinH","MaxH","MinS","MaxS","MinV","MaxV","MinArea","MaxArea","MinRound" };
     int historyDepth;
 
-    void goalDetect(cv::Point_<int> intersection, int xvelo);
     void goalDetectOffense(cv::Point_<int> intersection, int xvelo);
 
 
@@ -59,16 +58,11 @@ public:
     cv::Point_<int> location, lastLocation, vectorXY;
 
 
-    cv::Point_<int> L_mid;
-    cv::Point_<int> R_mid;
     clock_t s;
     clock_t e;
     int vectorMult = 15;
     double walls[4][3];
-//    int goalArr[2][3];
-//    int predicted[3];
-//    double det;
-    cv::Point_<double> intersect;
+
 
     bool found;
     int lostCnt;
@@ -76,7 +70,7 @@ public:
     bool rightGoal;
     bool leftGoalOffense;
     bool rightGoalOffense;
-    std::vector<cv::Point_<int>> Goals;
+
     std::vector<std::vector<cv::Point_<int>>> trajectory;
 
 
@@ -106,7 +100,6 @@ public:
             //cv::destroyWindow(previewWindowName);
         }
     }
-    void setGoals(std::vector<cv::Point_<int>> sortedX);
     void drawTraj(cv::Mat& in, std::vector<std::vector<cv::Point_<int>>> traj);
     std::vector<std::vector<cv::Point_<int>>> calcTraj(cv::Mat grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);
     std::vector<std::vector<cv::Point_<int>>> calcTrajOffense(cv::Mat& grabbed, cv::Point_<int> lastLoc, cv::Point_<int> loc);

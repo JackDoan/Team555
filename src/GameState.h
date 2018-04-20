@@ -13,7 +13,6 @@ class GamePiece {
 public:
     cv::Point_<int> location = Table::home;
     cv::Point_<int> lastLocation = Table::home;
-    cv::Point_<int> vectorXY = {0,0};
 
     bool found = false;
     bool onTable = false;
@@ -39,34 +38,24 @@ class GameStateManager {
 private:
     static std::vector<GameState> history;
     static const unsigned long maxLen;
+    static int lostCnt;
+public:
+    static int getLostCnt();
 
-    static void setStateInfo(GameState& gs) {
-        auto lastGs;
-        if(history.size() > 2) { //if there even was a previous state
-            lastGs = history[1];
-        }
-        else {
-            lastGs = GameState();
-        }
-        if(lastGs.found) {
+private:
+    static const unsigned int maxLostCnt;
+    static void setStateInfo(GameState& gs);
 
-        }
-        else {
-
-        }
-
-
-    }
 
 
 public:
     GameStateManager() = default;
 
     static GameState get(cv::Mat& in) {
-        auto gs = GameStateFactory::build(in);
-
-        update(gs);
-        return gs;
+        auto gs = GameStateFactory::build(in);  //build a GS from the frame
+        setStateInfo(gs);                       //update it with what happened last time
+        update(gs);                             //fill in the history
+        return gs;                              //return the full object
     }
 
     static void update(const GameState& in) {

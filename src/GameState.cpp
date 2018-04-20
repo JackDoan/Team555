@@ -9,10 +9,11 @@
 
 std::vector<GameState> GameStateManager::history;
 const unsigned long GameStateManager::maxLen = 30;
-
+const unsigned int GameStateManager::maxLostCnt = 10;
+int GameStateManager::lostCnt = 0;
 
 ///Takes in a frame, annotates it, and returns a class with data about
-///what is in the frame.
+///what was in the frame.
 GameState GameStateFactory::build(cv::Mat &in) {
     GameState toReturn;
     // if threadIt is set high we thread the contour searching process
@@ -87,5 +88,39 @@ GamePiece GameStateFactory::findPiece(cv::Mat& in, const struct threshold_s& lim
         }
     }
     return toReturn;
+}
+
+static void GameStateManager::setStateInfo(GameState& gs) {
+    auto lastGs;
+    if(history.size() > 2) { //if there even was a previous state
+        lastGs = history[1];
+    }
+    else {
+        lastGs = GameState();
+    }
+    if(lastGs.found) {
+        lostCnt= 0;
+        gs.mallet.lastLocation = lastGs.mallet.location;
+        gs.puck.lastLocation = lastGs.mallet.location;
+    }
+    else {
+        if(++lostCnt > maxLostCnt) {
+            //we've really lost the puck
+            //todo?
+        }
+        else {
+            //predict the puck's next location
+            gs.mallet.lastLocation = lastGs.mallet.location;
+            gs.puck.lastLocation = lastGs.puck.location;
+            gs.mallet.location = lastGs.mallet.lastLocation + lastGs.mallet.location;
+            gs.puck.location = lastGs.puck.lastLocation + lastGs.puck.location;
+        }
+    }
+
+
+}
+
+int GameStateManager::getLostCnt() {
+    return lostCnt;
 }
 

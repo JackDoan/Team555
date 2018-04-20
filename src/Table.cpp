@@ -21,8 +21,12 @@ cv::Point_<int> Table::strikeLimitMax;
 cv::Point_<int> Table::motionLimitMin;
 cv::Point_<int> Table::motionLimitMax;
 cv::Rect Table::motionLimit;
+Corners Table::corners;
+Goals Table::goals = Goals(Table::corners);
 
 void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Point_<int>> sortedY) {
+
+
     min.x = sortedX[0].x; printf("Setting min X: %d\n", min.x);
     max.x = sortedX[3].x; printf("Setting max X: %d\n", max.x);
     min.y = sortedY[0].y; printf("Setting min Y: %d\n", min.y);
@@ -40,13 +44,14 @@ void Table::setLimits(std::vector<cv::Point_<int>> sortedX, std::vector<cv::Poin
     strikeLimitMin.x = motionLimitMin.x + 30;
     strikeLimitMax.x = motionLimitMax.x - 30;
 
-
 }
 
-cv::Point_<int> Table::pixelsToSteps(cv::Point_<int> pixels) {
+const cv::Point_<int> Table::pixelsToSteps(const cv::Point_<int>& pixels) {
     return 4*(pixels - home);
 }
 
-cv::Point_<int> Table::stepsToPixels(cv::Point_<int> steps) {
+const cv::Point_<int> Table::stepsToPixels(const cv::Point_<int>& steps) {
     return (steps/4) + home;
 }
+
+

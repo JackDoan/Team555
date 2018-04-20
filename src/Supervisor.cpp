@@ -51,9 +51,6 @@ void Supervisor::run() {
     motion = Motion();
     Camera& camera = Camera::getInstance();
 
-    // set the puck goal locations
-    puck.setGoals(corners.sortedX);
-
     // initialize counters, timers windows and frames etc.
     FrameCounter = 0;
 
@@ -255,6 +252,11 @@ void Supervisor::idle() {
 }
 
 void Supervisor::makeDecision() {
+    //calculate trajectory:
+
+
+
+
     switch (playState) {
         case DEFENDING:
             /*
