@@ -9,6 +9,7 @@
 #include "../states.h"
 #include "../GamePieces/Mallet.h"
 #include "../GamePieces/Puck.h"
+#include "../../src/GameState.h"
 
 class Offense {
 private:
@@ -27,6 +28,7 @@ public:
     Offense() = default;
     void reset() { setDone(); }
     bool run(Mallet& mallet, Puck& puck, cv::Mat& grabbed);
+    bool run(GameState&);
     offenseState_t getState() const;
     void setDone();
 

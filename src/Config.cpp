@@ -14,6 +14,8 @@ bool Settings::video_output = false;   //can be shown through Idle Process
 bool Settings::undistort = true;
 bool Settings::calibrateCorners = false;
 bool Settings::preview = true;
+bool Settings::threadFindingThings = true;
+
 
 bool writeConfigValues(Corners corners) {
     std::fstream configFile;

@@ -23,6 +23,7 @@
 #include "../inc/MotorDriver.h"
 #include "../inc/motion/Motion.h"
 #include "../inc/motion/Offense.h"
+#include "GameState.h"
 
 cv::VideoWriter Supervisor::video = cv::VideoWriter("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
 DoubleBuffer Supervisor::previewBuf;
@@ -82,24 +83,14 @@ void Supervisor::run() {
             break;
         }
 
-        // if threadIt is set high we thread the contour searching process
-        if(threadIt) {
-            std::thread puckThread(&Puck::findOne, std::ref(puck), frameBuf.active(), false);
-            std::thread malletThread(&Mallet::findOne, std::ref(mallet), frameBuf.active(), true);
-            puckThread.join();
-            malletThread.join();
-        }
-        else {
-            puck.findOne(frameBuf.active(),false);
-            mallet.findOne(frameBuf.active(),true);
-        }
+        auto gameState = GameStateManager::get(frameBuf.active());
+        checkKeyboard();
 
-        int key = cv::waitKey(1);
-        checkKeyboard(key, motorDriver, puck, mallet, settings);
         // check if keyboard input set keepGoing to false, if it did, jump to the top and quit
         if (!keepGoing) {
             continue;
         }
+
         cv::Point_<int> movingTo;
         if (mode == PLAY) {
            // call the decide function that will set the playMode enum and then play
@@ -121,10 +112,10 @@ void Supervisor::run() {
                 default:
                     // call defense
                     playState = DEFENDING;
-                    movingTo = motion.defense.run(mallet, puck, frameBuf.active());
+                    movingTo = motion.defense.run(gameState);
                     break;
             }
-            if (table.preview == 1) {
+            if (Settings::preview == 1) {
                 display(movingTo);
             }
         }
@@ -146,29 +137,30 @@ void Supervisor::calcFPS() {
     ++FrameCounter;
 }
 
-void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& puck, Mallet& mallet, Settings& settings) {
+void Supervisor::checkKeyboard() {
+    const key = cv::waitKey(1);
     switch(key) {
         case 27: //ESC
             keepGoing = false;
-            motorDriver.stop();
+            MotorDriver::getInstance().stop();
             break;
         case 'f':
-            motorDriver.toggleFan();
+            MotorDriver::getInstance().toggleFan();
             break;
         case 'j':
             motion.calibrate.home();
             break;
-        case 'p':
-            threadIt = false;
-            puck.toggleDebugInfo();
-            break;
-        case 't':
-            threadIt = true;
-            break;
-        case 'y':
-            threadIt = false;
-            mallet.toggleDebugInfo();
-            break;
+//        case 'p':
+//            Settings::threadFindingThings = false;
+//            puck.toggleDebugInfo();
+//            break;
+//        case 't':
+//            Settings::threadFindingThings = true;
+//            break;
+//        case 'y':
+//            Settings::threadFindingThings = false;
+//            mallet.toggleDebugInfo();
+//            break;
         case 'v':
             Settings::video_output = !Settings::video_output;
             printf("Video output: %d\n", Settings::video_output);
@@ -203,7 +195,7 @@ void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& p
             if (decisionMode == AUTOMATIC) {
                 decisionMode = MANUAL;
                 printf("Decision Mode set to MANUAL\n");
-            } else if (decisionMode = MANUAL) {
+            } else if (decisionMode == MANUAL) {
                 decisionMode = AUTOMATIC;
                 printf("Decision Mode set to AUTOMATIC\n");
             }
@@ -211,15 +203,6 @@ void Supervisor::checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& p
         case 200: //F11 = toggle fullscreen
             cv::setWindowProperty("Video", CV_WND_PROP_FULLSCREEN, !cv::getWindowProperty("Video", CV_WND_PROP_FULLSCREEN));
             break;
-
-        case 'k':
-            while(cvWaitKey(1) == -1) {
-                cv::Point_<int> fuck = {0, 200};
-                motorDriver.moveTo(Table::home + fuck);
-                sleep(5);
-                motorDriver.moveTo(Table::home - fuck);
-                sleep(5);
-            }
 
         default:
             if(key != -1) {

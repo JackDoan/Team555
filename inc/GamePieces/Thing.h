@@ -8,42 +8,24 @@
 
 #include <opencv2/opencv.hpp>
 #include "../Table.h"
+#include "../Settings.h"
 #include "History.h"
 #include <vector>
 #include <math.h>
 #include <thread>
 #include <string>
 
-struct threshold_s {
-    int minH = 26;
-    int maxH = 128;
-    int minS = 69;
-    int maxS = 138;
-    int minV = 59;
-    int maxV = 172;
 
-//    int minH = 16;
-//    int maxH = 121;
-//    int minS = 23;
-//    int maxS = 154;
-//    int minV = 0;
-//    int maxV = 0;
-};
 
 class Thing {
 protected:
-    int minArea = 1200;
-    int maxArea = 3600;
-    int minRoundness = 445;
-    int minAreaCalib = 800;
-    int maxAreaCalib = 4000;
-    int minRoundnessCalib = 320;
-    bool doBars = false;
+
+    bool& doBars;
+
     char* settingWindowName = const_cast<char *>("Settings");
     char* previewWindowName = const_cast<char *>("Thing");
     bool debug = false;
     bool debugWindows = false;
-    struct threshold_s limits;
     cv::Mat getThresholdImage(cv::Mat& in);
     cv::Scalar outlineColor = cv::Scalar(40, 255, 255);
     static void onChange(int v, void *ptr) {
@@ -51,16 +33,20 @@ protected:
         auto *that = (Thing*)ptr;
         that->realTrack(v);
     }
+    struct threshold_s* limits;
+    int* minArea;
+    int* maxArea;
+    int* minRoundness;
     void realTrack(int v) {
-        limits.minH = cv::getTrackbarPos(TrackbarName[0],settingWindowName);
-        limits.maxH = cv::getTrackbarPos(TrackbarName[1],settingWindowName);
-        limits.minS = cv::getTrackbarPos(TrackbarName[2],settingWindowName);
-        limits.maxS = cv::getTrackbarPos(TrackbarName[3],settingWindowName);
-        limits.minV = cv::getTrackbarPos(TrackbarName[4],settingWindowName);
-        limits.maxV = cv::getTrackbarPos(TrackbarName[5],settingWindowName);
-        minArea = cv::getTrackbarPos(TrackbarName[6],settingWindowName);
-        maxArea = cv::getTrackbarPos(TrackbarName[7],settingWindowName);;
-        minRoundness = cv::getTrackbarPos(TrackbarName[8],settingWindowName);
+        limits->minH = cv::getTrackbarPos(TrackbarName[0],settingWindowName);
+        limits->maxH = cv::getTrackbarPos(TrackbarName[1],settingWindowName);
+        limits->minS = cv::getTrackbarPos(TrackbarName[2],settingWindowName);
+        limits->maxS = cv::getTrackbarPos(TrackbarName[3],settingWindowName);
+        limits->minV = cv::getTrackbarPos(TrackbarName[4],settingWindowName);
+        limits->maxV = cv::getTrackbarPos(TrackbarName[5],settingWindowName);
+        *minArea = cv::getTrackbarPos(TrackbarName[6],settingWindowName);
+        *maxArea = cv::getTrackbarPos(TrackbarName[7],settingWindowName);;
+        *minRoundness = cv::getTrackbarPos(TrackbarName[8],settingWindowName);
     }
     char TrackbarName[9][50] = { "MinH","MaxH","MinS","MaxS","MinV","MaxV","MinArea","MaxArea","MinRound" };
     int historyDepth;
@@ -70,7 +56,7 @@ protected:
 
 
 public:
-    cv::Point_<int> location, lastLocation, vectorXY, predictedLocation;
+    cv::Point_<int> location, lastLocation, vectorXY;
 
 
     cv::Point_<int> L_mid;
@@ -84,11 +70,8 @@ public:
 //    double det;
     cv::Point_<double> intersect;
 
-    bool bouncex;
-    bool bouncey;
     bool found;
     int lostCnt;
-    bool goalFlag;
     bool leftGoal;
     bool rightGoal;
     bool leftGoalOffense;
@@ -140,6 +123,7 @@ public:
     void fillFoundHistory(bool found);
 
     History<cv::Point_<int>> locHist = History<cv::Point_<int>>(cv::Scalar(50, 255, 200), 3);
+
 
 
 

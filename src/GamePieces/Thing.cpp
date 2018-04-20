@@ -14,6 +14,9 @@
 #include <string>
 
 
+int Thing::minArea = 1200;
+int Thing::maxArea = 3600;
+int Thing::minRoundness = 445;
 
 
 void Thing::setupTrackbars() {
@@ -106,8 +109,6 @@ Thing::Thing() {
     lastLocation = {0,0};
     vectorXY = {0,0};
     predictedLocation = {0,0};
-    bouncex = false;
-    bouncey = false;
     found = false;
     lostCnt = 0;
     historyDepth = 30;
@@ -220,7 +221,6 @@ std::vector<cv::Point_<int>> Thing::find(cv::Mat& in) {
 
 void Thing::findOne(cv::Mat in, bool isMallet) {
     onTable = false;
-    goalFlag = false;
     trajectory.clear();
     leftGoal = false;
     rightGoal = false;
@@ -237,9 +237,6 @@ void Thing::findOne(cv::Mat in, bool isMallet) {
         imshow(settingWindowName, imgThreshSmall);
     }
     std::vector< std::vector<cv::Point> > contours;  //hold the pointer to a contour in the memory block
-    CvSeq* result;   //hold sequence of points of a contour
-
-//    Coordinate pos = Coordinate(0.0,0);
     cv::Point_<int> pos = {0,0};
 
     cv::findContours(imgThresh, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));

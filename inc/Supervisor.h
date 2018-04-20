@@ -88,7 +88,7 @@ public:
     void run();
 
     void calcFPS();
-    void checkKeyboard(const int& key, MotorDriver &motorDriver, Puck& puck, Mallet& mallet, Settings& settings);
+    void checkKeyboard();
     void idle();
     void makeDecision();
     void decide();

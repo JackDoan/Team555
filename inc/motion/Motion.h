@@ -28,6 +28,7 @@ public:
     Defense defense;
     Impulse impulse;
 
+    static hitVector_t findHitVector(GameState& gs, int ff);
     static hitVector_t findHitVector(Mallet& mallet, Puck& puck, cv::Mat& grabbed, int ff);
     void calcPuckRange(cv::Point_<double> mallet2puck, cv::Point_<int>& puckPlus, cv::Point_<int>& puckMinus);
 

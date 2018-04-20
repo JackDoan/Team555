@@ -12,7 +12,6 @@ void History<T>::insert(const T& in) {
 
 template<>
 void History<cv::Point_<int>>::insert(const cv::Point_<int>& in) {
-    data.insert(data.begin(), in);
-    data.resize(dataLen);
+
 }
 

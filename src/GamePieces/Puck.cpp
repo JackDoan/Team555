@@ -11,58 +11,18 @@
 #include <ctime>
 
 
-
 // TODO: add logic to puck.findPuck that uses functions from camera, to adjust exposure and gain when puck isn't found for a long time
 // If speed is measured 'high' and puck is not found, turn up exposure and gain until it is found again
 // then once it is found again return it to its default setting
 
 Puck::Puck() {
-    struct threshold_s puckLimitsCalib;
+
     //for green
-    minArea = 1200;
-    maxArea = 3600;
-    minRoundness = 100;
-    minAreaCalib = 600;
-    maxAreaCalib = 4000;
-    minRoundnessCalib = 320;
+
+
     settingWindowName = const_cast<char *>("Puck Settings");
     previewWindowName = const_cast<char *>("Puck");
-//    puckLimits.minH = 43;
-//    puckLimits.maxH = 110;
-//    puckLimits.minS = 70;
-//    puckLimits.maxS = 155;
-//    puckLimits.minV = 20;
-//    puckLimits.maxV = 67;
-    limits.minH = 31;//16;
-    limits.maxH = 61;//121;
-    limits.minS = 53;//23;
-    limits.maxS = 160;//185;
-    limits.minV = 0;
-    limits.maxV = 255;//0
-    outlineColor = cv::Scalar(40, 255, 255);
 
-    puckLimitsCalib.minH = 43;
-    puckLimitsCalib.maxH = 110;
-    puckLimitsCalib.minS = 70;
-    puckLimitsCalib.maxS = 155;
-    puckLimitsCalib.minV = 20;
-    puckLimitsCalib.maxV = 70;
-
-
-
-    //for orange
-    /*
-    puckLimits.minH = 39;
-    puckLimits.maxH = 103;
-    puckLimits.minS = 90;
-    puckLimits.maxS = 149;
-    puckLimits.minV = 121;
-    puckLimits.maxV = 212;
-     */
-
-
-    bouncex = false;
-    bouncey = false;
     lostCnt = 0;
 
 }
