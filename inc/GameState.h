@@ -40,6 +40,7 @@ public:
 
 class GameStateManager {
 private:
+    static void setStateInfo(GamePiece& current, const GamePiece& past);
     static std::vector<GameState> history;
     static const unsigned long maxLen;
     static int lostCnt;

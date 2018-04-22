@@ -40,10 +40,7 @@ private:
     DoubleBuffer frameBuf;
 
     long firstTimestamp = 0;
-    cv::Mat& grabbed = frameBuf.active();
-//    cv::Mat frame;
-//    cv::Mat imgHSV;
-//    cv::Mat imgThresh;
+
     time_t start = 0;
     time_t end = 0;
     time_t idleStart = 0;
@@ -52,7 +49,6 @@ private:
     double idleSec = 0;
     Motion motion;
     difficulty_t difficulty = HARD;
-    bool threadIt = true;
     long FrameCounter = 0;
     bool sendGetButtons;
     bool keepGoing;
@@ -61,8 +57,9 @@ private:
     void decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo);
     static cv::Mat& preview;
     static DoubleBuffer previewBuf;
-    static bool pushFrame();
+    static void pushFrame();
     static bool timeToPushFrame;
+    static bool pushNetworkFrame(const cv::Mat& send);
 
 
 
@@ -82,7 +79,7 @@ public:
     void findPuck();
     bool resetPuck(const GameState& gs);
     bool stillMovingToCheck();
-    void display(const GameState gs, const cv::Point_<int> movingTo);
+    void display(GameState gs, cv::Point_<int> movingTo);
 
 };
 

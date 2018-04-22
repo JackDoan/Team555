@@ -37,7 +37,7 @@ void Calibration::run() {
     static bool speedDone = false;
     home();
     if(!speedDone) {
-        speed();
+        ///speed();
         speedDone = true;
     }
 }
@@ -45,7 +45,7 @@ void Calibration::run() {
 void Calibration::home() {
 
     MotorDriver& motorDriver = MotorDriver::getInstance();
-    const int homeDecayMax = 5;
+    const int homeDecayMax = 10;
     bool home = false;
     int homeDecay = 0;
 
@@ -97,12 +97,12 @@ std::vector<Calibration::pointAndTime> Calibration::moveTo(const cv::Point_<int>
                 continue;
         }
         else {
-            //printf("Motion::calGoto: Moving from (%d,%d) to (%d,%d)\n",mallet.location.x, mallet.location.y,  destination.x, destination.y);
+            printf("Motion::calGoto: Moving from (%d,%d) to (%d,%d)\n",gs.mallet.location.x, gs.mallet.location.y,  destination.x, destination.y);
             motorDriver.moveTo(destination);
         }
-        if (Motion::isAt(gs.mallet.location, destination, 8)) {
-            done = true;
-        }
+        if (Motion::isAt(gs.mallet.location, destination, 30)) {
+            done = true; //todo 30 is too big
+         }
 
         display();
         if (cv::waitKey(1) >= 0) { break; }

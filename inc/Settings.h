@@ -28,10 +28,11 @@ struct threshold_s {
             maxS = 203;
             minV = 0;
             maxV = 255;
-            minArea = 1548;
+            minArea = 1100;
             maxArea = 4500;
             minRoundness = 800;
             doBars = true;
+            //debug = true;
             outlineColor = cv::Scalar(210, 255, 255);
 
         }
@@ -60,6 +61,7 @@ public:
     static bool undistort;
     static bool calibrateCorners;
     static bool preview;
+    static bool network_video;
 
     static struct threshold_s puckLimits;
     static struct threshold_s malletLimits;

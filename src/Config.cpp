@@ -14,9 +14,11 @@ bool Settings::video_output = false;   //can be shown through Idle Process
 bool Settings::undistort = true;
 bool Settings::calibrateCorners = false;
 bool Settings::preview = true;
-bool Settings::threadFindingThings = true;
+
 struct threshold_s Settings::puckLimits = threshold_s(false);
 struct threshold_s Settings::malletLimits = threshold_s(true);
+bool Settings::threadFindingThings = puckLimits.debug & malletLimits.debug;
+bool Settings::network_video = true;
 
 bool writeConfigValues(Table::Corners corners) {
     std::fstream configFile;
@@ -24,7 +26,7 @@ bool writeConfigValues(Table::Corners corners) {
     std::vector<cv::Point_<int>> cornersVector = corners.getCorners();
     std::vector<cv::Point_<int>> offsetsVector = corners.getOffsets();
     //configFile.open("C:/Users/mdl150330/blah.txt");
-    configFile.open("C:/AirHockeyRobot/config.txt");
+    configFile.open("../config.txt");
     if (configFile.is_open()) {
 //        printf("File Opened Succesfully\n");
         if (cornersVector.size() == 4) {

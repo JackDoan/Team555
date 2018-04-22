@@ -115,27 +115,36 @@ void GameStateManager::setStateInfo(GameState& gs) {
     if(history.size() > 2) { //if there even was a previous state
         lastGs = history[1];
     }
-    if(lastGs.puck.found) {
-        lostCnt= 0;
-        gs.mallet.lastLocation = lastGs.mallet.location;
-        gs.puck.lastLocation = lastGs.mallet.location;
+    if(gs.puck.found && gs.mallet.found) {
+        lostCnt = 0;
     }
     else {
-        if(++lostCnt > maxLostCnt) {
-            //we've really lost the puck
-            //todo?
-        }
-        else {
-            //predict the puck's next location
-            gs.mallet.lastLocation = lastGs.mallet.location;
-            gs.puck.lastLocation = lastGs.puck.location;
-            gs.mallet.location = lastGs.mallet.lastLocation + lastGs.mallet.location;
-            gs.puck.location = lastGs.puck.lastLocation + lastGs.puck.location;
-        }
+        lostCnt++;
     }
+    setStateInfo(gs.puck, lastGs.puck);
+    setStateInfo(gs.mallet, lastGs.mallet);
 
     gs.puckTraj = Trajectory::calculate(gs);
 }
+
+void GameStateManager::setStateInfo(GamePiece& current, const GamePiece& past) {
+    if(current.found) {
+        current.lastLocation = past.location;
+    }
+    else {
+        if(lostCnt > maxLostCnt) {
+            //we've really lost our pieces
+            current.location = Table::home;
+            current.lastLocation = Table::home;
+        }
+        else {
+            //predict the puck's next location
+            current.lastLocation = past.location;
+            current.location   = past.location + (past.location - past.lastLocation);
+        }
+    }
+}
+
 
 int GameStateManager::getLostCnt() {
     return lostCnt;

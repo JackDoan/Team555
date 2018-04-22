@@ -1,7 +1,11 @@
 #include <AccelStepper.h>
 #include <MultiStepper.h>
 
+#define X_STEP_PIN 2
+#define X_DIR_PIN  3
 
+#define Y_STEP_PIN 5
+#define Y_DIR_PIN  6
 
 typedef union longBytesU {
 	struct {
@@ -16,15 +20,20 @@ typedef union longBytesU {
 void processCMD(char cmd, longbytes in);
 
 // Define some steppers and the pins the will use
-AccelStepper stepperX(AccelStepper::DRIVER, 25, 24);
-AccelStepper stepperY(AccelStepper::DRIVER, 23, 22);
+AccelStepper stepperX(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
+AccelStepper stepperY(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
+
+#define HOME_ACCEL 500.0
+#define X_ACCEL 10000.0
+#define Y_ACCEL 45000.0
+
 
 void setup() {
 	// put your setup code here, to run once:
 	stepperX.setMaxSpeed(400000.0);
-	stepperX.setAcceleration(10000.0);
+	stepperX.setAcceleration(X_ACCEL);
 	stepperY.setMaxSpeed(200000.0); //200000
-	stepperY.setAcceleration(50000.0); //30000
+	stepperY.setAcceleration(Y_ACCEL); //30000
 	Serial.begin(115200);
 	pinMode(10,OUTPUT);
 	digitalWrite(10, 1);
@@ -61,15 +70,19 @@ void processCMD(char cmd, longbytes rx) {
             stepperY.stop();
             break;
         case 'x':
+	    stepperX.setAcceleration(HOME_ACCEL);
             stepperX.move(rx.l);
             break;
         case 'y':
+	    stepperY.setAcceleration(HOME_ACCEL);
             stepperY.move(rx.l);
             break;
         case 'X':
+	    stepperX.setAcceleration(X_ACCEL);
             stepperX.moveTo(rx.l);
             break;
         case 'Y':
+	    stepperY.setAcceleration(Y_ACCEL);
             stepperY.moveTo(rx.l);
             break;
         case 'H':
