@@ -27,7 +27,7 @@ string Settings::filePath = "config.txt";
 char Settings::delim = ':';
 
 
-bool Settings::getSettingName(fstream& f, char* buffer, unsigned int bufSize) {
+bool Settings::processLine(fstream &f, char *buffer, unsigned int bufSize) {
     f.getline(buffer, bufSize, delim); //get a line, look for a colon
     //begin error checking:
     if(!f.good()) {
@@ -54,15 +54,30 @@ bool Settings::getSettingName(fstream& f, char* buffer, unsigned int bufSize) {
         }
         else if(strncmp(buffer, malletLimitString.c_str(), bufSize) == 0) {
             f.get(); //throw out a ':'
-            //todo
+            readThreshold(malletLimits, f);
         }
         else if(strncmp(buffer,puckLimitString.c_str() , bufSize) == 0) {
             f.get(); //throw out a ':'
-            //todo
+            readThreshold(puckLimits, f);
         }
         else if(strncmp(buffer,cornerString.c_str() , bufSize) == 0) {
             f.get(); //throw out a ':'
-            //todo
+            auto corners = Table::corners.getCorners();
+
+            for(int i = 0; i < 4; i++) {
+                cv::Point_<int> in;
+                f >> in.x;
+                f >> in.y;
+                corners.emplace(corners.begin(), in);
+            }
+
+            if(corners.size() >= 4) { //we have what we need
+                corners.resize(4);
+                Table::corners.setCorners(corners); //update things
+                Table::goals.recalculate(Table::corners);
+                Table::setLimits();
+            }
+
         }
         else {
             //this wasn't a valid setting?
@@ -83,10 +98,26 @@ bool Settings::readConfigValues(const std::string& path) {
         }
         else {
             char buffer[256] = {};
-
+            bool keepReading = true;
+//            while(keepReading) {
+//                keepReading = processLine(f, buffer, sizeof(buffer));
+//            }
 
         }
     }
+}
+
+void Settings::readThreshold(threshold_s& t, fstream& f) {
+    f << skipws;
+    f >> t.minH;
+    f >> t.maxH;
+    f >> t.minS;
+    f >> t.maxS;
+    f >> t.minV;
+    f >> t.maxV;
+    f >> t.minArea;
+    f >> t.maxArea;
+    f.get(); //get the endl
 }
 
 void Settings::writeThreshold(const threshold_s& t, fstream& f) {
@@ -127,6 +158,7 @@ bool Settings::writeConfigValues(const string& path) {
         cout << "Failed to save settings" << endl;
         return false;
     }
+    f.close();
 
 }
 

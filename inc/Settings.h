@@ -56,7 +56,7 @@ struct threshold_s {
 
 class Settings {
 private:
-    bool getSettingName(std::fstream& f, char* buffer, unsigned int bufSize);
+    static bool processLine(std::fstream &f, char *buffer, unsigned int bufSize);
     static std::string cameraUndistortString;
     static std::string malletLimitString;
     static std::string puckLimitString;
@@ -64,13 +64,13 @@ private:
     static char delim;
     static std::string filePath;
     static void writeThreshold(const threshold_s& t, std::fstream& f);
+    static void readThreshold(threshold_s& t, std::fstream& f);
 
 public:
     static bool video_output;   //can be shown through Idle Process
     static bool undistort;
     static bool calibrateCorners;
     static bool preview;
-    static bool network_video;
 
     static struct threshold_s puckLimits;
     static struct threshold_s malletLimits;
