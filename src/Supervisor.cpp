@@ -97,9 +97,7 @@ void Supervisor::run() {
                     movingTo = motion.defense.run(gameState, intersectPoint);
                     break;
             }
-            if (Settings::preview == 1) {
-                display(gameState, movingTo);
-            }
+            display(gameState, movingTo);
         }
         else {
             idle();
@@ -121,8 +119,7 @@ void Supervisor::calcFPS() {
 
 
 bool intersection(const cv::Point_<int>& o1, const cv::Point_<int>& p1, const cv::Point_<int>& o2, const cv::Point_<int>& p2,
-                  cv::Point_<int> &r)
-{
+                  cv::Point_<int> &r) {
     cv::Point_<int> x = o2 - o1;
     cv::Point_<int> d1 = p1 - o1;
     cv::Point_<int> d2 = p2 - o2;
@@ -148,6 +145,7 @@ void Supervisor::checkKeyboard() {
             break;
         case 'j':
             mode = CALIBRATE;
+            cv::displayOverlay("Video", "Robot is re-calibrating. Please wait.", 2000);
             break;
 //        case 'p':
 //            Settings::threadFindingThings = false;
@@ -172,9 +170,12 @@ void Supervisor::checkKeyboard() {
                 playTime.incrementRobotPoint();
             }
             break;
-        case 'v':
+        case 'v': {
+            char buf[80];
             Settings::video_output = !Settings::video_output;
-            printf("Video output: %d\n", Settings::video_output);
+            snprintf(buf, sizeof(buf), "Video output: %d\n", Settings::video_output);
+            cv::displayOverlay("Video", buf, 2000);
+        }
             break;
         case 'd':
             printf("Motion Mode = Defend\n");
@@ -200,12 +201,15 @@ void Supervisor::checkKeyboard() {
             break;
         case 'e':
             difficulty = EASY;
+            cv::displayOverlay("Video", "Easy Mode!", 2000);
             break;
         case 'm':
             difficulty = MEDIUM;
+            cv::displayOverlay("Video", "Medium Mode!", 2000);
             break;
         case 'h':
             difficulty = HARD;
+            cv::displayOverlay("Video", "HARD MODE!", 2000);
             break;
         case 197: //F8
             if (decisionMode == AUTOMATIC) {
@@ -335,30 +339,18 @@ void Supervisor::makeDecision(GameState& gs) {
 
 }
 
-
-
-
-
 void Supervisor::display(const GameState gs, const cv::Point_<int> movingTo) {
-//    if(timeToPushFrame) {
-//        timeToPushFrame = false;
-//        if (Settings::network_video) {
-//            auto handle = std::async(std::launch::async, pushFrame);
-//        }
-//        else {
-//            pushFrame(); //todo threading
-//        }
-//        //frameBuf.toggle();
-//        if(!gs.frame.empty()) {
-//            decorate(gs, gs.frame, frameRate, movingTo);
-//            //auto handle = std::async(std::launch::async, decorate, frameBuf.inactive(), frameRate, puck.lastLocation, puck.location, table.motionLimitMax, table.motionLimitMin, corners, puck.Goals);
-//        }
-//        else {
-//            timeToPushFrame = true;
-//        }
-//    }
+    static int frameDelayer = 0;
     decorate(gs, gs.frame, frameRate, movingTo);
-    pushFrame(gs);
+    if (!gs.frame.empty()) {
+
+        if((++frameDelayer % 4) == 0)
+            cv::imshow("Video", gs.frame);
+
+        if (Settings::video_output) {
+            Supervisor::video.write(gs.frame);
+        }
+    }
 }
 
 void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo) {
@@ -404,17 +396,4 @@ void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_
             break;
     }
     cv::addText(in, modeStrings[modeStringIndex], cvPoint(35, 345*2), font);
-}
-
-void Supervisor::pushFrame(const GameState& gs) {
-    static int frameDelayer = 0;
-    if (!gs.frame.empty()) {
-
-        if((++frameDelayer % 4) == 0)
-            cv::imshow("Video", gs.frame);
-
-        if (Settings::video_output) {
-            Supervisor::video.write(gs.frame);
-        }
-    }
 }

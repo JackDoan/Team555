@@ -12,8 +12,6 @@
 using namespace std;
 bool Settings::video_output = false;   //can be shown through Idle Process
 bool Settings::undistort = true;
-bool Settings::calibrateCorners = false;
-bool Settings::preview = true;
 
 struct threshold_s Settings::puckLimits = threshold_s(false);
 struct threshold_s Settings::malletLimits = threshold_s(true);

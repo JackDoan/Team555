@@ -69,8 +69,6 @@ private:
 public:
     static bool video_output;   //can be shown through Idle Process
     static bool undistort;
-    static bool calibrateCorners;
-    static bool preview;
 
     static struct threshold_s puckLimits;
     static struct threshold_s malletLimits;

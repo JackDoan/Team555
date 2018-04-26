@@ -119,9 +119,7 @@ GamePiece GameStateFactory::findPiece(cv::Mat& in, struct threshold_s& limits) {
                     continue;  // continue with other contour... (this is outside the table)
                 }
                 else {
-                    if (Settings::preview == 1) { // Draw contour
-                        cv::drawContours(in, contours, i, limits.outlineColor, 5, 4);
-                    }
+                    cv::drawContours(in, contours, i, limits.outlineColor, 5, 4);
                     toReturn.found = true;
                     toReturn.onTable = within(toReturn.location, Table::min, Table::max);
                     break; //we've found the piece, stop looking

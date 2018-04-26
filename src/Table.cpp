@@ -22,7 +22,7 @@ cv::Point_<int> Table::strikeLimitMax;
 cv::Point_<int> Table::motionLimitMin;
 cv::Point_<int> Table::motionLimitMax;
 cv::Rect Table::motionLimit;
-Table::Corners Table::corners = Table::Corners(Settings::calibrateCorners);
+Table::Corners Table::corners = Table::Corners();
 
 
 
