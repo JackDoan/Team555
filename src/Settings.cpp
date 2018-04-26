@@ -10,7 +10,7 @@
 #include <fstream>
 #include <string>
 using namespace std;
-bool Settings::video_output = !false;   //can be shown through Idle Process
+bool Settings::video_output = false;   //can be shown through Idle Process
 bool Settings::undistort = true;
 bool Settings::calibrateCorners = false;
 bool Settings::preview = true;

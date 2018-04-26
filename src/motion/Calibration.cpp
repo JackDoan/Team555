@@ -17,9 +17,9 @@ void Calibration::display() {
     cv::resize(gs.frame, calSmall, cv::Size(), 0.5, 0.5);
     cv::cvtColor(calSmall, calSmall, cv::COLOR_HSV2RGB);
     imshow("Video", calSmall);
-    if (Settings::video_output) {
-        Supervisor::video.write(calSmall);
-    }
+//    if (Settings::video_output) {
+//        Supervisor::video.write(calSmall);
+//    }
 }
 
 bool Calibration::getFrame() {
@@ -41,7 +41,7 @@ void Calibration::run() {
     static bool speedDone = false;
     home();
     if(!speedDone) {
-        speed();
+       // speed();
         speedDone = true;
     }
 }

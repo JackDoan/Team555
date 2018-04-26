@@ -26,7 +26,7 @@
 #include "../inc/PlayTime.h"
 #include "../lib/PracticalSocket.h"
 
-cv::VideoWriter Supervisor::video = cv::VideoWriter("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
+cv::VideoWriter Supervisor::video = cv::VideoWriter("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cv::Size(Camera::getInstance().dimensions));
 DoubleBuffer Supervisor::previewBuf;
 cv::Mat& Supervisor::preview = previewBuf.active();
 bool Supervisor::timeToPushFrame = true;
@@ -486,9 +486,9 @@ void Supervisor::pushFrame(const GameState& gs) {
         if((++frameDelayer % 4) == 0)
             cv::imshow("Video", gs.frame);
 
-//        if (Settings::video_output) {
-//            Supervisor::video.write(gs.frame);
-//        }
+        if (Settings::video_output) {
+            Supervisor::video.write(gs.frame);
+        }
     }
 }
 
