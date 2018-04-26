@@ -63,6 +63,7 @@ private:
     static std::string cornerString;
     static char delim;
     static std::string filePath;
+    static void writeThreshold(const threshold_s& t, std::fstream& f);
 
 public:
     static bool video_output;   //can be shown through Idle Process

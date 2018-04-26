@@ -36,24 +36,6 @@ public:
     std::vector<std::vector<cv::Point_<int>>> pointField;
     std::vector<std::vector<Calibration::pointAndTime>> speedNumbers;
 
-    std::vector<pointAndTime> up;
-    std::vector<pointAndTime> left;
-    std::vector<pointAndTime> down;
-    std::vector<pointAndTime> right;
-    std::vector<pointAndTime> home2Top;
-    std::vector<pointAndTime> home2Left;
-    std::vector<pointAndTime> home2Bottom;
-    std::vector<pointAndTime> home2Right;
-
-//    double upTime;
-//    double leftTime;
-//    double downTime;
-//    double rightTime;
-//    double home2Top;
-//    double home2Left;
-//    double home2Bottom;
-//    double home2Right;
-};
 
 
 #endif //TEAM555_CALIBRATION_H

@@ -89,8 +89,17 @@ bool Settings::readConfigValues(const std::string& path) {
     }
 }
 
-
-
+void Settings::writeThreshold(const threshold_s& t, fstream& f) {
+    f << t.minH << ' '
+      << t.maxH << ' '
+      << t.minS << ' '
+      << t.maxS << ' '
+      << t.minV << ' '
+      << t.maxV << ' '
+      << t.minArea << ' '
+      << t.maxArea << ' '
+      << endl;
+}
 
 bool Settings::writeConfigValues(const string& path) {
     std::fstream f;
@@ -98,16 +107,8 @@ bool Settings::writeConfigValues(const string& path) {
     char buffer[50];
     if (f.is_open()) {
         f << cameraUndistortString << delim << undistort << endl;
-        f << malletLimitString << delim 
-            << malletLimits.minH << ' '
-            << malletLimits.maxH << ' '
-            << malletLimits.minS << ' '
-            << malletLimits.maxS << ' '
-            << malletLimits.minV << ' '
-            << malletLimits.maxV << ' '
-            << malletLimits.minArea << ' '
-            << malletLimits.maxArea << ' '
-            << endl;
+        f << malletLimitString << delim;
+        writeThreshold(malletLimits, f);
         f << puckLimitString << delim
             << puckLimits.minH << ' '
             << puckLimits.maxH << ' '
