@@ -49,19 +49,19 @@ bool Settings::processLine(fstream &f, char *buffer, unsigned int bufSize) {
             return true;
         }
         else if(strncmp(buffer, cameraUndistortString.c_str(), bufSize) == 0) {
-            f.get(); //throw out a ':'
-            f >> skipws >> boolalpha >> Settings::undistort;
+            //f.get(); //throw out a ':'
+            f >> skipws >> Settings::undistort;
         }
         else if(strncmp(buffer, malletLimitString.c_str(), bufSize) == 0) {
-            f.get(); //throw out a ':'
+            //f.get(); //throw out a ':'
             readThreshold(malletLimits, f);
         }
         else if(strncmp(buffer,puckLimitString.c_str() , bufSize) == 0) {
-            f.get(); //throw out a ':'
+            //f.get(); //throw out a ':'
             readThreshold(puckLimits, f);
         }
         else if(strncmp(buffer,cornerString.c_str() , bufSize) == 0) {
-            f.get(); //throw out a ':'
+            //f.get(); //throw out a ':'
             auto corners = Table::corners.getCorners();
 
             for(int i = 0; i < 4; i++) {
@@ -83,6 +83,8 @@ bool Settings::processLine(fstream &f, char *buffer, unsigned int bufSize) {
             //this wasn't a valid setting?
             return false;
         }
+        f.getline(buffer, bufSize);
+        return true;
     }
 }
 
@@ -99,9 +101,9 @@ bool Settings::readConfigValues(const std::string& path) {
         else {
             char buffer[256] = {};
             bool keepReading = true;
-//            while(keepReading) {
-//                keepReading = processLine(f, buffer, sizeof(buffer));
-//            }
+            while(keepReading) {
+                keepReading = processLine(f, buffer, sizeof(buffer));
+            }
 
         }
     }
@@ -135,7 +137,6 @@ void Settings::writeThreshold(const threshold_s& t, fstream& f) {
 bool Settings::writeConfigValues(const string& path) {
     std::fstream f;
     f.open("config.txt");
-    char buffer[50];
     if (f.is_open()) {
         f << cameraUndistortString << delim << undistort << endl;
         f << malletLimitString << delim;
@@ -151,7 +152,12 @@ bool Settings::writeConfigValues(const string& path) {
             << puckLimits.maxArea << ' '
             << endl;
         auto corners = Table::corners.getCorners();
-        f << cornerString << delim << corners[0] << ' ' << corners[1] << ' ' <<corners[2] << ' ' <<corners[3] << endl;
+        f << cornerString << delim
+            << corners[0].x << ' ' << corners[0].y << ' '
+            << corners[1].x << ' ' << corners[1].y << ' '
+            << corners[2].x << ' ' << corners[2].y << ' '
+            << corners[3].x << ' ' << corners[3].y << ' '
+            << endl;
 
     }
     else {
