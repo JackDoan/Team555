@@ -7,6 +7,7 @@
 
 
 #include <opencv2/videoio.hpp>
+
 #include "helpers.h"
 
 //this is a Singleton
@@ -25,6 +26,8 @@ class Camera {
         cv::Mat newCameraMatrix, map1, map2;
         cv::Mat cameraMatrix;
         cv::Mat distCoeffs;
+
+
     cv::Mat hsv;
     public:
         static Camera& getInstance() {
@@ -38,6 +41,7 @@ class Camera {
         ~Camera();
         void close();
         double getFrameRate();
+
 
         cv::Mat getFrame();
         //double calcFPS(int counter, bool active);

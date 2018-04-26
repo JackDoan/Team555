@@ -62,7 +62,9 @@ private:
     void decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo);
     static cv::Mat& preview;
     static DoubleBuffer previewBuf;
-    static void pushFrame();
+    //static void pushFrame();
+    static void pushFrame(const GameState& gs);
+    static void pushGLFrame();
     static bool timeToPushFrame;
     static bool pushNetworkFrame(const cv::Mat& send);
 

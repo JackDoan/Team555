@@ -41,6 +41,7 @@ void Supervisor::runCalibrateCorners() {
 
 void Supervisor::run() {
 
+
     // initializing class instances
     MotorDriver& motorDriver = MotorDriver::getInstance();
     motion = Motion();
@@ -235,7 +236,7 @@ void Supervisor::checkKeyboard() {
         case 'h':
             difficulty = HARD;
             break;
-        case 197:
+        case 197: //F8
             if (decisionMode == AUTOMATIC) {
                 decisionMode = MANUAL;
                 printf("Decision Mode set to MANUAL\n");
@@ -247,10 +248,23 @@ void Supervisor::checkKeyboard() {
         case 200: //F11 = toggle fullscreen
             cv::setWindowProperty("Video", CV_WND_PROP_FULLSCREEN, !cv::getWindowProperty("Video", CV_WND_PROP_FULLSCREEN));
             break;
-        case 199:
+        case 199: //F10, dont use
             Settings::network_video = !Settings::network_video;
             printf("Network Video toggled.\n");
             break;
+        case 191: {
+            MotorDriver::getInstance().stop();
+            Table::acceptMouseInput = true;
+            cv::Point_<int> toDraw = Table::home;
+            cv::setMouseCallback("Video", Table::mouseHelper, nullptr); //todo draw the corners
+            while (Table::acceptMouseInput) {
+                cv::displayOverlay("Video", "Select the corners, then click the middle of the table", 1000);
+                cv::waitKey(1);
+
+            }
+        }
+            break;
+
 
         default:
             if(key != -1) {
@@ -361,137 +375,210 @@ void Supervisor::makeDecision(GameState& gs) {
 
 
 void Supervisor::display(const GameState gs, const cv::Point_<int> movingTo) {
-    if(timeToPushFrame) {
-        timeToPushFrame = false;
-        if (Settings::network_video) {
-            auto handle = std::async(std::launch::async, pushFrame);
-        }
-        else {
-            pushFrame(); //todo threading
-        }
-        //frameBuf.toggle();
-        if(!gs.frame.empty()) {
-            decorate(gs, gs.frame, frameRate, movingTo);
-            //auto handle = std::async(std::launch::async, decorate, frameBuf.inactive(), frameRate, puck.lastLocation, puck.location, table.motionLimitMax, table.motionLimitMin, corners, puck.Goals);
-        }
-        else {
-            timeToPushFrame = true;
-        }
-    }
+//    if(timeToPushFrame) {
+//        timeToPushFrame = false;
+//        if (Settings::network_video) {
+//            auto handle = std::async(std::launch::async, pushFrame);
+//        }
+//        else {
+//            pushFrame(); //todo threading
+//        }
+//        //frameBuf.toggle();
+//        if(!gs.frame.empty()) {
+//            decorate(gs, gs.frame, frameRate, movingTo);
+//            //auto handle = std::async(std::launch::async, decorate, frameBuf.inactive(), frameRate, puck.lastLocation, puck.location, table.motionLimitMax, table.motionLimitMin, corners, puck.Goals);
+//        }
+//        else {
+//            timeToPushFrame = true;
+//        }
+//    }
+    decorate(gs, gs.frame, frameRate, movingTo);
+    pushFrame(gs);
 }
 
 void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo) {
     char tempStr[80] = {};
-    const double ratio = 0.5;
-    //cv::resize(in, previewBuf.active(), cv::Size(), 0.5, 0.5);
-    cv::resize(in, previewBuf.active(), cv::Size(), ratio, ratio);
-    cv::cvtColor(previewBuf.active(), previewBuf.active(), cv::COLOR_HSV2RGB);
-    sprintf(tempStr, "%3.0f %d,%d %d,%d   Mallet Dest: %d,%d", frameRate, gs.puck.lastLocation.x, gs.puck.lastLocation.y,
+    const double ratio = 1.0;
+    static const cv::QtFont font = cv::fontQt("Monospace", 30, cv::Scalar(255, 225, 0));
+    std::string modeStrings[] = {"Defending", "Attacking", "Fixing", "Bottom Text"};
+    int modeStringIndex = 0;
+
+    cv::cvtColor(in, in, cv::COLOR_HSV2RGB);
+    sprintf(tempStr, "FPS: %3.0f Puck Loc: %d,%d   Mallet Dest: %d,%d", frameRate,
             gs.puck.location.x, gs.puck.location.y, movingTo.x, movingTo.y);
 
+    std::vector<cv::Point_<int>> testTraj = Trajectory::newCalc(gs);
+    for(int i = 1; i < testTraj.size(); i ++) {
+        cv::line(in, testTraj[i]*ratio, testTraj[i-1]*ratio, cv::Scalar(255, 255, 255), 4);
+    }
 
     // drawing the motion limits
-    cv::rectangle(previewBuf.active(), Table::motionLimitMax * ratio, Table::motionLimitMin * ratio, cv::Scalar(210, 200, 0), 4);
-    cv::circle(previewBuf.active(), movingTo * ratio, 20, cv::Scalar(100, 200, 0), 4);
+    cv::rectangle(in, Table::motionLimitMax * ratio, Table::motionLimitMin * ratio, cv::Scalar(210, 200, 0), 4);
+    cv::circle(in, movingTo * ratio, 20, cv::Scalar(100, 200, 0), 4);
     // Draw Table borders
-    //Table::corners.drawSquareNew(previewBuf.active(), Table::corners.getCalibratedCorners());
+    Table::corners.drawSquareNew(in, Table::corners.getCorners());
 
-    //cv::line(previewBuf.active()Small,table.motionLimitMax,table.motionLimitMin,cv::Scalar(255,0,0),4);
-    cv::line(previewBuf.active(), Table::goals.goals[0] * ratio, Table::goals.goals[1] * ratio, cv::Scalar(180, 255, 255), 4);
-    cv::line(previewBuf.active(), Table::goals.goals[2] * ratio, Table::goals.goals[3] * ratio, cv::Scalar(180, 255, 255), 4);
-    cv::putText(previewBuf.active(), tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+    cv::line(in, Table::goals.goals[0] * ratio, Table::goals.goals[1] * ratio, cv::Scalar(180, 255, 255), 4);
+    cv::line(in, Table::goals.goals[2] * ratio, Table::goals.goals[3] * ratio, cv::Scalar(180, 255, 255), 4);
+    cv::addText(in, tempStr, cvPoint(10, 50), font);
 
     sprintf(tempStr, "Player: %d Robot: %d Time: %3.0f", playTime.playerPoints, playTime.robotPoints, playTime.remaining);
-    cv::putText(previewBuf.active(), tempStr, cvPoint(200, 345), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 255, 0), 2);
+    cv::addText(in, tempStr, cvPoint(550, 345*2), font);
     switch(playMode) {
         case DEFENSE:
-            cv::putText(previewBuf.active(), "Defending", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+            modeStringIndex = 0;
             break;
         case OFFENSE:
-            cv::putText(previewBuf.active(), "Attacking", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+            modeStringIndex = 1;
             break;
         case FIX:
-            cv::putText(previewBuf.active(), "Resetting", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+            modeStringIndex = 2;
             break;
         default:
-            cv::putText(previewBuf.active(), "Bottom Text", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+            modeStringIndex = 3;
             break;
     }
-    previewBuf.toggle();
+    cv::addText(in, modeStrings[modeStringIndex], cvPoint(35, 345*2), font);
 }
 
-void Supervisor::pushFrame() {
-    static int i = 0;
-    if (!previewBuf.inactive().empty()) {
-        if (Settings::network_video) { //every other frame
-            if(!(++i % 8)) {
-                i = 0;
-                pushNetworkFrame(previewBuf.inactive());
-            }
-        }
-        else {
-            cv::imshow("Video", previewBuf.inactive());
-        }
+//void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo) {
+//    char tempStr[80] = {};
+//    const double ratio = 0.5;
+//    //cv::resize(in, previewBuf.active(), cv::Size(), 0.5, 0.5);
+//    cv::resize(in, previewBuf.active(), cv::Size(), ratio, ratio);
+//    cv::cvtColor(previewBuf.active(), previewBuf.active(), cv::COLOR_HSV2RGB);
+//    sprintf(tempStr, "%3.0f %d,%d %d,%d   Mallet Dest: %d,%d", frameRate, gs.puck.lastLocation.x, gs.puck.lastLocation.y,
+//            gs.puck.location.x, gs.puck.location.y, movingTo.x, movingTo.y);
+//
+//    std::vector<cv::Point_<int>> testTraj = Trajectory::newCalc(gs);
+//    for(int i = 1; i < testTraj.size(); i ++) {
+//        cv::line(previewBuf.active(), testTraj[i]*ratio, testTraj[i-1]*ratio, cv::Scalar(255, 255, 255), 4);
+//    }
+//
+//    // drawing the motion limits
+//    cv::rectangle(previewBuf.active(), Table::motionLimitMax * ratio, Table::motionLimitMin * ratio, cv::Scalar(210, 200, 0), 4);
+//    cv::circle(previewBuf.active(), movingTo * ratio, 20, cv::Scalar(100, 200, 0), 4);
+//    // Draw Table borders
+//    //Table::corners.drawSquareNew(previewBuf.active(), Table::corners.getCalibratedCorners());
+//
+//    //cv::line(previewBuf.active()Small,table.motionLimitMax,table.motionLimitMin,cv::Scalar(255,0,0),4);
+//    cv::line(previewBuf.active(), Table::goals.goals[0] * ratio, Table::goals.goals[1] * ratio, cv::Scalar(180, 255, 255), 4);
+//    cv::line(previewBuf.active(), Table::goals.goals[2] * ratio, Table::goals.goals[3] * ratio, cv::Scalar(180, 255, 255), 4);
+//    cv::putText(previewBuf.active(), tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+//
+//    sprintf(tempStr, "Player: %d Robot: %d Time: %3.0f", playTime.playerPoints, playTime.robotPoints, playTime.remaining);
+//    cv::putText(previewBuf.active(), tempStr, cvPoint(200, 345), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 255, 0), 2);
+//    switch(playMode) {
+//        case DEFENSE:
+//            cv::putText(previewBuf.active(), "Defending", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+//            break;
+//        case OFFENSE:
+//            cv::putText(previewBuf.active(), "Attacking", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+//            break;
+//        case FIX:
+//            cv::putText(previewBuf.active(), "Resetting", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+//            break;
+//        default:
+//            cv::putText(previewBuf.active(), "Bottom Text", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+//            break;
+//    }
+//    previewBuf.toggle();
+//}
 
-        if (Settings::video_output) {
-            Supervisor::video.write(previewBuf.inactive());
-        }
+void Supervisor::pushFrame(const GameState& gs) {
+    static int frameDelayer = 0;
+    if (!gs.frame.empty()) {
+
+        if((++frameDelayer % 4) == 0)
+            cv::imshow("Video", gs.frame);
+
+//        if (Settings::video_output) {
+//            Supervisor::video.write(gs.frame);
+//        }
     }
-    timeToPushFrame = true;
+}
+
+//void Supervisor::pushFrame() {
+//    static int i = 0;
+//    if (!previewBuf.inactive().empty()) {
+//        if (Settings::network_video) { //every other frame
+//            if(!(++i % 8)) {
+//                i = 0;
+//                pushNetworkFrame(previewBuf.inactive());
+//            }
+//        }
+//        else {
+//            cv::imshow("Video", previewBuf.inactive());
+//        }
+//
+//        if (Settings::video_output) {
+//            Supervisor::video.write(previewBuf.inactive());
+//        }
+//    }
+//    timeToPushFrame = true;
+//}
+
+void Supervisor::pushGLFrame() {
+
+    cv::imshow("Video", previewBuf.inactive());
+
+    if (Settings::video_output) {
+        Supervisor::video.write(previewBuf.inactive());
+    }
 }
 
 bool Supervisor::pushNetworkFrame(const cv::Mat& send) {
-    static const string servAddress = "127.0.0.1"; // First arg: server address
-    static const unsigned short servPort = Socket::resolveService("1337", "udp");
-    static bool doOnce = true;
-    const int jpegqual =  20;
-    static vector < int > compression_params;
-    static vector < uchar > encoded;
-    if(doOnce) {
-
-        compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-        compression_params.push_back(jpegqual);
-        doOnce = false;
-    }
-
-#define FRAME_INTERVAL (1000/30)
-#define PACK_SIZE 4096 //udp pack size; note that OSX limits < 8100 bytes
-
-    try {
-        static UDPSocket sock;
-
-
-
-        static clock_t last_cycle = clock();
-
-        if(send.size().width==0) return false;//simple integrity check; skip erroneous data...
-
-        //resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
-
-
-        imencode(".jpg", send, encoded, compression_params);
-        //imshow("send", send);
-        int total_pack = 1 + (encoded.size() - 1) / PACK_SIZE;
-
-        int ibuf[1];
-        ibuf[0] = total_pack;
-        sock.sendTo(ibuf, sizeof(int), servAddress, servPort);
-
-        for (int i = 0; i < total_pack; i++)
-            sock.sendTo( & encoded[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
-
-        //waitKey(FRAME_INTERVAL);
-
-        clock_t next_cycle = clock();
-        double duration = (next_cycle - last_cycle) / (double) CLOCKS_PER_SEC;
-//        cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack / duration / 1024 * 8) << endl;
-
-//        cout << next_cycle - last_cycle;
-        last_cycle = next_cycle;
-
-
-    } catch (SocketException & e) {
-        cerr << e.what() << endl;
-        exit(1);
-    }
+//    static const string servAddress = "127.0.0.1"; // First arg: server address
+//    static const unsigned short servPort = Socket::resolveService("1337", "udp");
+//    static bool doOnce = true;
+//    const int jpegqual =  20;
+//    static vector < int > compression_params;
+//    static vector < uchar > encoded;
+//    if(doOnce) {
+//
+//        compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+//        compression_params.push_back(jpegqual);
+//        doOnce = false;
+//    }
+//
+//#define FRAME_INTERVAL (1000/30)
+//#define PACK_SIZE 4096 //udp pack size; note that OSX limits < 8100 bytes
+//
+//    try {
+//        static UDPSocket sock;
+//
+//
+//
+//        static clock_t last_cycle = clock();
+//
+//        if(send.size().width==0) return false;//simple integrity check; skip erroneous data...
+//
+//        //resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
+//
+//
+//        imencode(".jpg", send, encoded, compression_params);
+//        //imshow("send", send);
+//        int total_pack = 1 + (encoded.size() - 1) / PACK_SIZE;
+//
+//        int ibuf[1];
+//        ibuf[0] = total_pack;
+//        sock.sendTo(ibuf, sizeof(int), servAddress, servPort);
+//
+//        for (int i = 0; i < total_pack; i++)
+//            sock.sendTo( & encoded[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
+//
+//        //waitKey(FRAME_INTERVAL);
+//
+//        clock_t next_cycle = clock();
+//        double duration = (next_cycle - last_cycle) / (double) CLOCKS_PER_SEC;
+////        cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack / duration / 1024 * 8) << endl;
+//
+////        cout << next_cycle - last_cycle;
+//        last_cycle = next_cycle;
+//
+//
+//    } catch (SocketException & e) {
+//        cerr << e.what() << endl;
+//        exit(1);
+//    }
 }

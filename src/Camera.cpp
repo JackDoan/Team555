@@ -43,34 +43,7 @@ Camera::Camera(int nwidth, int nheight) {
     /*autovideosink*/
     //capture.open("tcambin ! video/x-raw,format=RGBx,width=1280,height=720,framerate=80/1 ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! appsink" );
                  /*autovideosink*/
-
-
-
 #endif
-//    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
-//    printf("Brightness: \t\t%f\n", capture.get(CV_CAP_PROP_BRIGHTNESS));
-//    printf("Contrast: \t\t%f\n", capture.get(CV_CAP_PROP_CONTRAST));
-//    printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
-//    printf("Hue: \t\t\t%f\n", capture.get(CV_CAP_PROP_HUE));
-//    printf("Gain: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAIN));
-//    printf("Exposure: \t\t%f\n", capture.get(CV_CAP_PROP_EXPOSURE));
-//    printf("Sharpness: \t\t%f\n", capture.get(CV_CAP_PROP_SHARPNESS));
-//    printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
-//    printf("******** INITIAL CAMERA DEVICE PROPERTIES *********\n");
-//    printf("******** SETTING CAMERA DEVICE PROPERTIES *********\n");
-    //capture.set(CV_CAP_PROP_CONVERT_RGB, true);
-//   capture.set(CV_CAP_PROP_SATURATION, 255);
- //   printf("Saturation: \t\t%f\n", capture.get(CV_CAP_PROP_SATURATION));
-//    capture.set(CV_CAP_PROP_GAIN, 77);
-//    printf("Gain: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAIN));
-//    capture.set(CV_CAP_PROP_EXPOSURE, -8);
-//    printf("Exposure: \t\t%f\n", capture.get(CV_CAP_PROP_EXPOSURE));
-//    capture.set(CV_CAP_PROP_SHARPNESS, 14);
-//    printf("Sharpness: \t\t%f\n", capture.get(CV_CAP_PROP_SHARPNESS));
-//    capture.set(CV_CAP_PROP_GAMMA, 67);
-//    printf("Gamma: \t\t\t%f\n", capture.get(CV_CAP_PROP_GAMMA));
-    printf("********** SET CAMERA DEVICE PROPERTIES ***********\n");
-
     if (!capture.isOpened()) {
         printf("OPENCV Capture failure!\n");
         exit(-123);
@@ -81,12 +54,9 @@ Camera::Camera(int nwidth, int nheight) {
     capture.set(CV_CAP_PROP_FRAME_HEIGHT, nheight);
 #endif
 
-    //capture.read(currentView);
     cv::initUndistortRectifyMap(cameraMatrix, distCoeffs, cv::Mat(),
                                 cameraMatrix, cv::Size(nwidth,nheight), CV_32FC1,map1, map2);
 
-    //capture.set(CV_CAP_PROP_FPS, table.fps);
-    //capture.set(CV_CAP_PROP_EXPOSURE, 2);
 
 }
 
@@ -99,18 +69,24 @@ Camera::~Camera() {
 
 
 cv::Mat Camera::getFrame() {
-    time_t s = clock();
     capture.read(currentView);
-    auto e = clock();
     cv::cvtColor(currentView, hsv, cv::COLOR_RGB2HSV);
-    auto b = clock();
     if (Settings::undistort) {
         remap(hsv, undistortedFrame, map1, map2, cv::INTER_LINEAR);
     }
-    time_t x = clock();
     //printf("%3.3f, %3.3f, %3.3f\n", difftime(e, s)/CLOCKS_PER_SEC,difftime(b, e)/CLOCKS_PER_SEC, difftime(x, b)/CLOCKS_PER_SEC);
     return undistortedFrame;
 }
+
+//cv::ogl::Texture2D Camera::getGLFrame() {
+//    capture.read(currentView);
+//    cv::cvtColor(currentView, hsv, cv::COLOR_RGB2HSV);
+//    if (Settings::undistort) {
+//        remap(hsv, undistortedFrame, map1, map2, cv::INTER_LINEAR);
+//    }
+//    return undistortedFrame;
+//}
+
 
 cv::Mat Camera::getHomography(std::vector<cv::Point_<int>> corners,
                                std::vector<cv::Point_<int>> Calibrated_corners){

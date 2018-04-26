@@ -54,6 +54,39 @@ void Table::setLimits() {
 
 }
 
+cv::Point_<int> Table::center = {1280/2, 720/2};
+cv::Point_<int> Table::centerRadius = {30,30};
+std::vector<cv::Point_<int>> Table::newCorners;
+bool Table::acceptMouseInput = false;
+void Table::mouseHelper( int event, int x, int y, int flag, void* data)
+{
+    if(acceptMouseInput) {
+        switch(event) {
+            case cv::EVENT_LBUTTONUP: {//corner selected
+                cv::Point_<int> clicked = {x, y};
+                if(within(clicked,center+centerRadius, center-centerRadius)) { //user has indicated they are done
+                    if(newCorners.size() == 4) { //we have what we need
+                        corners.setCorners(newCorners);
+                        setLimits();
+                        cv::displayOverlay("Video", "Corners updated!", 2000);
+                        acceptMouseInput = false;
+                    }
+                }
+                else { //not done yet
+                    newCorners.emplace(newCorners.begin(), clicked);
+                    newCorners.resize(4);
+                }
+                break;
+            }
+            case cv::EVENT_RBUTTONUP: //last corner deleted
+                break;
+            default: //ignore everything else
+                break;
+
+        }
+    }
+}
+
 const cv::Point_<int> Table::pixelsToSteps(const cv::Point_<int>& pixels) {
     return 4*(pixels - home);
 }

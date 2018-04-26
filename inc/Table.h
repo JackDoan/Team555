@@ -23,22 +23,10 @@ public:
 //    std::vector<cv::Point_<int>> offsets{{40, 40}, {-40, 40}, {40, -40}, {-40, -40}};
         std::vector<cv::Point_<int>> offsets{{40, 40}, {-40, 40}, {-40, -40}, {40, -40}};
 
-
-
-
-        std::vector<cv::Point_<int>> tempXa;
-        std::vector<cv::Point_<int>> tempYa;
-        std::vector<cv::Point_<int>> fcorners;
-
-
     public:
         std::vector<cv::Point_<int>> sortedX;
         std::vector<cv::Point_<int>> sortedY;
-//    static std::vector<cv::Point_<int>> corners;
-//    static std::vector<cv::Point_<int>> tempCorners;
-//    static std::vector<cv::Point_<int>> CalibratedCorners;
-//    static std::vector<cv::Point_<int>> offsets{ {40, 40}, {-40, 40}, {40, -40}, {-40, -40}};
-        void drawSquareOld(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector, std::vector<cv::Point_<int>> offsetsVector);
+
         void drawSquareNew(cv::Mat previewSmall, std::vector<cv::Point_<int>> calibratedVector);
         void drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector);
         void setCorners(std::vector<cv::Point_<int>> cornersVector);
@@ -50,9 +38,7 @@ public:
         std::vector<cv::Point_<int>> getCalibratedCorners();
         std::vector<cv::Point_<int>> getSortedX(std::vector<cv::Point_<int>> calibrated);
         std::vector<cv::Point_<int>> getSortedY(std::vector<cv::Point_<int>> calibrated);
-        Corners() {
-            Corners(false);
-        }
+        Corners() : Corners(false) {}
         explicit Corners(bool calibrate);
         ~Corners();
     };
@@ -107,7 +93,11 @@ public:
     static Corners corners;
     static Goals goals;
     static double walls[4][3];
-
+    static void mouseHelper( int event, int x, int y, int, void* );
+    static bool acceptMouseInput;
+    static cv::Point_<int> center;
+    static cv::Point_<int> centerRadius;
+    static std::vector<cv::Point_<int>> newCorners;
 
     Table() =default;
     ~Table();
