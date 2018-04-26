@@ -65,12 +65,7 @@ void Table::mouseHelper( int event, int x, int y, int flag, void* data)
             case cv::EVENT_LBUTTONUP: {//corner selected
                 cv::Point_<int> clicked = {x, y};
                 if(within(clicked,center+centerRadius, center-centerRadius)) { //user has indicated they are done
-                    if(newCorners.size() == 4) { //we have what we need
-                        corners.setCorners(newCorners);
-                        setLimits();
-                        cv::displayOverlay("Video", "Corners updated!", 2000);
-                        acceptMouseInput = false;
-                    }
+
                 }
                 else { //not done yet
                     newCorners.emplace(newCorners.begin(), clicked);
@@ -78,7 +73,16 @@ void Table::mouseHelper( int event, int x, int y, int flag, void* data)
                 }
                 break;
             }
-            case cv::EVENT_RBUTTONUP: //last corner deleted
+            case cv::EVENT_MBUTTONUP: //last corner deleted
+                if(newCorners.size() == 4) { //we have what we need
+                    corners.setCorners(newCorners);
+                    setLimits();
+
+                    acceptMouseInput = false;
+                }
+                else {
+                    cv::displayOverlay("Video", "Click more!", 2000);
+                }
                 break;
             default: //ignore everything else
                 break;
