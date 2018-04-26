@@ -23,16 +23,18 @@ void processCMD(char cmd, longbytes in);
 AccelStepper stepperX(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
 AccelStepper stepperY(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
 
-#define HOME_ACCEL 500.0
-#define X_ACCEL 10000.0
-#define Y_ACCEL 45000.0
+#define MICROSTEP_RATIO 1 
+
+#define HOME_ACCEL 500.0 * MICROSTEP_RATIO
+#define X_ACCEL 8000.0 * MICROSTEP_RATIO 
+#define Y_ACCEL 50000.0 * MICROSTEP_RATIO
 
 
 void setup() {
 	// put your setup code here, to run once:
-	stepperX.setMaxSpeed(400000.0);
+	stepperX.setMaxSpeed(X_ACCEL * MICROSTEP_RATIO);
 	stepperX.setAcceleration(X_ACCEL);
-	stepperY.setMaxSpeed(200000.0); //200000
+	stepperY.setMaxSpeed(Y_ACCEL* MICROSTEP_RATIO); //200000
 	stepperY.setAcceleration(Y_ACCEL); //30000
 	Serial.begin(115200);
 	pinMode(10,OUTPUT);
@@ -71,44 +73,44 @@ void processCMD(char cmd, longbytes rx) {
             break;
         case 'x':
 	    stepperX.setAcceleration(HOME_ACCEL);
-            stepperX.move(rx.l);
+            stepperX.move(rx.l* MICROSTEP_RATIO);
             break;
         case 'y':
 	    stepperY.setAcceleration(HOME_ACCEL);
-            stepperY.move(rx.l);
+            stepperY.move(rx.l* MICROSTEP_RATIO);
             break;
         case 'X':
 	    stepperX.setAcceleration(X_ACCEL);
-            stepperX.moveTo(rx.l);
+            stepperX.moveTo(rx.l* MICROSTEP_RATIO);
             break;
         case 'Y':
 	    stepperY.setAcceleration(Y_ACCEL);
-            stepperY.moveTo(rx.l);
+            stepperY.moveTo(rx.l* MICROSTEP_RATIO);
             break;
         case 'H':
             stepperX.setCurrentPosition(0);
             stepperY.setCurrentPosition(0);
             break;
         case 'O':
-            stepperX.setMaxSpeed((float) rx.l);
+            stepperX.setMaxSpeed((float) rx.l* MICROSTEP_RATIO);
             break;
         case '{':
-            stepperY.setMaxSpeed((float) rx.l);
+            stepperY.setMaxSpeed((float) rx.l* MICROSTEP_RATIO);
             break;
         case 'Q':
-            rx.l = stepperX.distanceToGo();
+            rx.l = stepperX.distanceToGo() / MICROSTEP_RATIO;
             break;
         case 'W':
-            rx.l = stepperY.distanceToGo();
+            rx.l = stepperY.distanceToGo() / MICROSTEP_RATIO;
             break;
         case 'f':
 		digitalWrite(10, !digitalRead(10));
 		break;
 	case '?':
             if (rx.b.lowest == 'y') {
-                stepCount.l = stepperY.currentPosition();
+                stepCount.l = stepperY.currentPosition()/ MICROSTEP_RATIO;
             } else {
-                stepCount.l = stepperX.currentPosition();
+                stepCount.l = stepperX.currentPosition()/ MICROSTEP_RATIO;
             }
             rx = stepCount;
             Serial.write("i?");

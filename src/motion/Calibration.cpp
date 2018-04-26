@@ -11,11 +11,15 @@
 #include "../../inc/Table.h"
 #include "../../inc/Settings.h"
 #include "../../inc/motion/Motion.h"
+#include "../../inc/Supervisor.h"
 
 void Calibration::display() {
     cv::resize(gs.frame, calSmall, cv::Size(), 0.5, 0.5);
     cv::cvtColor(calSmall, calSmall, cv::COLOR_HSV2RGB);
     imshow("Video", calSmall);
+    if (Settings::video_output) {
+        Supervisor::video.write(calSmall);
+    }
 }
 
 bool Calibration::getFrame() {
@@ -37,7 +41,7 @@ void Calibration::run() {
     static bool speedDone = false;
     home();
     if(!speedDone) {
-        ///speed();
+//        speed();
         speedDone = true;
     }
 }
@@ -105,6 +109,7 @@ std::vector<Calibration::pointAndTime> Calibration::moveTo(const cv::Point_<int>
          }
 
         display();
+
         if (cv::waitKey(1) >= 0) { break; }
     }
     return locsTimes;
@@ -132,7 +137,16 @@ void Calibration::speed() {
 //    moveTo(mallet, {Table::strikeLimitMin.x, Table::strikeLimitMax.y});
     const std::vector<Calibration::pointAndTime>* things[] = {&up, &left, &down, &right, &home2Top, &home2Left, &home2Bottom, &home2Right};
     std::vector<const char*> thingNames = {"Up", "Left", "Down", "Right", "home2Top", "home2Left", "home2Bottom", "home2Right"};
-    moveTo(Table::strikeLimitMax);
+    //moveTo(Table::strikeLimitMax);
+
+    /*while (cvWaitKey(1) != 'w') {
+        moveTo(cv::Point(Table::home.x, Table::strikeLimitMin.y));
+        moveTo(cv::Point(Table::home.x, Table::strikeLimitMax.y));
+    }*/
+//    while(cvWaitKey(1) != 'r') {
+//        moveTo(cv::Point(Table::strikeLimitMin.x, Table::home.y));
+//        moveTo(cv::Point(Table::strikeLimitMax.x, Table::home.y));
+//    }
     up = moveTo({Table::strikeLimitMax.x, Table::strikeLimitMin.y});
     left = moveTo(Table::strikeLimitMin);
     down = moveTo({Table::strikeLimitMin.x, Table::strikeLimitMax.y});
@@ -144,7 +158,10 @@ void Calibration::speed() {
     home2Bottom = moveTo({Table::home.x, Table::strikeLimitMax.y});
     moveTo(Table::home);
     home2Right = moveTo({Table::strikeLimitMax.x, Table::home.y});
+    moveTo(Table::strikeLimitMin);
+    moveTo(Table::strikeLimitMax);
     moveTo(Table::home);
+
 
     for (int i = 0; i < 8; i++) {
         char name[64];

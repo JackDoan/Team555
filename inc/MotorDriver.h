@@ -34,7 +34,7 @@ private:
     bool sendCMD(int steps, char axis);
     MotorDriver();
 public:
-    int deadband = 1;
+    int deadband = 10;
 //    Serial* SPx = new Serial("\\\\.\\COM4");
 //    Serial* SPy = new Serial("\\\\.\\COM5");
     static MotorDriver& getInstance() {

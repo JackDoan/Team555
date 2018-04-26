@@ -14,7 +14,7 @@
 
 
 Table::~Table() = default;
-const cv::Point_<int> Table::home = cv::Point_<int>(1100,370);
+const cv::Point_<int> Table::home = cv::Point_<int>(1110,370);
 cv::Point_<int> Table::max;
 cv::Point_<int> Table::min;
 cv::Point_<int> Table::strikeLimitMin;
@@ -37,10 +37,10 @@ void Table::setLimits() {
     max.y = corners.sortedY[3].y; printf("Setting max Y: %d\n", max.y);
 
     //todo make these ratios                adjust drawGoalVector after made into ratios
-    motionLimitMin.y = min.y + 60;
-    motionLimitMax.y = max.y - 60;
-    motionLimitMin.x = min.x + 770;
-    motionLimitMax.x = max.x - 100;
+    motionLimitMin.y = min.y + 70;
+    motionLimitMax.y = max.y - 70;
+    motionLimitMin.x = min.x + 870;
+    motionLimitMax.x = max.x - 95;
     motionLimit = cv::Rect_<int>(motionLimitMin,motionLimitMax);
 
     strikeLimitMin.y = motionLimitMin.y + 40;

@@ -14,6 +14,7 @@
 #include "Defense.h"
 #include "Offense.h"
 #include "Impulse.h"
+#include "ResetPuck.h"
 
 
 class Motion {
@@ -25,6 +26,7 @@ public:
     Calibration calibrate;
     Defense defense;
     Impulse impulse;
+    ResetPuck resetPuck;
 
     static hitVector_t findHitVector(GameState& gs, int ff);
     void calcPuckRange(cv::Point_<double> mallet2puck, cv::Point_<int>& puckPlus, cv::Point_<int>& puckMinus);

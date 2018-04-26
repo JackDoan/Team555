@@ -10,15 +10,15 @@
 #include <fstream>
 #include <string>
 
-bool Settings::video_output = false;   //can be shown through Idle Process
+bool Settings::video_output = !false;   //can be shown through Idle Process
 bool Settings::undistort = true;
 bool Settings::calibrateCorners = false;
 bool Settings::preview = true;
 
 struct threshold_s Settings::puckLimits = threshold_s(false);
 struct threshold_s Settings::malletLimits = threshold_s(true);
-bool Settings::threadFindingThings = puckLimits.debug & malletLimits.debug;
-bool Settings::network_video = true;
+bool Settings::threadFindingThings = !(puckLimits.debug & malletLimits.debug);
+bool Settings::network_video = !true;
 
 bool writeConfigValues(Table::Corners corners) {
     std::fstream configFile;

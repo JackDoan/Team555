@@ -11,8 +11,11 @@
 
 class GamePiece {
 public:
-    cv::Point_<int> location = Table::home;
-    cv::Point_<int> lastLocation = Table::home;
+//    cv::Point_<int> location = Table::home;
+//    cv::Point_<int> lastLocation = Table::home;
+
+    cv::Point_<int> location = {0,0};
+    cv::Point_<int> lastLocation = {0,0};
 
     bool found = false;
     bool onTable = false;
@@ -32,6 +35,7 @@ public:
 
 class GameStateFactory {
 public:
+    static GameState build();
     static GameState build(cv::Mat& in);
     static void findPieceThread(GamePiece& out, cv::Mat& in, struct threshold_s& limits);
     static GamePiece findPiece(cv::Mat& in, struct threshold_s& limits);
@@ -48,9 +52,19 @@ private:
     static void setStateInfo(GameState& gs);
 
 
-
 public:
     GameStateManager() = default;
+
+    static GameState get() {
+
+        auto gs = GameStateFactory::build();  //build a GS from the frame
+
+        setStateInfo(gs);                       //update it with what happened last time
+        update(gs);                             //fill in the history
+
+
+        return gs;                              //return the full object
+    }
 
     static GameState get(cv::Mat& in) {
         auto gs = GameStateFactory::build(in);  //build a GS from the frame

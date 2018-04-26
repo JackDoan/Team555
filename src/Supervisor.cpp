@@ -23,6 +23,7 @@
 #include "../inc/motion/Offense.h"
 #include "../inc/GameState.h"
 #include "../inc/motion/Trajectory.h"
+#include "../inc/PlayTime.h"
 #include "../lib/PracticalSocket.h"
 
 cv::VideoWriter Supervisor::video = cv::VideoWriter("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cvSize(640, 360));
@@ -39,6 +40,7 @@ void Supervisor::runCalibrateCorners() {
 }
 
 void Supervisor::run() {
+
     // initializing class instances
     MotorDriver& motorDriver = MotorDriver::getInstance();
     motion = Motion();
@@ -61,17 +63,23 @@ void Supervisor::run() {
     // main while loop that runs the robot
     while (keepGoing) {
         // calculating FPS
+
         calcFPS();
 
-        frameBuf.active() = camera.getFrame();
+//        frameBuf.active() = camera.getFrame();
+//
+//        // checking if frames are there
+//        if (frameBuf.active().empty()) {
+//            printf("No frames!\n");
+//            break;
+//        }
 
-        // checking if frames are there
-        if (frameBuf.active().empty()) {
-            printf("No frames!\n");
-            break;
-        }
+//        GameState gameState;
 
-        auto gameState = GameStateManager::get(frameBuf.active());
+//        if (mode == PLAY) {
+            auto gameState = GameStateManager::get(/*frameBuf.active()*/);
+//        }
+
         checkKeyboard();
 
         // check if keyboard input set keepGoing to false, if it did, jump to the top and quit
@@ -84,8 +92,14 @@ void Supervisor::run() {
             motion.calibrate.run();
             mode = PLAY;
         }
+
         else if(mode == PLAY) {
            // call the decide function that will set the playMode enum and then play
+            playTime.manage();
+            lostCnt = GameStateManager::getLostCnt();
+            if (!playTime.isPlaying) {
+                mode = IDLE;
+            }
             if (decisionMode == AUTOMATIC) {
                 makeDecision(gameState);
             }
@@ -93,18 +107,19 @@ void Supervisor::run() {
                 case OFFENSE:
                     // call offense
                     playState = OFFENDING;
-                    doneCheck = motion.offense.run(gameState);
+                    movingTo = motion.offense.run(gameState, frameRate);
                     break;
                 case FIX:
                     // call impulse
                     playState = FIXING;
+                    resetDone = motion.resetPuck.run(gameState, GameStateManager::getLostCnt());
                     ///doneCheck = resetPuck(motion, table, mallet, puck, frameBuf.active());
                     break;
                 case DEFENSE:
                 default:
                     // call defense
                     playState = DEFENDING;
-                    movingTo = motion.defense.run(gameState);
+                    movingTo = motion.defense.run(gameState, intersectPoint);
                     break;
             }
             if (Settings::preview == 1) {
@@ -114,6 +129,7 @@ void Supervisor::run() {
         else {
             idle();
         }
+       // printf("lostCnt = %d\n", GameStateManager::getLostCnt());
     }
 }
 
@@ -128,6 +144,25 @@ void Supervisor::calcFPS() {
 
     ++FrameCounter;
 }
+
+
+bool intersection(const cv::Point_<int>& o1, const cv::Point_<int>& p1, const cv::Point_<int>& o2, const cv::Point_<int>& p2,
+                  cv::Point_<int> &r)
+{
+    cv::Point_<int> x = o2 - o1;
+    cv::Point_<int> d1 = p1 - o1;
+    cv::Point_<int> d2 = p2 - o2;
+
+    float cross = d1.x*d2.y - d1.y*d2.x;
+    if (abs(cross) < 1e-6 || abs(cross) > 99999)
+        return false;
+
+    auto t1 = (x.x * d2.y - x.y * d2.x)/cross;
+    r = o1 + d1 * t1;
+    return true;
+}
+
+
 
 void Supervisor::checkKeyboard() {
     const int key = cv::waitKey(1);
@@ -153,6 +188,18 @@ void Supervisor::checkKeyboard() {
 //            Settings::threadFindingThings = false;
 //            mallet.toggleDebugInfo();
 //            break;
+        case '3':
+            // increment player goal count
+            if (playTime.isPlaying) {
+                playTime.incrementPlayerPoints();
+            }
+            break;
+        case '5':
+            // increment robot goal count
+            if (playTime.isPlaying) {
+                playTime.incrementRobotPoint();
+            }
+            break;
         case 'v':
             Settings::video_output = !Settings::video_output;
             printf("Video output: %d\n", Settings::video_output);
@@ -164,14 +211,19 @@ void Supervisor::checkKeyboard() {
         case 'a':
             printf("Motion Mode = Attack\n");
             playMode = OFFENSE;
-            motion.offense.reset();
             break;
         case 'w':
             mode = PLAY;
+            if (!playTime.isPlaying) {
+                playTime.beginGame();
+            }
             printf("Play Mode set to PLAY\n");
             break;
         case 'r':
             mode = IDLE;
+            if (playTime.isPlaying) {
+                playTime.endGame();
+            }
             printf("Play Mode set to IDLE\n");
             break;
         case 'e':
@@ -255,114 +307,71 @@ void Supervisor::makeDecision(GameState& gs) {
 
     auto traj = Trajectory::calculate(gs);
     auto magHistoryAvg = GameStateManager::getMagHistoryAvg();
-    switch (playState) {
-        case DEFENDING:
-            if (gs.goalFlag == Table::Goals::RIGHT_GOAL) {
-                playMode = DEFENSE;
-                break; ///Return immediately, we need to block.
+    need2Defend = false;
+    if (gs.puck.found) {
+        for(auto leg :gs.puckTraj) {
+            if(intersection(leg[0], leg[1], {Table::home.x, Table::motionLimitMax.y}, {Table::home.x, Table::motionLimitMin.y}, intersectPoint)) {
+                need2Defend = true;
+                break;
             }
-            if (within(Trajectory::predictLocation(gs.puck, 10), Table::strikeLimitMin, Table::strikeLimitMax)
-                && magHistoryAvg < 500 && gs.puck.location.x < gs.mallet.location.x
-                && motion.defense.getState() == ATHOME
-                && gs.puck.found && gs.mallet.found) {
-                playMode = OFFENSE;
-                doneCheck = false;
-            } else {
-                playMode = DEFENSE;
-            }
-            break;
-        // literally does nothing right now
-        /*case FIXING:
-            if (doneCheck|| puck.rightGoal) {
-                playMode = DEFENSE;
-                doneCheck = false;
-            } else {
-                playMode = FIX;
-            }
-            break;*/
-        case OFFENDING:
-            if (motion.offense.getState() == OFFENSEDONE || gs.goalFlag == Table::Goals::RIGHT_GOAL
-                || !within(Trajectory::predictLocation(gs.puck, 10), Table::strikeLimitMin, Table::strikeLimitMax)
-                || magHistoryAvg >= 500) {
-                motion.offense.setDone();
-                playMode = DEFENSE;
-                doneCheck = false;
-            } else {
-                playMode = OFFENSE;
-            }
-            break;
-        default:
+        }
+        if (need2Defend) {
             playMode = DEFENSE;
-            break;
-    }
-}
-
-void Supervisor::findPuck() {
-    // did we come into this call with FINDINGPUCK high or low?
-        // if high is the robot at the checking location?
-            // no, wait for the robot to get there (return)
-            // yes, is the puck found?
-                // yes, is it stationary on our side of the table?
-                // calculate an impulse stage position (might need two like draw a leg to get there)
-    // TODO: need to store the last found and last predicted location somewhere
-    // what was puck's last found location and last predicted location?
-    // are either of these in some x-range with the current robot location?
-        // if yes then set the playState to FINDINGPUCK
-        // need to move the robot forward a little bit to some set location
-        // once at this location
-}
-
-bool Supervisor::resetPuck(const GameState& gs) {
-    bool impulseDone = false;
-    bool toReturn = false;
-    if(resetState == RESETDONE) {
-        playState = FIXING;
-        if(gs.puck.onTable) {
-            resetState = RESETTING;
+        } else if (gs.puck.location.x < gs.mallet.location.x){
+            playMode = OFFENSE;
         } else {
-            resetState = CHECKING;
+            MotorDriver::getInstance().moveTo(Table::home);
         }
+
+        /*switch (playState) {
+            case DEFENDING:
+                if (gs.goalFlag == Table::Goals::RIGHT_GOAL) {
+                    playMode = DEFENSE;
+                    break; ///Return immediately, we need to block.
+                } else {
+                    playMode = OFFENSE;
+                }
+                break;
+                case FIXING:
+                    if (resetDone) {
+                        playMode = DEFENSE;
+                    } else {
+                        playMode = FIX;
+                    }
+                    break;
+            case OFFENDING:
+                if (gs.goalFlag == Table::Goals::RIGHT_GOAL) {
+                    playMode = DEFENSE;
+                } else {
+                    playMode = OFFENSE;
+                }
+                break;
+            default:
+                playMode = DEFENSE;
+                break;
+        }*/
+    } else {
+        // dont decide, use the last decision
     }
 
-    if (resetState == CHECKING) {
-        if (!stillMovingToCheck()) {
-            resetState = DONECHECKING;
-        }
-    }
-
-    if (resetState == DONECHECKING) {
-        if(gs.puck.onTable) {
-            resetState = RESETTING;
-        } else {
-            resetState = RESETDONE;
-        }
-    }
-
-    if (resetState == RESETTING) {
-        //impulseDone = motion.impulse.run(gs);
-        if (impulseDone) {
-            resetState = RESETDONE;
-            toReturn = true;
-        }
-    }
-
-
-    return toReturn;
 }
 
-bool Supervisor::stillMovingToCheck() {
 
-}
+
+
 
 void Supervisor::display(const GameState gs, const cv::Point_<int> movingTo) {
     if(timeToPushFrame) {
         timeToPushFrame = false;
-        auto handle = std::async(std::launch::async, pushFrame);
-        //pushFrame(); //todo threading
-        frameBuf.toggle();
-        //frameBuf.active() = frameBuf.active(); ///need to use both of these
-        if(!frameBuf.inactive().empty()) {
-            decorate(gs, frameBuf.inactive(), frameRate, movingTo);
+        if (Settings::network_video) {
+            auto handle = std::async(std::launch::async, pushFrame);
+        }
+        else {
+            pushFrame(); //todo threading
+        }
+        //frameBuf.toggle();
+        if(!gs.frame.empty()) {
+            decorate(gs, gs.frame, frameRate, movingTo);
             //auto handle = std::async(std::launch::async, decorate, frameBuf.inactive(), frameRate, puck.lastLocation, puck.location, table.motionLimitMax, table.motionLimitMin, corners, puck.Goals);
         }
         else {
@@ -373,23 +382,27 @@ void Supervisor::display(const GameState gs, const cv::Point_<int> movingTo) {
 
 void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo) {
     char tempStr[80] = {};
+    const double ratio = 0.5;
     //cv::resize(in, previewBuf.active(), cv::Size(), 0.5, 0.5);
-    cv::resize(in, previewBuf.active(), cv::Size(), 1.0, 1.0);
+    cv::resize(in, previewBuf.active(), cv::Size(), ratio, ratio);
     cv::cvtColor(previewBuf.active(), previewBuf.active(), cv::COLOR_HSV2RGB);
     sprintf(tempStr, "%3.0f %d,%d %d,%d   Mallet Dest: %d,%d", frameRate, gs.puck.lastLocation.x, gs.puck.lastLocation.y,
             gs.puck.location.x, gs.puck.location.y, movingTo.x, movingTo.y);
 
-    // drawing the motion limits
-    cv::rectangle(previewBuf.active(), Table::motionLimitMax, Table::motionLimitMin, cv::Scalar(210, 200, 0), 4);
-    cv::rectangle(previewBuf.active(), Table::strikeLimitMax, Table::strikeLimitMin, cv::Scalar(110, 200, 0), 4);
 
+    // drawing the motion limits
+    cv::rectangle(previewBuf.active(), Table::motionLimitMax * ratio, Table::motionLimitMin * ratio, cv::Scalar(210, 200, 0), 4);
+    cv::circle(previewBuf.active(), movingTo * ratio, 20, cv::Scalar(100, 200, 0), 4);
     // Draw Table borders
     //Table::corners.drawSquareNew(previewBuf.active(), Table::corners.getCalibratedCorners());
 
     //cv::line(previewBuf.active()Small,table.motionLimitMax,table.motionLimitMin,cv::Scalar(255,0,0),4);
-    cv::line(previewBuf.active(), Table::goals.goals[0], Table::goals.goals[1], cv::Scalar(180, 255, 255), 4);
-    cv::line(previewBuf.active(), Table::goals.goals[2], Table::goals.goals[3], cv::Scalar(180, 255, 255), 4);
+    cv::line(previewBuf.active(), Table::goals.goals[0] * ratio, Table::goals.goals[1] * ratio, cv::Scalar(180, 255, 255), 4);
+    cv::line(previewBuf.active(), Table::goals.goals[2] * ratio, Table::goals.goals[3] * ratio, cv::Scalar(180, 255, 255), 4);
     cv::putText(previewBuf.active(), tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
+
+    sprintf(tempStr, "Player: %d Robot: %d Time: %3.0f", playTime.playerPoints, playTime.robotPoints, playTime.remaining);
+    cv::putText(previewBuf.active(), tempStr, cvPoint(200, 345), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 255, 0), 2);
     switch(playMode) {
         case DEFENSE:
             cv::putText(previewBuf.active(), "Defending", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
@@ -410,15 +423,18 @@ void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_
 void Supervisor::pushFrame() {
     static int i = 0;
     if (!previewBuf.inactive().empty()) {
-        if (Settings::network_video && !(++i % 8)) { //every other frame
-            i = 0;
-            pushNetworkFrame(previewBuf.inactive());
-        } else {
-            //cv::imshow("Video", previewBuf.inactive());
+        if (Settings::network_video) { //every other frame
+            if(!(++i % 8)) {
+                i = 0;
+                pushNetworkFrame(previewBuf.inactive());
+            }
+        }
+        else {
+            cv::imshow("Video", previewBuf.inactive());
         }
 
         if (Settings::video_output) {
-            video.write(previewBuf.inactive());
+            Supervisor::video.write(previewBuf.inactive());
         }
     }
     timeToPushFrame = true;
@@ -428,7 +444,7 @@ bool Supervisor::pushNetworkFrame(const cv::Mat& send) {
     static const string servAddress = "127.0.0.1"; // First arg: server address
     static const unsigned short servPort = Socket::resolveService("1337", "udp");
     static bool doOnce = true;
-    const int jpegqual =  50;
+    const int jpegqual =  20;
     static vector < int > compression_params;
     static vector < uchar > encoded;
     if(doOnce) {
@@ -468,9 +484,9 @@ bool Supervisor::pushNetworkFrame(const cv::Mat& send) {
 
         clock_t next_cycle = clock();
         double duration = (next_cycle - last_cycle) / (double) CLOCKS_PER_SEC;
-        cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack / duration / 1024 * 8) << endl;
+//        cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack / duration / 1024 * 8) << endl;
 
-        cout << next_cycle - last_cycle;
+//        cout << next_cycle - last_cycle;
         last_cycle = next_cycle;
 
 

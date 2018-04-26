@@ -14,11 +14,27 @@ bool Defense::checkPastgoalFlags(std::vector<bool> goalFlagHistory) {
     }
 }
 
-cv::Point_<int> Defense::run(GameState& gs) {
+//stolen from https://stackoverflow.com/questions/7446126/opencv-2d-line-intersection-helper-function?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+/*bool intersection(const cv::Point_<int>& o1, const cv::Point_<int>& p1, const cv::Point_<int>& o2, const cv::Point_<int>& p2,
+                  cv::Point_<int> &r)
+{
+    cv::Point_<int> x = o2 - o1;
+    cv::Point_<int> d1 = p1 - o1;
+    cv::Point_<int> d2 = p2 - o2;
 
-    static cv::Point_<int> interceptSpot = Table::home;
+    float cross = d1.x*d2.y - d1.y*d2.x;
+    if (abs(cross) < *//*EPS*//*1e-8)
+        return false;
+
+    auto t1 = (x.x * d2.y - x.y * d2.x)/cross;
+    r = o1 + d1 * t1;
+    return true;
+}*/
+
+cv::Point_<int> Defense::run(GameState& gs, cv::Point_<int> intersection) {
+
     cv::Point_<int> desiredLocation = Table::home;
-    defenseDecision_t defenseDecision;
+    /*defenseDecision_t defenseDecision;
 
     // make defense decision based on current states and other inputs
     if (GameStateManager::checkPastGoalFlags()) {
@@ -26,6 +42,13 @@ cv::Point_<int> Defense::run(GameState& gs) {
         //calculate an intercept spot right off the bat if in THIS frame we think we are being scored on
         if (gs.goalFlag == Table::Goals::RIGHT_GOAL) { ///you need this or you segfault
             interceptSpot = gs.puckTraj.back()[0] + (gs.puckTraj.back()[1] - gs.puckTraj.back()[0]) * 0.7;
+            for(auto leg :gs.puckTraj) {
+                cv::Point_<int> intersectPoint;
+                if(intersection(leg[0], leg[1], {Table::home.x, Table::motionLimitMax.y}, {Table::home.x, Table::motionLimitMin.y}, intersectPoint)) {
+                    desiredLocation = intersectPoint;
+                    break;
+                }
+            }
         }
     }
     else {
@@ -69,9 +92,9 @@ cv::Point_<int> Defense::run(GameState& gs) {
         case ATHOME:
             desiredLocation = Table::home;
             break;
-    }
+    }*/
 
-    desiredLocation = saturate(desiredLocation, Table::motionLimitMin, Table::motionLimitMax);
+    desiredLocation = saturate(intersection, Table::motionLimitMin, Table::motionLimitMax);
     if (gs.mallet.onTable) {
         MotorDriver::getInstance().moveTo(desiredLocation);
     }

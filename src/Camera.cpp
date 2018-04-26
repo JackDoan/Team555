@@ -99,11 +99,16 @@ Camera::~Camera() {
 
 
 cv::Mat Camera::getFrame() {
+    time_t s = clock();
     capture.read(currentView);
+    auto e = clock();
     cv::cvtColor(currentView, hsv, cv::COLOR_RGB2HSV);
+    auto b = clock();
     if (Settings::undistort) {
         remap(hsv, undistortedFrame, map1, map2, cv::INTER_LINEAR);
     }
+    time_t x = clock();
+    //printf("%3.3f, %3.3f, %3.3f\n", difftime(e, s)/CLOCKS_PER_SEC,difftime(b, e)/CLOCKS_PER_SEC, difftime(x, b)/CLOCKS_PER_SEC);
     return undistortedFrame;
 }
 

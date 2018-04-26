@@ -60,16 +60,20 @@ bool MotorDriver::stop() {
 }
 
 bool MotorDriver::moveTo(const cv::Point_<int> &in) { ///this takes pixels now!
+    static cv::Point_<int> lastPos = Table::home;
+    const cv::Point_<int> db = {deadband, deadband};
     cv::Point_<int> toMove = Table::pixelsToSteps(saturate(in, Table::motionLimitMin, Table::motionLimitMax));
-//    if (abs(toMove.x) <= deadband) {
-//        toMove.x = 0;
-//    }
-//    if (abs(toMove.y) <= deadband) {
-//        toMove.y = 0;
-//    }
+    if(!within(toMove, lastPos-db, lastPos+db)) { //if we're NOT in the deadband
+        sendCMD(toMove.y, 'Y');
+        sendCMD(-1 * toMove.x, 'X');
+        lastPos = toMove;
+    }
+    else {
+        //do nothing?
+    }
+
 //    printf("MotorDriver: Going to %d,%d\n", toMove.x, toMove.y);
-    sendCMD(toMove.y, 'Y');
-    sendCMD(-1 * toMove.x, 'X');
+
     return true; //sendCMD(-1 * toMove.x, 'X') && sendCMD(toMove.y, 'Y');
 }
 

@@ -15,6 +15,28 @@ int GameStateManager::lostCnt = 0;
 
 ///Takes in a frame, annotates it, and returns a class with data about
 ///what was in the frame.
+GameState GameStateFactory::build() {
+
+    time_t e;
+    GameState toReturn;
+    toReturn.frame = Camera::getInstance().getFrame();
+
+    // if threadIt is set high we thread the contour searching process
+    if(Settings::threadFindingThings) {
+        std::thread puckThread(&GameStateFactory::findPieceThread, std::ref(toReturn.puck), std::ref(toReturn.frame), std::ref(Settings::puckLimits));
+        std::thread malletThread(&GameStateFactory::findPieceThread, std::ref(toReturn.mallet), std::ref(toReturn.frame), std::ref(Settings::malletLimits));
+        puckThread.join();
+
+        malletThread.join();
+    }
+//    else {
+//        toReturn.puck   = findPiece(toReturn.frame, Settings::puckLimits);
+//        toReturn.mallet = findPiece(toReturn.frame, Settings::malletLimits);
+//    }
+
+    return toReturn;
+}
+
 GameState GameStateFactory::build(cv::Mat &in) {
     GameState toReturn;
     // if threadIt is set high we thread the contour searching process
@@ -112,6 +134,7 @@ GamePiece GameStateFactory::findPiece(cv::Mat& in, struct threshold_s& limits) {
 
 void GameStateManager::setStateInfo(GameState& gs) {
     GameState lastGs = GameState();
+    const int db = 8;
     if(history.size() > 2) { //if there even was a previous state
         lastGs = history[1];
     }
@@ -123,12 +146,29 @@ void GameStateManager::setStateInfo(GameState& gs) {
     }
     setStateInfo(gs.puck, lastGs.puck);
     setStateInfo(gs.mallet, lastGs.mallet);
-
-    gs.puckTraj = Trajectory::calculate(gs);
+    if(within(gs.puck.location,
+            cvPoint(lastGs.puck.location.x-db, lastGs.puck.location.y-db),
+            cvPoint(lastGs.puck.location.x+db, lastGs.puck.location.y+db))
+            ) {
+//            gs.puck.location = lastGs.puck.location;
+    } else {
+        gs.puckTraj = Trajectory::calculate(gs);
+    }
 }
 
 void GameStateManager::setStateInfo(GamePiece& current, const GamePiece& past) {
+
+
     if(current.found) {
+        /*if(within(
+                current.location,
+                cvPoint(past.location.x-db, past.location.y-db),
+                cvPoint(past.location.x+db, past.location.y+db))
+                ) {
+            current.location = past.location;
+
+        }*/
+
         current.lastLocation = past.location;
     }
     else {

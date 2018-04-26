@@ -21,6 +21,7 @@
 #include "motion/Motion.h"
 #include "DoubleBuffer.h"
 #include "states.h"
+#include "PlayTime.h"
 
 
 class Supervisor {
@@ -36,6 +37,10 @@ private:
     playState_t playState = DEFENDING;
     resetState_t resetState = RESETDONE;
     decisionMode_t decisionMode = AUTOMATIC;
+    bool resetDone = false;
+    bool need2Defend = false;
+    cv::Point_<int> intersectPoint;
+    int lostCnt;
 
     DoubleBuffer frameBuf;
 
@@ -64,6 +69,7 @@ private:
 
 
 public:
+    PlayTime playTime;
 
     double frameRate = 0;
     static cv::VideoWriter video;
