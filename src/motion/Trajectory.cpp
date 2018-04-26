@@ -179,14 +179,30 @@ std::vector<cv::Point_<int>> Trajectory::newCalc(GameState& gs) {
                 }
 
             }
+            cv::Point_<int> t = {abs(nextPoint.x - toReturn[i].x), abs(nextPoint.y - toReturn[i].y)};
+            cv::Point_<int> c = {abs(intersection.x - toReturn[i].x), abs(intersection.y - toReturn[i].y)};
+            cv::Point_<int> l = t - c;
+            cv::Point_<int> nextnextPoint;
+
+            if (bounces[0] || bounces[2]) {
+                l.x = -1* l.x;
+                nextPoint = intersection + l;
+                nextnextPoint = nextPoint + cv::Point(-1 * t.x, t.y);
+                i++;
+            } else if (bounces[1] || bounces[3]) {
+                l.y = -1 * l.y;
+                nextPoint = intersection + l;
+                nextnextPoint = nextPoint + cv::Point(t.x, -1 * t.y);
+                i++;
+            }
+
                 // calculate next point after bounce
-            double magorig = sqrt(pow(toReturn[i].x - toReturn[i-1].x, 2) +
+            /*double magorig = sqrt(pow(toReturn[i].x - toReturn[i-1].x, 2) +
                                   pow(toReturn[i].y - toReturn[i-1].y, 2));
             double magclipped = sqrt(pow(intersection.x - toReturn[i-1].x, 2) +
                                      pow(intersection.y - toReturn[i-1].y, 2));
             double magrat = magclipped / magorig;
 
-            cv::Point_<int> nextnextPoint;
             if (bounces[0] || bounces[2]) {
                 nextPoint.x = (int)(round((toReturn[i-1].x - toReturn[i].x) * (1 - magrat))) + intersection.x;
                 nextPoint.y = (int)(round((toReturn[i].y - toReturn[i-1].y) * (1 - magrat))) + intersection.y;
@@ -199,7 +215,7 @@ std::vector<cv::Point_<int>> Trajectory::newCalc(GameState& gs) {
                 nextnextPoint.x = nextPoint.x + (toReturn[i].x - toReturn[i-1].x);
                 nextnextPoint.y = nextPoint.y + (toReturn[i-1].y - toReturn[i].y);
                 i++;
-            }
+            }*/
             toReturn.emplace_back(nextPoint);
             toReturn.emplace_back(nextnextPoint);
         } else {
