@@ -171,7 +171,7 @@ void Calibration::speed() {
         moveTo(Table::home);
         cvWaitKey(200);
         for (int i = 0; i < pointField.size(); i++) {
-            std::vector<Calibration::pointAndTime> rowVector;
+            std::vector<double> rowVector;
             for (int j = 0; j < pointField[i].size(); j++) {
                 rowVector.emplace_back(moveTo(pointField[i][j]));
                 cvWaitKey(200);
