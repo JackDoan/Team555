@@ -14,6 +14,7 @@ private:
     bool getFrame();
     void display();
     GameState gs;
+    void generatePointField(int length);
 
     clock_t yHome2EdgeTime;
     clock_t yEdge2EdgeTime;
@@ -28,9 +29,12 @@ public:
         cv::Point_<int> location;
         double time;
     } pointAndTime;
-    std::vector<pointAndTime> moveTo(const cv::Point_<int>& destination);
+    pointAndTime moveTo(const cv::Point_<int>& destination);
     double calculateTXDelay(std::vector<Calibration::pointAndTime> input);
     void run();
+
+    std::vector<std::vector<cv::Point_<int>>> pointField;
+    std::vector<std::vector<Calibration::pointAndTime>> speedNumbers;
 
     std::vector<pointAndTime> up;
     std::vector<pointAndTime> left;

@@ -41,7 +41,7 @@ void Calibration::run() {
     static bool speedDone = false;
     home();
     if(!speedDone) {
-//        speed();
+        speed();
         speedDone = true;
     }
 }
@@ -81,20 +81,18 @@ void Calibration::home() {
     printf("Homing complete!\n");
 }
 
-std::vector<Calibration::pointAndTime> Calibration::moveTo(const cv::Point_<int>& destination) {
+Calibration::pointAndTime Calibration::moveTo(const cv::Point_<int>& destination) {
     MotorDriver& motorDriver = MotorDriver::getInstance();
     double timeDelta = 0.0;
     clock_t start;
     bool done = false;
     start = clock();
-    std::vector<Calibration::pointAndTime> locsTimes;
     Calibration::pointAndTime tmp;
     while(!done) {
 
         if(!getFrame()) { break; }
-        tmp.location = gs.mallet.location;
+        tmp.location = destination;
         tmp.time = ((clock() - start) / (double) CLOCKS_PER_SEC);
-        locsTimes.emplace_back(tmp);
         if (!gs.mallet.found) {
             printf("Mallet not found!\n");
             if (cv::waitKey(1) >= 0)
@@ -104,7 +102,7 @@ std::vector<Calibration::pointAndTime> Calibration::moveTo(const cv::Point_<int>
             printf("Motion::calGoto: Moving from (%d,%d) to (%d,%d)\n",gs.mallet.location.x, gs.mallet.location.y,  destination.x, destination.y);
             motorDriver.moveTo(destination);
         }
-        if (Motion::isAt(gs.mallet.location, destination, 30)) {
+        if (Motion::isAt(gs.mallet.location, destination, 5)) {
             done = true; //todo 30 is too big
          }
 
@@ -112,7 +110,7 @@ std::vector<Calibration::pointAndTime> Calibration::moveTo(const cv::Point_<int>
 
         if (cv::waitKey(1) >= 0) { break; }
     }
-    return locsTimes;
+    return tmp;
 }
 
 void pATtoCSV(const std::vector<Calibration::pointAndTime>& in, const char* name) {
@@ -130,53 +128,65 @@ void pATtoCSV(const std::vector<Calibration::pointAndTime>& in, const char* name
     fclose(f);
 }
 
-void Calibration::speed() {
-//    moveTo(mallet, {Table::home.x, Table::strikeLimitMax.y});
-//    moveTo(mallet, {Table::home.x, Table::strikeLimitMin.y});
-//    moveTo(mallet, {Table::strikeLimitMax.x, Table::strikeLimitMax.y});
-//    moveTo(mallet, {Table::strikeLimitMin.x, Table::strikeLimitMax.y});
-    const std::vector<Calibration::pointAndTime>* things[] = {&up, &left, &down, &right, &home2Top, &home2Left, &home2Bottom, &home2Right};
-    std::vector<const char*> thingNames = {"Up", "Left", "Down", "Right", "home2Top", "home2Left", "home2Bottom", "home2Right"};
-    //moveTo(Table::strikeLimitMax);
-
-    /*while (cvWaitKey(1) != 'w') {
-        moveTo(cv::Point(Table::home.x, Table::strikeLimitMin.y));
-        moveTo(cv::Point(Table::home.x, Table::strikeLimitMax.y));
-    }*/
-//    while(cvWaitKey(1) != 'r') {
-//        moveTo(cv::Point(Table::strikeLimitMin.x, Table::home.y));
-//        moveTo(cv::Point(Table::strikeLimitMax.x, Table::home.y));
-//    }
-    up = moveTo({Table::strikeLimitMax.x, Table::strikeLimitMin.y});
-    left = moveTo(Table::strikeLimitMin);
-    down = moveTo({Table::strikeLimitMin.x, Table::strikeLimitMax.y});
-    right = moveTo(Table::strikeLimitMax);
-    home2Top = moveTo({Table::home.x, Table::strikeLimitMin.y});
-    moveTo(Table::home);
-    home2Left = moveTo({Table::strikeLimitMin.x, Table::home.y});
-    moveTo(Table::home);
-    home2Bottom = moveTo({Table::home.x, Table::strikeLimitMax.y});
-    moveTo(Table::home);
-    home2Right = moveTo({Table::strikeLimitMax.x, Table::home.y});
-    moveTo(Table::strikeLimitMin);
-    moveTo(Table::strikeLimitMax);
-    moveTo(Table::home);
+bool isSquare(int n) {
+    if (n < 0)
+        return false;
+    int root(round(sqrt(n)));
+    return n == root * root;
+}
 
 
-    for (int i = 0; i < 8; i++) {
-        char name[64];
-        snprintf(name, sizeof(name), "%s.csv", thingNames[i]);
-        pATtoCSV(*things[i], name);
+void Calibration::generatePointField (int length) {
+
+    if (!isSquare(length)) {
+        printf("Point field was not generated, input was not square\n");
+        return;
     }
 
-    printf("up: %f\nleft: %f\ndown: %f\nright: %f\n", up.back().time, left.back().time, down.back().time, right.back().time);
-    printf("home2Top: %f\nhome2Left: %f\nhome2Bottom: %f\nhome2Right: %f\n", home2Top.back().time, home2Left.back().time, home2Bottom.back().time, home2Right.back().time);
+    int xlen = Table::motionLimitMax.x - Table::motionLimitMin.x;
+    int ylen = Table::motionLimitMax.y - Table::motionLimitMin.y;
+    double xstep = (double)xlen/(double)length;
+    double ystep = (double)ylen/(double)length;
 
-    // todo: test this
-    double upDelay = calculateTXDelay(up);
-    printf("up TX delay = %f\n", upDelay);
-    double leftDelay = calculateTXDelay(left);
-    printf("left TX delay = %f\n", leftDelay);
+    int xpos, ypos;
+    std::vector<cv::Point_<int>> rowVector;
+
+    for (int i = 0; i < length; i++) {
+        ypos = round(Table::motionLimitMin.y + ystep * i);
+        for (int j = 0; j < length; j++) {
+            xpos = round(Table::motionLimitMin.x + xstep * j);
+            rowVector.emplace_back(xpos, ypos);
+        }
+        pointField.emplace_back(rowVector);
+    }
+
+}
+
+
+void Calibration::speed() {
+    int fieldSize = 4;
+    generatePointField(fieldSize);
+
+    while (cvWaitKey(1) != 't') {
+        moveTo(Table::home);
+        cvWaitKey(200);
+        for (int i = 0; i < pointField.size(); i++) {
+            std::vector<Calibration::pointAndTime> rowVector;
+            for (int j = 0; j < pointField[i].size(); j++) {
+                rowVector.emplace_back(pointField[i][j]);
+                cvWaitKey(200);
+            }
+            speedNumbers.emplace_back(rowVector);
+        }
+    }
+
+    /*for (int i = 0; i < 8; i++) {
+        char name[64];
+        snprintf(name, sizeof(name), "%d.csv", i);
+        pATtoCSV(*things[i], name);
+    }*/
+
+
 }
 
 

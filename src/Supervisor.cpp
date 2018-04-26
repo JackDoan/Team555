@@ -408,8 +408,8 @@ void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_
             gs.puck.location.x, gs.puck.location.y, movingTo.x, movingTo.y);
 
     std::vector<cv::Point_<int>> testTraj = Trajectory::newCalc(gs);
-    for(int i = 1; i < testTraj.size(); i ++) {
-        cv::line(in, testTraj[i]*ratio, testTraj[i-1]*ratio, cv::Scalar(255, 255, 255), 4);
+    for(int i = 0; i < testTraj.size(); i ++) {
+        cv::circle(in, testTraj[i], 2, cv::Scalar(255, 255, 255), 4);
     }
 
     // drawing the motion limits
