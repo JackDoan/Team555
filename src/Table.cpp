@@ -58,8 +58,7 @@ cv::Point_<int> Table::center = {1280/2, 720/2};
 cv::Point_<int> Table::centerRadius = {30,30};
 std::vector<cv::Point_<int>> Table::newCorners;
 bool Table::acceptMouseInput = false;
-void Table::mouseHelper( int event, int x, int y, int flag, void* data)
-{
+void Table::mouseHelper( int event, int x, int y, int flag, void* data) {
     if(acceptMouseInput) {
         switch(event) {
             case cv::EVENT_LBUTTONUP: {//corner selected
@@ -75,9 +74,9 @@ void Table::mouseHelper( int event, int x, int y, int flag, void* data)
             }
             case cv::EVENT_MBUTTONUP: //last corner deleted
                 if(newCorners.size() == 4) { //we have what we need
-                    corners.setCorners(newCorners);
+                    corners.setCorners(newCorners); //update things
+                    goals.recalculate(corners);
                     setLimits();
-
                     acceptMouseInput = false;
                 }
                 else {

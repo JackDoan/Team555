@@ -248,23 +248,17 @@ void Supervisor::checkKeyboard() {
         case 200: //F11 = toggle fullscreen
             cv::setWindowProperty("Video", CV_WND_PROP_FULLSCREEN, !cv::getWindowProperty("Video", CV_WND_PROP_FULLSCREEN));
             break;
-        case 199: //F10, dont use
-            Settings::network_video = !Settings::network_video;
-            printf("Network Video toggled.\n");
-            break;
         case 191: {
             MotorDriver::getInstance().stop();
             Table::acceptMouseInput = true;
-            cv::Point_<int> toDraw = Table::home;
             cv::setMouseCallback("Video", Table::mouseHelper, nullptr); //todo draw the corners
             while (Table::acceptMouseInput) {
-                cv::displayOverlay("Video", "Select the corners, then click the middle of the table", 1000);
+                cv::displayOverlay("Video", "Select the corners, then click middle click", 1000);
                 cv::waitKey(1);
-
             }
-        }
+            Settings::writeConfigValues();
+            }
             break;
-
 
         default:
             if(key != -1) {

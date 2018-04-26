@@ -18,9 +18,6 @@ public:
 
     class Corners {
         std::vector<cv::Point_<int>> corners;
-        std::vector<cv::Point_<int>> tempCorners;
-        std::vector<cv::Point_<int>> CalibratedCorners;
-//    std::vector<cv::Point_<int>> offsets{{40, 40}, {-40, 40}, {40, -40}, {-40, -40}};
         std::vector<cv::Point_<int>> offsets{{40, 40}, {-40, 40}, {-40, -40}, {40, -40}};
 
     public:
@@ -28,14 +25,8 @@ public:
         std::vector<cv::Point_<int>> sortedY;
 
         void drawSquareNew(cv::Mat previewSmall, std::vector<cv::Point_<int>> calibratedVector);
-        void drawLabels(cv::Mat previewSmall, std::vector<cv::Point_<int>> cornersVector);
         void setCorners(std::vector<cv::Point_<int>> cornersVector);
         std::vector<cv::Point_<int>> getCorners();
-        void setOffsets(std::vector<cv::Point_<int>>);
-        std::vector<cv::Point_<int>> getOffsets();
-        //void calibrateCorners(cv::Mat frame, cv::Mat previewSmall, Table table, Puck puck);
-        void setCalibratedCorners(std::vector<cv::Point_<int>> calibratedVector);
-        std::vector<cv::Point_<int>> getCalibratedCorners();
         std::vector<cv::Point_<int>> getSortedX(std::vector<cv::Point_<int>> calibrated);
         std::vector<cv::Point_<int>> getSortedY(std::vector<cv::Point_<int>> calibrated);
         Corners() : Corners(false) {}
@@ -64,6 +55,10 @@ public:
         const int goalPush = 0;
 
         explicit Goals(const Corners& corners) {
+            recalculate(corners);
+        }
+
+        void recalculate(const Corners& corners) {
             L_mid = cvPoint(corners.sortedX[1].x, 715/2);
             R_mid = cvPoint(corners.sortedX[2].x, 740/2);
             L_top = {L_mid.x, L_mid.y + 30 + goalScale};

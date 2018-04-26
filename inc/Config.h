@@ -10,6 +10,6 @@
 #include "Corners.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
-    bool writeConfigValues(Table::Corners corners);
+
 
 #endif //TEAM555_CONFIG_H
