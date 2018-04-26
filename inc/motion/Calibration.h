@@ -29,12 +29,12 @@ public:
         cv::Point_<int> location;
         double time;
     } pointAndTime;
-    pointAndTime moveTo(const cv::Point_<int>& destination);
+    double moveTo(const cv::Point_<int>& destination);
     double calculateTXDelay(std::vector<Calibration::pointAndTime> input);
     void run();
 
     std::vector<std::vector<cv::Point_<int>>> pointField;
-    std::vector<std::vector<Calibration::pointAndTime>> speedNumbers;
+    std::vector<std::vector<double>> speedNumbers;
 
 
 

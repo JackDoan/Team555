@@ -81,7 +81,7 @@ void Calibration::home() {
     printf("Homing complete!\n");
 }
 
-Calibration::pointAndTime Calibration::moveTo(const cv::Point_<int>& destination) {
+double Calibration::moveTo(const cv::Point_<int>& destination) {
     MotorDriver& motorDriver = MotorDriver::getInstance();
     double timeDelta = 0.0;
     clock_t start;
@@ -110,7 +110,7 @@ Calibration::pointAndTime Calibration::moveTo(const cv::Point_<int>& destination
 
         if (cv::waitKey(1) >= 0) { break; }
     }
-    return tmp;
+    return tmp.time;
 }
 
 void pATtoCSV(const std::vector<Calibration::pointAndTime>& in, const char* name) {
@@ -171,9 +171,9 @@ void Calibration::speed() {
         moveTo(Table::home);
         cvWaitKey(200);
         for (int i = 0; i < pointField.size(); i++) {
-            std::vector<Calibration::pointAndTime> rowVector;
+            std::vector<double> rowVector;
             for (int j = 0; j < pointField[i].size(); j++) {
-                rowVector.emplace_back(pointField[i][j]);
+                rowVector.emplace_back(moveTo(pointField[i][j]));
                 cvWaitKey(200);
             }
             speedNumbers.emplace_back(rowVector);
