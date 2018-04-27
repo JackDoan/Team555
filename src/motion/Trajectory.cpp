@@ -183,13 +183,27 @@ std::vector<cv::Point_<int>> Trajectory::newCalc(GameState& gs) {
             cv::Point_<int> clipped = {abs(intersection.x - toReturn[i].x), abs(intersection.y - toReturn[i].y)};
             cv::Point_<int> leftover = total - clipped;
             cv::Point_<int> nextnextPoint;
-
-            if (bounces[0] || bounces[2]) { //vertical bounce, but not a goal
+            int xdir;
+            int ydir;
+            if (toReturn[i].x - toReturn[i-1].x < 0) {
+                xdir = -1;
+            } else {
+                xdir = 1;
+            }
+            if (toReturn[i].y - toReturn[i-1].y < 0) {
+                ydir = -1;
+            } else {
+                ydir = 1;
+            }
+            if (bounces[0] || bounces[2]) {
                 leftover.x = -1* leftover.x;
+                leftover.y = ydir * leftover.y;
                 nextPoint = intersection + leftover;
                 nextnextPoint = nextPoint + cv::Point(-1 * total.x, total.y);
                 i++;
-            } else if (bounces[1] || bounces[3]) { //horiz bounce (aligned with ESPN)
+            } else if (bounces[1] || bounces[3]) {
+                leftover.x = xdir * leftover.x;
+
                 leftover.y = -1 * leftover.y;
                 nextPoint = intersection + leftover;
                 nextnextPoint = nextPoint + cv::Point(total.x, -1 * total.y);
