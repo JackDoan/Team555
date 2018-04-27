@@ -42,10 +42,6 @@ private:
     cv::Point_<int> intersectPoint;
     int lostCnt;
 
-    DoubleBuffer frameBuf;
-
-    long firstTimestamp = 0;
-
     time_t start = 0;
     time_t end = 0;
     time_t idleStart = 0;
@@ -55,20 +51,11 @@ private:
     Motion motion;
     difficulty_t difficulty = HARD;
     long FrameCounter = 0;
-    bool sendGetButtons;
     bool keepGoing;
     bool doneCheck;
     cv::Mat idleImage;
     void decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo);
-    static cv::Mat& preview;
-    static DoubleBuffer previewBuf;
-    //static void pushFrame();
     static void pushFrame(const GameState& gs);
-    static void pushGLFrame();
-    static bool timeToPushFrame;
-    static bool pushNetworkFrame(const cv::Mat& send);
-
-
 
 public:
     PlayTime playTime;
@@ -77,7 +64,6 @@ public:
     static cv::VideoWriter video;
     Supervisor();
     ~Supervisor() = default;
-    void runCalibrateCorners();
     void run();
 
     void calcFPS();

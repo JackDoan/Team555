@@ -203,6 +203,7 @@ std::vector<cv::Point_<int>> Trajectory::newCalc(GameState& gs) {
                 i++;
             } else if (bounces[1] || bounces[3]) {
                 leftover.x = xdir * leftover.x;
+
                 leftover.y = -1 * leftover.y;
                 nextPoint = intersection + leftover;
                 nextnextPoint = nextPoint + cv::Point(total.x, -1 * total.y);

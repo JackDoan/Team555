@@ -27,24 +27,17 @@
 #include "../lib/PracticalSocket.h"
 
 cv::VideoWriter Supervisor::video = cv::VideoWriter("output.avi", CV_FOURCC('M', 'J', 'P', 'G'),10, cv::Size(Camera::getInstance().dimensions));
-DoubleBuffer Supervisor::previewBuf;
-cv::Mat& Supervisor::preview = previewBuf.active();
-bool Supervisor::timeToPushFrame = true;
+
 
 Supervisor::Supervisor() {
-
+    motion = Motion();
 }
 
-void Supervisor::runCalibrateCorners() {
-    // this is kinda defunct now
-}
+
 
 void Supervisor::run() {
-
-
     // initializing class instances
     MotorDriver& motorDriver = MotorDriver::getInstance();
-    motion = Motion();
     Camera& camera = Camera::getInstance();
 
     // initialize counters, timers windows and frames etc.
@@ -52,37 +45,18 @@ void Supervisor::run() {
 
     time(&start);
     time(&idleStart);
-    //cv::namedWindow("Video", CV_WINDOW_AUTOSIZE);
+
     cv::namedWindow("Video", CV_WINDOW_NORMAL);
 
-
     keepGoing = true;
-    sendGetButtons = true;
     doneCheck = false;
     mode = CALIBRATE;
 
     // main while loop that runs the robot
     while (keepGoing) {
-        // calculating FPS
-
         calcFPS();
-
-//        frameBuf.active() = camera.getFrame();
-//
-//        // checking if frames are there
-//        if (frameBuf.active().empty()) {
-//            printf("No frames!\n");
-//            break;
-//        }
-
-//        GameState gameState;
-
-//        if (mode == PLAY) {
-            auto gameState = GameStateManager::get(/*frameBuf.active()*/);
-//        }
-
+        auto gameState = GameStateManager::get();
         checkKeyboard();
-
         // check if keyboard input set keepGoing to false, if it did, jump to the top and quit
         if (!keepGoing) {
             continue;
@@ -123,9 +97,7 @@ void Supervisor::run() {
                     movingTo = motion.defense.run(gameState, intersectPoint);
                     break;
             }
-            if (Settings::preview == 1) {
-                display(gameState, movingTo);
-            }
+            display(gameState, movingTo);
         }
         else {
             idle();
@@ -142,14 +114,12 @@ void Supervisor::calcFPS() {
         FrameCounter = 0;
         time(&start);
     }
-
     ++FrameCounter;
 }
 
 
 bool intersection(const cv::Point_<int>& o1, const cv::Point_<int>& p1, const cv::Point_<int>& o2, const cv::Point_<int>& p2,
-                  cv::Point_<int> &r)
-{
+                  cv::Point_<int> &r) {
     cv::Point_<int> x = o2 - o1;
     cv::Point_<int> d1 = p1 - o1;
     cv::Point_<int> d2 = p2 - o2;
@@ -163,8 +133,6 @@ bool intersection(const cv::Point_<int>& o1, const cv::Point_<int>& p1, const cv
     return true;
 }
 
-
-
 void Supervisor::checkKeyboard() {
     const int key = cv::waitKey(1);
     switch(key) {
@@ -177,6 +145,7 @@ void Supervisor::checkKeyboard() {
             break;
         case 'j':
             mode = CALIBRATE;
+            cv::displayOverlay("Video", "Robot is re-calibrating. Please wait.", 2000);
             break;
 //        case 'p':
 //            Settings::threadFindingThings = false;
@@ -201,9 +170,12 @@ void Supervisor::checkKeyboard() {
                 playTime.incrementRobotPoint();
             }
             break;
-        case 'v':
+        case 'v': {
+            char buf[80];
             Settings::video_output = !Settings::video_output;
-            printf("Video output: %d\n", Settings::video_output);
+            snprintf(buf, sizeof(buf), "Video output: %d\n", Settings::video_output);
+            cv::displayOverlay("Video", buf, 2000);
+        }
             break;
         case 'd':
             printf("Motion Mode = Defend\n");
@@ -229,12 +201,15 @@ void Supervisor::checkKeyboard() {
             break;
         case 'e':
             difficulty = EASY;
+            cv::displayOverlay("Video", "Easy Mode!", 2000);
             break;
         case 'm':
             difficulty = MEDIUM;
+            cv::displayOverlay("Video", "Medium Mode!", 2000);
             break;
         case 'h':
             difficulty = HARD;
+            cv::displayOverlay("Video", "HARD MODE!", 2000);
             break;
         case 197: //F8
             if (decisionMode == AUTOMATIC) {
@@ -364,30 +339,18 @@ void Supervisor::makeDecision(GameState& gs) {
 
 }
 
-
-
-
-
 void Supervisor::display(const GameState gs, const cv::Point_<int> movingTo) {
-//    if(timeToPushFrame) {
-//        timeToPushFrame = false;
-//        if (Settings::network_video) {
-//            auto handle = std::async(std::launch::async, pushFrame);
-//        }
-//        else {
-//            pushFrame(); //todo threading
-//        }
-//        //frameBuf.toggle();
-//        if(!gs.frame.empty()) {
-//            decorate(gs, gs.frame, frameRate, movingTo);
-//            //auto handle = std::async(std::launch::async, decorate, frameBuf.inactive(), frameRate, puck.lastLocation, puck.location, table.motionLimitMax, table.motionLimitMin, corners, puck.Goals);
-//        }
-//        else {
-//            timeToPushFrame = true;
-//        }
-//    }
+    static int frameDelayer = 0;
     decorate(gs, gs.frame, frameRate, movingTo);
-    pushFrame(gs);
+    if (!gs.frame.empty()) {
+
+        if((++frameDelayer % 4) == 0)
+            cv::imshow("Video", gs.frame);
+
+        if (Settings::video_output) {
+            Supervisor::video.write(gs.frame);
+        }
+    }
 }
 
 void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo) {
@@ -433,146 +396,4 @@ void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_
             break;
     }
     cv::addText(in, modeStrings[modeStringIndex], cvPoint(35, 345*2), font);
-}
-
-//void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo) {
-//    char tempStr[80] = {};
-//    const double ratio = 0.5;
-//    //cv::resize(in, previewBuf.active(), cv::Size(), 0.5, 0.5);
-//    cv::resize(in, previewBuf.active(), cv::Size(), ratio, ratio);
-//    cv::cvtColor(previewBuf.active(), previewBuf.active(), cv::COLOR_HSV2RGB);
-//    sprintf(tempStr, "%3.0f %d,%d %d,%d   Mallet Dest: %d,%d", frameRate, gs.puck.lastLocation.x, gs.puck.lastLocation.y,
-//            gs.puck.location.x, gs.puck.location.y, movingTo.x, movingTo.y);
-//
-//    std::vector<cv::Point_<int>> testTraj = Trajectory::newCalc(gs);
-//    for(int i = 1; i < testTraj.size(); i ++) {
-//        cv::line(previewBuf.active(), testTraj[i]*ratio, testTraj[i-1]*ratio, cv::Scalar(255, 255, 255), 4);
-//    }
-//
-//    // drawing the motion limits
-//    cv::rectangle(previewBuf.active(), Table::motionLimitMax * ratio, Table::motionLimitMin * ratio, cv::Scalar(210, 200, 0), 4);
-//    cv::circle(previewBuf.active(), movingTo * ratio, 20, cv::Scalar(100, 200, 0), 4);
-//    // Draw Table borders
-//    //Table::corners.drawSquareNew(previewBuf.active(), Table::corners.getCalibratedCorners());
-//
-//    //cv::line(previewBuf.active()Small,table.motionLimitMax,table.motionLimitMin,cv::Scalar(255,0,0),4);
-//    cv::line(previewBuf.active(), Table::goals.goals[0] * ratio, Table::goals.goals[1] * ratio, cv::Scalar(180, 255, 255), 4);
-//    cv::line(previewBuf.active(), Table::goals.goals[2] * ratio, Table::goals.goals[3] * ratio, cv::Scalar(180, 255, 255), 4);
-//    cv::putText(previewBuf.active(), tempStr, cvPoint(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
-//
-//    sprintf(tempStr, "Player: %d Robot: %d Time: %3.0f", playTime.playerPoints, playTime.robotPoints, playTime.remaining);
-//    cv::putText(previewBuf.active(), tempStr, cvPoint(200, 345), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 255, 0), 2);
-//    switch(playMode) {
-//        case DEFENSE:
-//            cv::putText(previewBuf.active(), "Defending", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
-//            break;
-//        case OFFENSE:
-//            cv::putText(previewBuf.active(), "Attacking", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
-//            break;
-//        case FIX:
-//            cv::putText(previewBuf.active(), "Resetting", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
-//            break;
-//        default:
-//            cv::putText(previewBuf.active(), "Bottom Text", cvPoint(35, 335), cv::FONT_HERSHEY_SIMPLEX, 0.75, cv::Scalar(255, 225, 0), 2);
-//            break;
-//    }
-//    previewBuf.toggle();
-//}
-
-void Supervisor::pushFrame(const GameState& gs) {
-    static int frameDelayer = 0;
-    if (!gs.frame.empty()) {
-
-        if((++frameDelayer % 4) == 0)
-            cv::imshow("Video", gs.frame);
-
-        if (Settings::video_output) {
-            Supervisor::video.write(gs.frame);
-        }
-    }
-}
-
-//void Supervisor::pushFrame() {
-//    static int i = 0;
-//    if (!previewBuf.inactive().empty()) {
-//        if (Settings::network_video) { //every other frame
-//            if(!(++i % 8)) {
-//                i = 0;
-//                pushNetworkFrame(previewBuf.inactive());
-//            }
-//        }
-//        else {
-//            cv::imshow("Video", previewBuf.inactive());
-//        }
-//
-//        if (Settings::video_output) {
-//            Supervisor::video.write(previewBuf.inactive());
-//        }
-//    }
-//    timeToPushFrame = true;
-//}
-
-void Supervisor::pushGLFrame() {
-
-    cv::imshow("Video", previewBuf.inactive());
-
-    if (Settings::video_output) {
-        Supervisor::video.write(previewBuf.inactive());
-    }
-}
-
-bool Supervisor::pushNetworkFrame(const cv::Mat& send) {
-//    static const string servAddress = "127.0.0.1"; // First arg: server address
-//    static const unsigned short servPort = Socket::resolveService("1337", "udp");
-//    static bool doOnce = true;
-//    const int jpegqual =  20;
-//    static vector < int > compression_params;
-//    static vector < uchar > encoded;
-//    if(doOnce) {
-//
-//        compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-//        compression_params.push_back(jpegqual);
-//        doOnce = false;
-//    }
-//
-//#define FRAME_INTERVAL (1000/30)
-//#define PACK_SIZE 4096 //udp pack size; note that OSX limits < 8100 bytes
-//
-//    try {
-//        static UDPSocket sock;
-//
-//
-//
-//        static clock_t last_cycle = clock();
-//
-//        if(send.size().width==0) return false;//simple integrity check; skip erroneous data...
-//
-//        //resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
-//
-//
-//        imencode(".jpg", send, encoded, compression_params);
-//        //imshow("send", send);
-//        int total_pack = 1 + (encoded.size() - 1) / PACK_SIZE;
-//
-//        int ibuf[1];
-//        ibuf[0] = total_pack;
-//        sock.sendTo(ibuf, sizeof(int), servAddress, servPort);
-//
-//        for (int i = 0; i < total_pack; i++)
-//            sock.sendTo( & encoded[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
-//
-//        //waitKey(FRAME_INTERVAL);
-//
-//        clock_t next_cycle = clock();
-//        double duration = (next_cycle - last_cycle) / (double) CLOCKS_PER_SEC;
-////        cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack / duration / 1024 * 8) << endl;
-//
-////        cout << next_cycle - last_cycle;
-//        last_cycle = next_cycle;
-//
-//
-//    } catch (SocketException & e) {
-//        cerr << e.what() << endl;
-//        exit(1);
-//    }
 }

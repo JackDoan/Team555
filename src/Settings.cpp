@@ -12,8 +12,6 @@
 using namespace std;
 bool Settings::video_output = false;   //can be shown through Idle Process
 bool Settings::undistort = true;
-bool Settings::calibrateCorners = false;
-bool Settings::preview = true;
 
 struct threshold_s Settings::puckLimits = threshold_s(false);
 struct threshold_s Settings::malletLimits = threshold_s(true);
@@ -27,7 +25,7 @@ string Settings::filePath = "config.txt";
 char Settings::delim = ':';
 
 
-bool Settings::getSettingName(fstream& f, char* buffer, unsigned int bufSize) {
+bool Settings::processLine(fstream &f, char *buffer, unsigned int bufSize) {
     f.getline(buffer, bufSize, delim); //get a line, look for a colon
     //begin error checking:
     if(!f.good()) {
@@ -49,25 +47,42 @@ bool Settings::getSettingName(fstream& f, char* buffer, unsigned int bufSize) {
             return true;
         }
         else if(strncmp(buffer, cameraUndistortString.c_str(), bufSize) == 0) {
-            f.get(); //throw out a ':'
-            f >> skipws >> boolalpha >> Settings::undistort;
+            //f.get(); //throw out a ':'
+            f >> skipws >> Settings::undistort;
         }
         else if(strncmp(buffer, malletLimitString.c_str(), bufSize) == 0) {
-            f.get(); //throw out a ':'
-            //todo
+            //f.get(); //throw out a ':'
+            readThreshold(malletLimits, f);
         }
         else if(strncmp(buffer,puckLimitString.c_str() , bufSize) == 0) {
-            f.get(); //throw out a ':'
-            //todo
+            //f.get(); //throw out a ':'
+            readThreshold(puckLimits, f);
         }
         else if(strncmp(buffer,cornerString.c_str() , bufSize) == 0) {
-            f.get(); //throw out a ':'
-            //todo
+            //f.get(); //throw out a ':'
+            auto corners = Table::corners.getCorners();
+
+            for(int i = 0; i < 4; i++) {
+                cv::Point_<int> in;
+                f >> in.x;
+                f >> in.y;
+                corners.emplace(corners.begin(), in);
+            }
+
+            if(corners.size() >= 4) { //we have what we need
+                corners.resize(4);
+                Table::corners.setCorners(corners); //update things
+                Table::goals.recalculate(Table::corners);
+                Table::setLimits();
+            }
+
         }
         else {
             //this wasn't a valid setting?
             return false;
         }
+        f.getline(buffer, bufSize);
+        return true;
     }
 }
 
@@ -83,10 +98,26 @@ bool Settings::readConfigValues(const std::string& path) {
         }
         else {
             char buffer[256] = {};
-
+            bool keepReading = true;
+            while(keepReading) {
+                keepReading = processLine(f, buffer, sizeof(buffer));
+            }
 
         }
     }
+}
+
+void Settings::readThreshold(threshold_s& t, fstream& f) {
+    f << skipws;
+    f >> t.minH;
+    f >> t.maxH;
+    f >> t.minS;
+    f >> t.maxS;
+    f >> t.minV;
+    f >> t.maxV;
+    f >> t.minArea;
+    f >> t.maxArea;
+    f.get(); //get the endl
 }
 
 void Settings::writeThreshold(const threshold_s& t, fstream& f) {
@@ -104,7 +135,6 @@ void Settings::writeThreshold(const threshold_s& t, fstream& f) {
 bool Settings::writeConfigValues(const string& path) {
     std::fstream f;
     f.open("config.txt");
-    char buffer[50];
     if (f.is_open()) {
         f << cameraUndistortString << delim << undistort << endl;
         f << malletLimitString << delim;
@@ -120,13 +150,19 @@ bool Settings::writeConfigValues(const string& path) {
             << puckLimits.maxArea << ' '
             << endl;
         auto corners = Table::corners.getCorners();
-        f << cornerString << delim << corners[0] << ' ' << corners[1] << ' ' <<corners[2] << ' ' <<corners[3] << endl;
+        f << cornerString << delim
+            << corners[0].x << ' ' << corners[0].y << ' '
+            << corners[1].x << ' ' << corners[1].y << ' '
+            << corners[2].x << ' ' << corners[2].y << ' '
+            << corners[3].x << ' ' << corners[3].y << ' '
+            << endl;
 
     }
     else {
         cout << "Failed to save settings" << endl;
         return false;
     }
+    f.close();
 
 }
 

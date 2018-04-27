@@ -90,8 +90,6 @@ public:
     static double walls[4][3];
     static void mouseHelper( int event, int x, int y, int, void* );
     static bool acceptMouseInput;
-    static cv::Point_<int> center;
-    static cv::Point_<int> centerRadius;
     static std::vector<cv::Point_<int>> newCorners;
 
     Table() =default;
