@@ -31,7 +31,7 @@ struct threshold_s {
             maxV = 255;
             minArea = 1100;
             maxArea = 2500;
-            minRoundness = 1200;
+            minRoundness = 3000;
             doBars = true;
             //debug = true;
             outlineColor = cv::Scalar(210, 255, 255);

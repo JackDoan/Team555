@@ -117,6 +117,7 @@ void Settings::readThreshold(threshold_s& t, fstream& f) {
     f >> t.maxV;
     f >> t.minArea;
     f >> t.maxArea;
+    f >> t.minRoundness;
     f.get(); //get the endl
 }
 
@@ -129,6 +130,7 @@ void Settings::writeThreshold(const threshold_s& t, fstream& f) {
       << t.maxV << ' '
       << t.minArea << ' '
       << t.maxArea << ' '
+            <<t.minRoundness << ' '
       << endl;
 }
 
@@ -139,16 +141,8 @@ bool Settings::writeConfigValues(const string& path) {
         f << cameraUndistortString << delim << undistort << endl;
         f << malletLimitString << delim;
         writeThreshold(malletLimits, f);
-        f << puckLimitString << delim
-            << puckLimits.minH << ' '
-            << puckLimits.maxH << ' '
-            << puckLimits.minS << ' '
-            << puckLimits.maxS << ' '
-            << puckLimits.minV << ' '
-            << puckLimits.maxV << ' '
-            << puckLimits.minArea << ' '
-            << puckLimits.maxArea << ' '
-            << endl;
+        f << puckLimitString << delim;
+        writeThreshold(puckLimits, f);
         auto corners = Table::corners.getCorners();
         f << cornerString << delim
             << corners[0].x << ' ' << corners[0].y << ' '

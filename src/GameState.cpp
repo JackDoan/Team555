@@ -15,55 +15,41 @@ int GameStateManager::lostCnt = 0;
 
 ///Takes in a frame, annotates it, and returns a class with data about
 ///what was in the frame.
-GameState GameStateFactory::build() {
 
-    GameState toReturn;
-    toReturn.frame = Camera::getInstance().getFrame();
-
-    int cols = 400;
-    int rows = Table::max.y - Table::min.y;
-    auto malletROI = cv::Rect(Table::max.x-cols,Table::min.y,cols,rows);
-    cv::Mat malletArea = toReturn.frame(malletROI);
-    //cv::imshow("Test", malletArea);
+void GameStateFactory::doFind(GameState& gs) {
+    int cols = 450;
+    int rows = 710;
+    auto malletROI = cv::Rect(Table::max.x-cols,0,cols,rows);
+    cv::Mat malletArea = gs.frame(malletROI);
+//    Settings::malletLimits.debug = true;
+//    cv::Mat test = getThresholdImage(malletArea, Settings::malletLimits);
+//    Settings::malletLimits.debug = false;
 
     if(Settings::threadFindingThings) {
-        std::thread puckThread(&GameStateFactory::findPieceThread, std::ref(toReturn.puck), std::ref(toReturn.frame), std::ref(Settings::puckLimits));
-        std::thread malletThread(&GameStateFactory::findPieceThread, std::ref(toReturn.mallet), std::ref(malletArea), std::ref(Settings::malletLimits));
+        std::thread puckThread(&GameStateFactory::findPieceThread, std::ref(gs.puck), std::ref(gs.frame), std::ref(Settings::puckLimits));
+        std::thread malletThread(&GameStateFactory::findPieceThread, std::ref(gs.mallet), std::ref(malletArea), std::ref(Settings::malletLimits));
         puckThread.join();
         malletThread.join();
-        //toReturn.mallet.location = toReturn.mallet.location+cv::Point_<int>(1280-cols, 720-rows);
+        gs.mallet.location = gs.mallet.location+cv::Point_<int>(1280-cols, 720-rows);
         //cv::circle(toReturn.frame,toReturn.mallet.location, 20, Settings::malletLimits.outlineColor, 6);
     }
-//    else {
-//        toReturn.puck   = findPiece(toReturn.frame, Settings::puckLimits);
-//        toReturn.mallet = findPiece(toReturn.frame, Settings::malletLimits);
-//    }
+    else {
+        gs.puck   = findPiece(gs.frame, Settings::puckLimits);
+        gs.mallet = findPiece(malletArea, Settings::malletLimits);
+    }
+}
 
+GameState GameStateFactory::build() {
+    GameState toReturn;
+    toReturn.frame = Camera::getInstance().getFrame();
+    doFind(toReturn);
     return toReturn;
 }
 
 GameState GameStateFactory::build(cv::Mat &in) {
     GameState toReturn;
-    // if threadIt is set high we thread the contour searching process
-    int cols = 400;
-    int rows = Table::max.y - Table::min.y;
-    auto malletROI = cv::Rect(Table::max.x-cols,Table::min.y,cols,rows);
-    cv::Mat malletArea = in(malletROI);
-
-    if(Settings::threadFindingThings) {
-        std::thread puckThread(&GameStateFactory::findPieceThread, std::ref(toReturn.puck), std::ref(in), std::ref(Settings::puckLimits));
-        std::thread malletThread(&GameStateFactory::findPieceThread, std::ref(toReturn.mallet), std::ref(malletArea), std::ref(Settings::malletLimits));
-        puckThread.join();
-        malletThread.join();
-        cv::circle(toReturn.frame,toReturn.mallet.location, 5, Settings::malletLimits.outlineColor);
-    }
-    else {
-        toReturn.puck   = findPiece(in, Settings::puckLimits);
-        toReturn.mallet = findPiece(in, Settings::malletLimits);
-    }
-    toReturn.mallet.location = toReturn.mallet.location+cv::Point_<int>(1280-cols, 720-rows);
-    cv::circle(toReturn.frame,toReturn.mallet.location, 20, Settings::malletLimits.outlineColor, 6);
     toReturn.frame = in;
+    doFind(toReturn);
     return toReturn;
 }
 
@@ -127,7 +113,7 @@ GamePiece GameStateFactory::findPiece(cv::Mat& in, struct threshold_s& limits) {
                 };
 
                 // limit the region of interest to the table
-                if (!within(toReturn.location, Table::min, Table::max)) {
+                if (!(toReturn.location.y <= Table::max.y || toReturn.location.y >= Table::min.y)) {
                     toReturn.location = Table::home;
                     continue;  // continue with other contour... (this is outside the table)
                 }

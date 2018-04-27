@@ -34,6 +34,8 @@ public:
 };
 
 class GameStateFactory {
+private:
+    static void doFind(GameState& gs);
 public:
     static GameState build();
     static GameState build(cv::Mat& in);

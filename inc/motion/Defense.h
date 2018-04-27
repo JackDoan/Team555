@@ -23,7 +23,8 @@ private:
 public:
     defenseState_t getState() const;
     Defense() = default;
-    cv::Point_<int> run(GameState& gs, cv::Point_<int> intersection);
+    cv::Point_<int> run(GameState& gs);
+
 };
 
 

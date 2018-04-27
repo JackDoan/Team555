@@ -162,12 +162,12 @@ Serial::Serial(const char *portName)  {
 #ifdef SERIALDEBUG
     char file[] = "serial.log";
 #else
-    char file[] = "/dev/ttyACM0";
+    char file[] = "/dev/serial/by-id/usb-Arduino_Srl_Arduino_Mega_55632313738351D01152-if00";
 #endif
     //todo why do we need this?!
-    system("stty -F /dev/ttyACM0 raw");
-    system("stty -F /dev/ttyACM0 -echo -echoe -echok -hupcl");
-    system("stty -F /dev/ttyACM0 115200");
+    system("stty -F /dev/serial/by-id/usb-Arduino_Srl_Arduino_Mega_55632313738351D01152-if00 raw");
+    system("stty -F /dev/serial/by-id/usb-Arduino_Srl_Arduino_Mega_55632313738351D01152-if00 -echo -echoe -echok -hupcl");
+    system("stty -F /dev/serial/by-id/usb-Arduino_Srl_Arduino_Mega_55632313738351D01152-if00 115200");
 
     sleep(1);
 

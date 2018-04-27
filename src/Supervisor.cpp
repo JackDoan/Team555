@@ -75,28 +75,27 @@ void Supervisor::run() {
             if (!playTime.isPlaying) {
                 mode = IDLE;
             }
-            if (decisionMode == AUTOMATIC) {
-                makeDecision(gameState);
-            }
-            switch(playMode) {
-                case OFFENSE:
-                    // call offense
-                    playState = OFFENDING;
-                    movingTo = motion.offense.run(gameState, frameRate);
-                    break;
-                case FIX:
-                    // call impulse
-                    playState = FIXING;
-                    resetDone = motion.resetPuck.run(gameState, GameStateManager::getLostCnt());
-                    ///doneCheck = resetPuck(motion, table, mallet, puck, frameBuf.active());
-                    break;
-                case DEFENSE:
-                default:
-                    // call defense
-                    playState = DEFENDING;
-                    movingTo = motion.defense.run(gameState, intersectPoint);
-                    break;
-            }
+//            if (decisionMode == AUTOMATIC) {
+//                makeDecision(gameState);
+//            }
+//            switch(playMode) {
+//                case OFFENSE:
+//                    // call offense
+//                    playState = OFFENDING;
+//                    movingTo = motion.offense.run(gameState, frameRate);
+//                    break;
+//                case FIX:
+//                    // call impulse
+//                    playState = FIXING;
+//                    resetDone = motion.resetPuck.run(gameState, GameStateManager::getLostCnt());
+//                    ///doneCheck = resetPuck(motion, table, mallet, puck, frameBuf.active());
+//                    break;
+//                case DEFENSE:
+//                    // call defense
+//                    playState = DEFENDING;
+                    movingTo = motion.defense.run(gameState);
+//                    break;
+//            }
             display(gameState, movingTo);
         }
         else {
@@ -347,12 +346,12 @@ void Supervisor::display(const GameState gs, const cv::Point_<int> movingTo) {
     static int frameDelayer = 0;
     if (!gs.frame.empty()) {
         if((++frameDelayer % 4) == 0) {
-//            cv::Mat toDisplay;
-//            toDisplay = gs.frame.clone();
-//            decorate(gs, toDisplay, frameRate, movingTo);
-//            cv::imshow("Video", toDisplay);
-            decorate(gs, gs.frame, frameRate, movingTo);
-            cv::imshow("Video", gs.frame);
+            cv::Mat toDisplay;
+            toDisplay = gs.frame.clone();
+            decorate(gs, toDisplay, frameRate, movingTo);
+            cv::imshow("Video", toDisplay);
+//            decorate(gs, gs.frame, frameRate, movingTo);
+//            cv::imshow("Video", gs.frame);
             if (Settings::video_output) {
                 //Supervisor::video.write(toDisplay);
                 Supervisor::video.write(gs.frame);

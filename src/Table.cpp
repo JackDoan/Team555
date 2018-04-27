@@ -14,7 +14,7 @@
 
 
 Table::~Table() = default;
-const cv::Point_<int> Table::home = cv::Point_<int>(1110,370);
+const cv::Point_<int> Table::home = cv::Point_<int>(1190,370);
 cv::Point_<int> Table::max;
 cv::Point_<int> Table::min;
 cv::Point_<int> Table::strikeLimitMin;
@@ -22,13 +22,14 @@ cv::Point_<int> Table::strikeLimitMax;
 cv::Point_<int> Table::motionLimitMin;
 cv::Point_<int> Table::motionLimitMax;
 cv::Rect Table::motionLimit;
-Table::Corners Table::corners = Table::Corners();
+Table::Corners Table::corners;
 Table::Goals Table::goals; // = Goals(Table::corners);
 double Table::walls[4][3];
 
 void Table::setup() {
-    corners.sortedY = corners.getSortedY(corners.getCorners());
-    corners.sortedX = corners.getSortedX(corners.getCorners());
+//    corners  = Table::Corners();
+//    corners.sortedY = corners.getSortedY(corners.getCorners());
+//    corners.sortedX = corners.getSortedX(corners.getCorners());
     goals = Goals(Table::corners);
     setLimits();
 }
@@ -46,8 +47,8 @@ void Table::setLimits() {
     //todo make these ratios                adjust drawGoalVector after made into ratios
     motionLimitMin.y = min.y + 70;
     motionLimitMax.y = max.y - 70;
-    motionLimitMin.x = min.x + 870;
-    motionLimitMax.x = max.x - 95;
+    motionLimitMin.x = min.x + 950;
+    motionLimitMax.x = max.x - 55;
     motionLimit = cv::Rect_<int>(motionLimitMin,motionLimitMax);
 
     strikeLimitMin.y = motionLimitMin.y + 40;
