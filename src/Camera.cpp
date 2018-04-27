@@ -10,13 +10,9 @@
 #include "../inc/Settings.h"
 
 #include <time.h>
-
-
-
-
-
-
-
+#include <stropts.h>
+#include <bits/fcntl-linux.h>
+#include <fcntl.h>
 
 
 Camera::Camera(int nwidth, int nheight) {
@@ -36,10 +32,17 @@ Camera::Camera(int nwidth, int nheight) {
 #else
 
 //gst-launch-1.0 tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance ! bayer2rgb ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! xvimagesink
+
+    auto fd = open("/dev/bus/", O_WRONLY);
+    ioctl(fd, USBDEVFS_RESET, 0);
+    close(fd);
+
+
     system("tcam-ctrl -p -s \"Exposure=5000\" 42614274");
     system("tcam-ctrl -p -s \"Gain=96\" 42614274");
-    system("tcam-ctrl -p -s \"Brightness=25\" 42614274");
-    capture.open("tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance ! bayer2rgb ! video/x-raw,format=RGBx ! videoconvert ! appsink" );
+    system("tcam-ctrl -p -s \"Brightness=50\" 42614274"); //auto=false red=110 green=105 blue=200
+    cv::waitKey(2000);
+    capture.open("tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance auto=false red=90 green=90 blue=200 ! bayer2rgb ! video/x-raw,format=RGBx ! videoconvert ! appsink" );
     /*autovideosink*/
     //capture.open("tcambin ! video/x-raw,format=RGBx,width=1280,height=720,framerate=80/1 ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! appsink" );
                  /*autovideosink*/
@@ -70,12 +73,12 @@ Camera::~Camera() {
 
 cv::Mat Camera::getFrame() {
     capture.read(currentView);
-    cv::cvtColor(currentView, hsv, cv::COLOR_RGB2HSV);
-    if (Settings::undistort) {
-        remap(hsv, undistortedFrame, map1, map2, cv::INTER_LINEAR);
-    }
+    remap(currentView, currentView, map1, map2, cv::INTER_LINEAR);
+    cv::cvtColor(currentView, currentView, cv::COLOR_RGB2HSV);
+
     //printf("%3.3f, %3.3f, %3.3f\n", difftime(e, s)/CLOCKS_PER_SEC,difftime(b, e)/CLOCKS_PER_SEC, difftime(x, b)/CLOCKS_PER_SEC);
-    return undistortedFrame;
+    return currentView;
+    //return undistortedFrame;
 }
 
 //cv::ogl::Texture2D Camera::getGLFrame() {

@@ -339,24 +339,29 @@ void Supervisor::makeDecision(GameState& gs) {
 
 }
 
+
 void Supervisor::display(const GameState gs, const cv::Point_<int> movingTo) {
     static int frameDelayer = 0;
-    decorate(gs, gs.frame, frameRate, movingTo);
     if (!gs.frame.empty()) {
-
-        if((++frameDelayer % 4) == 0)
+        if((++frameDelayer % 4) == 0) {
+//            cv::Mat toDisplay;
+//            toDisplay = gs.frame.clone();
+//            decorate(gs, toDisplay, frameRate, movingTo);
+//            cv::imshow("Video", toDisplay);
+            decorate(gs, gs.frame, frameRate, movingTo);
             cv::imshow("Video", gs.frame);
-
-        if (Settings::video_output) {
-            Supervisor::video.write(gs.frame);
+            if (Settings::video_output) {
+                //Supervisor::video.write(toDisplay);
+                Supervisor::video.write(gs.frame);
+            }
         }
     }
 }
-
+const cv::QtFont font = cv::fontQt("Monospace", 30, cv::Scalar(255, 225, 0));
 void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo) {
     char tempStr[80] = {};
     const double ratio = 1.0;
-    static const cv::QtFont font = cv::fontQt("Monospace", 30, cv::Scalar(255, 225, 0));
+
     std::string modeStrings[] = {"Defending", "Attacking", "Fixing", "Bottom Text"};
     int modeStringIndex = 0;
 
@@ -364,9 +369,12 @@ void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_
     sprintf(tempStr, "FPS: %3.0f Puck Loc: %d,%d   Mallet Dest: %d,%d", frameRate,
             gs.puck.location.x, gs.puck.location.y, movingTo.x, movingTo.y);
 
-    std::vector<cv::Point_<int>> testTraj = Trajectory::newCalc(gs);
+/*    std::vector<cv::Point_<int>> testTraj = Trajectory::newCalc(gs);
     for(int i = 0; i < testTraj.size(); i ++) {
         cv::circle(in, testTraj[i], 2, cv::Scalar(255, 255, 255), 4);
+    }*/
+    for (int i = 0; i < gs.puckTraj.size(); i ++) {
+        cv::line(in, gs.puckTraj.back()[0], gs.puckTraj.back()[1], cv::Scalar(255, 255, 255), 4);
     }
 
     // drawing the motion limits

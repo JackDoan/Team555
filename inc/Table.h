@@ -11,6 +11,7 @@
 #include "Camera.h"
 #include "helpers.h"
 #include "Corners.h"
+#include "Settings.h"
 
 
 class Table {
@@ -51,8 +52,10 @@ public:
         cv::Point_<int> R_top;
         cv::Point_<int> R_bottom;
 
-        const int goalScale = 50;
-        const int goalPush = 0;
+        int goalScale = 50;
+        int goalPush = 0;
+
+        Goals() = default;
 
         explicit Goals(const Corners& corners) {
             recalculate(corners);
@@ -92,7 +95,7 @@ public:
     static bool acceptMouseInput;
     static std::vector<cv::Point_<int>> newCorners;
 
-    Table() =default;
+    Table()  =default;
     ~Table();
 };
 

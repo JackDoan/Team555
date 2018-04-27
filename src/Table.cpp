@@ -22,14 +22,15 @@ cv::Point_<int> Table::strikeLimitMax;
 cv::Point_<int> Table::motionLimitMin;
 cv::Point_<int> Table::motionLimitMax;
 cv::Rect Table::motionLimit;
-Table::Corners Table::corners = Table::Corners();
-
-
-
-Table::Goals Table::goals = Goals(Table::corners);
+Table::Corners Table::corners;// = Table::Corners();
+Table::Goals Table::goals; // = Goals(Table::corners);
 double Table::walls[4][3];
 
 void Table::setLimits() {
+
+    Settings::readConfigValues();
+    corners = Table::Corners();
+    goals = Goals(Table::corners);
 
     min.x = corners.sortedX[0].x; printf("Setting min X: %d\n", min.x);
     max.x = corners.sortedX[3].x; printf("Setting max X: %d\n", max.x);

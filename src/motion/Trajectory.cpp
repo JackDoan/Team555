@@ -150,17 +150,23 @@ const cv::Point_<int> Trajectory::findIntersection(const std::vector<bool>& boun
 }
 
 std::vector<cv::Point_<int>> Trajectory::newCalc(GameState& gs) {
+    // we want to calculate a vector of points which from front to back represent our prediction
+    // of the puck's location, where each element in the vector represents a frame forward from
+    // the previous location
+
+    // initialize variables
     cv::Point_<int> intersection;
     std::vector<cv::Point_<int>> toReturn;
     // todo: make sure that there isn't a bounce in the first future point
+    // place the current location into the vector
     toReturn.emplace_back(gs.puck.location);
+    // place the next predicted location into the back of the vector
     toReturn.emplace_back(gs.puck.location + (gs.puck.location - gs.puck.lastLocation));
+    // for loop that starts at one, and will calculate the second predicted location and move forward
     for (int i = 1; i < futureHeight; i++) {
-        // was there a bounce in the last calculation?
-        // no bounce in last one? then just do normal deal
-        // calculate nextPoint
+        // calculate the next predicted position
         cv::Point_<int> nextPoint =  toReturn[i] + (toReturn[i] - toReturn[i-1]);
-        // bounce?
+        // does a bounce occur?
         std::vector<bool> bounces = bounceDetect(toReturn[i], nextPoint);
         // if any bounce is true need to find intersection
         if (bounces[0] || bounces[1] || bounces[2] || bounces[3]) {
@@ -179,6 +185,7 @@ std::vector<cv::Point_<int>> Trajectory::newCalc(GameState& gs) {
                 }
 
             }
+            // we need to calculate how far we are from
             cv::Point_<int> total = {abs(nextPoint.x - toReturn[i].x), abs(nextPoint.y - toReturn[i].y)};
             cv::Point_<int> clipped = {abs(intersection.x - toReturn[i].x), abs(intersection.y - toReturn[i].y)};
             cv::Point_<int> leftover = total - clipped;
@@ -199,14 +206,14 @@ std::vector<cv::Point_<int>> Trajectory::newCalc(GameState& gs) {
                 leftover.x = -1* leftover.x;
                 leftover.y = ydir * leftover.y;
                 nextPoint = intersection + leftover;
-                nextnextPoint = nextPoint + cv::Point(-1 * total.x, total.y);
+                nextnextPoint = nextPoint + cv::Point(-1 * total.x, ydir * total.y);
                 i++;
             } else if (bounces[1] || bounces[3]) {
                 leftover.x = xdir * leftover.x;
 
                 leftover.y = -1 * leftover.y;
                 nextPoint = intersection + leftover;
-                nextnextPoint = nextPoint + cv::Point(total.x, -1 * total.y);
+                nextnextPoint = nextPoint + cv::Point(xdir * total.x, -1 * total.y);
                 i++;
             }
 

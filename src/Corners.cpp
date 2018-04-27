@@ -11,100 +11,100 @@
 
 
 Table::Corners::Corners(bool calibrate) {
-    std::fstream configFile;
-    std::vector<cv::Point_<int>> calibratedCornersVector;
-    std::vector<cv::Point_<int>> cornersVector;
-    std::vector<cv::Point_<int>> offsetsVector;
-#ifdef WINDOWS
-    configFile.open("C:/AirHockeyRobot/blahnew.txt");
-#else
-    configFile.open("/opt/Team555/config.txt");
-#endif
-    std::string blue;
-    int j = 0;
-    if (configFile.is_open()) {
-        while (std::getline(configFile, blue)) {
-            char xnumber[5];
-            char ynumber[5];
-            bool axisFlag = false;
-            std::string temp;
-            char buffer2[200];
-            int k = 0;
-            int n = 0;
-            strcpy(buffer2, blue.c_str());
-            temp = buffer2;
-            if (!strncmp(buffer2, "Calibrated", strlen("Calibrated"))) {
-                for (int m = temp.find(":"); buffer2[m] != '\0'; m++) {
-                    if ((buffer2[m] >= 48 && buffer2[m] <= 57) || buffer2[m] == 45) {
-                        if (!axisFlag) {
-                            xnumber[n] = buffer2[m];
-                            n++;
-                        } else {
-                            ynumber[n] = buffer2[m];
-                            n++;
-                            if (buffer2[m + 1] == '\0') {
-                                ynumber[n] = '\0';
-                            }
-                        }
-                    } else if (buffer2[m] == 44) {
-                        xnumber[n] = '\0';
-                        axisFlag = true;
-                        n = 0;
-                    }
-                };
-                calibratedCornersVector.emplace_back(atoi(xnumber), atoi(ynumber));
-            }
-            if (!strncmp(buffer2, "Corner", strlen("Corner"))) {
-                for (int m = temp.find(":"); buffer2[m] != '\0'; m++) {
-                    if ((buffer2[m] >= 48 && buffer2[m] <= 57) || buffer2[m] == 45) {
-                        if (!axisFlag) {
-                            xnumber[n] = buffer2[m];
-                            n++;
-                        } else {
-                            ynumber[n] = buffer2[m];
-                            n++;
-                            if (buffer2[m + 1] == '\0') {
-                                ynumber[n] = '\0';
-                            }
-                        }
-                    } else if (buffer2[m] == 44) {
-                        xnumber[n] = '\0';
-                        axisFlag = true;
-                        n = 0;
-                    }
-                };
-                cornersVector.emplace_back(atoi(xnumber), atoi(ynumber));
-            }
-            if (!strncmp(buffer2, "Offset", strlen("Offset"))) {
-                for (int m = temp.find(":"); buffer2[m] != '\0'; m++) {
-                    if ((buffer2[m] >= 48 && buffer2[m] <= 57) || buffer2[m] == 45) {
-                        if (!axisFlag) {
-                            xnumber[n] = buffer2[m];
-                            n++;
-                        } else {
-                            ynumber[n] = buffer2[m];
-                            n++;
-                            if (buffer2[m + 1] == '\0') {
-                                ynumber[n] = '\0';
-                            }
-                        }
-                    } else if (buffer2[m] == 44) {
-                        xnumber[n] = '\0';
-                        axisFlag = true;
-                        n = 0;
-                    }
-                };
-                offsetsVector.emplace_back(atoi(xnumber), atoi(ynumber));
-            }
-        }
-        printf("File Opened Succesfully\n");
-
-        if (!calibrate) {
-            setCorners(cornersVector);
-        }
-    } else {
-        printf("Could not open config file\n");
-    }
+//    std::fstream configFile;
+//    std::vector<cv::Point_<int>> calibratedCornersVector;
+//    std::vector<cv::Point_<int>> cornersVector;
+//    std::vector<cv::Point_<int>> offsetsVector;
+//#ifdef WINDOWS
+//    configFile.open("C:/AirHockeyRobot/blahnew.txt");
+//#else
+//    configFile.open("/opt/Team555/config.txt");
+//#endif
+//    std::string blue;
+//    int j = 0;
+//    if (configFile.is_open()) {
+//        while (std::getline(configFile, blue)) {
+//            char xnumber[5];
+//            char ynumber[5];
+//            bool axisFlag = false;
+//            std::string temp;
+//            char buffer2[200];
+//            int k = 0;
+//            int n = 0;
+//            strcpy(buffer2, blue.c_str());
+//            temp = buffer2;
+//            if (!strncmp(buffer2, "Calibrated", strlen("Calibrated"))) {
+//                for (int m = temp.find(":"); buffer2[m] != '\0'; m++) {
+//                    if ((buffer2[m] >= 48 && buffer2[m] <= 57) || buffer2[m] == 45) {
+//                        if (!axisFlag) {
+//                            xnumber[n] = buffer2[m];
+//                            n++;
+//                        } else {
+//                            ynumber[n] = buffer2[m];
+//                            n++;
+//                            if (buffer2[m + 1] == '\0') {
+//                                ynumber[n] = '\0';
+//                            }
+//                        }
+//                    } else if (buffer2[m] == 44) {
+//                        xnumber[n] = '\0';
+//                        axisFlag = true;
+//                        n = 0;
+//                    }
+//                };
+//                calibratedCornersVector.emplace_back(atoi(xnumber), atoi(ynumber));
+//            }
+//            if (!strncmp(buffer2, "Corner", strlen("Corner"))) {
+//                for (int m = temp.find(":"); buffer2[m] != '\0'; m++) {
+//                    if ((buffer2[m] >= 48 && buffer2[m] <= 57) || buffer2[m] == 45) {
+//                        if (!axisFlag) {
+//                            xnumber[n] = buffer2[m];
+//                            n++;
+//                        } else {
+//                            ynumber[n] = buffer2[m];
+//                            n++;
+//                            if (buffer2[m + 1] == '\0') {
+//                                ynumber[n] = '\0';
+//                            }
+//                        }
+//                    } else if (buffer2[m] == 44) {
+//                        xnumber[n] = '\0';
+//                        axisFlag = true;
+//                        n = 0;
+//                    }
+//                };
+//                cornersVector.emplace_back(atoi(xnumber), atoi(ynumber));
+//            }
+//            if (!strncmp(buffer2, "Offset", strlen("Offset"))) {
+//                for (int m = temp.find(":"); buffer2[m] != '\0'; m++) {
+//                    if ((buffer2[m] >= 48 && buffer2[m] <= 57) || buffer2[m] == 45) {
+//                        if (!axisFlag) {
+//                            xnumber[n] = buffer2[m];
+//                            n++;
+//                        } else {
+//                            ynumber[n] = buffer2[m];
+//                            n++;
+//                            if (buffer2[m + 1] == '\0') {
+//                                ynumber[n] = '\0';
+//                            }
+//                        }
+//                    } else if (buffer2[m] == 44) {
+//                        xnumber[n] = '\0';
+//                        axisFlag = true;
+//                        n = 0;
+//                    }
+//                };
+//                offsetsVector.emplace_back(atoi(xnumber), atoi(ynumber));
+//            }
+//        }
+//        printf("File Opened Succesfully\n");
+//
+//        if (!calibrate) {
+//            setCorners(cornersVector);
+//        }
+//    } else {
+//        printf("Could not open config file\n");
+//    }
 }
 
 Table::Corners::~Corners() = default;

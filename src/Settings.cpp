@@ -15,7 +15,7 @@ bool Settings::undistort = true;
 
 struct threshold_s Settings::puckLimits = threshold_s(false);
 struct threshold_s Settings::malletLimits = threshold_s(true);
-bool Settings::threadFindingThings = !(puckLimits.debug & malletLimits.debug);
+bool Settings::threadFindingThings = true; //!(puckLimits.debug & malletLimits.debug);
 
 string Settings::cameraUndistortString = "camera.undistort";
 string Settings::malletLimitString = "mallet.limits";

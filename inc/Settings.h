@@ -18,19 +18,20 @@ struct threshold_s {
             maxArea = 3600;
             minRoundness = 100;
             doBars = true;
+            //debug=true;
             outlineColor = cv::Scalar(40, 255, 255);
             windowName[4] = '\0';
         }
         else {
-            minH = 63;
-            maxH = 109;
-            minS = 80;
+            minH = 77;
+            maxH = 123;
+            minS = 122;
             maxS = 203;
             minV = 0;
             maxV = 255;
             minArea = 1100;
-            maxArea = 4500;
-            minRoundness = 800;
+            maxArea = 2500;
+            minRoundness = 1200;
             doBars = true;
             //debug = true;
             outlineColor = cv::Scalar(210, 255, 255);
