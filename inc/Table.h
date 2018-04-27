@@ -94,8 +94,8 @@ public:
     static void mouseHelper( int event, int x, int y, int, void* );
     static bool acceptMouseInput;
     static std::vector<cv::Point_<int>> newCorners;
-
-    Table()  =default;
+    static void setup();
+    Table() =default;
     ~Table();
 };
 

@@ -231,6 +231,9 @@ void Supervisor::checkKeyboard() {
                 cv::displayOverlay("Video", "Select the corners, then click middle click", 1000);
                 cv::waitKey(1);
             }
+            Table::corners.setCorners(Table::newCorners); //update things
+            Table::goals.recalculate(Table::corners);
+            Table::setLimits();
             Settings::writeConfigValues();
             }
             break;
@@ -374,7 +377,7 @@ void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_
         cv::circle(in, testTraj[i], 2, cv::Scalar(255, 255, 255), 4);
     }*/
     for (int i = 0; i < gs.puckTraj.size(); i ++) {
-        cv::line(in, gs.puckTraj[i][0], gs.puckTraj.back[i][1], cv::Scalar(255, 255, 255), 4);
+        cv::line(in, gs.puckTraj[i][0], gs.puckTraj[i][1], cv::Scalar(255, 255, 255), 4);
     }
 
     // drawing the motion limits

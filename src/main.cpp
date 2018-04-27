@@ -24,8 +24,8 @@
 
 
 int main(int argc, char* argv[]) {
-    Table::setLimits();
     Settings::readConfigValues();
+    Table::setup();
     Supervisor supervisor = Supervisor();
     supervisor.run();
     cvDestroyAllWindows();
