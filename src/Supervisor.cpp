@@ -34,6 +34,7 @@ Supervisor::Supervisor() {
 }
 
 
+const cv::QtFont font = cv::fontQt("Monospace", 30, cv::Scalar(255, 225, 0));
 
 void Supervisor::run() {
     // initializing class instances
@@ -48,6 +49,7 @@ void Supervisor::run() {
 
     cv::namedWindow("Video", CV_WINDOW_NORMAL);
 
+    cv::setWindowProperty("Video", CV_WND_PROP_FULLSCREEN, !cv::getWindowProperty("Video", CV_WND_PROP_FULLSCREEN));
     keepGoing = true;
     doneCheck = false;
     mode = CALIBRATE;
@@ -189,7 +191,8 @@ void Supervisor::checkKeyboard() {
             if (!playTime.isPlaying) {
                 playTime.beginGame();
             }
-            printf("Play Mode set to PLAY\n");
+            MotorDriver::getInstance().toggleFan();
+	    printf("Play Mode set to PLAY\n");
             break;
         case 'r':
             mode = IDLE;
@@ -197,6 +200,7 @@ void Supervisor::checkKeyboard() {
                 playTime.endGame();
             }
             printf("Play Mode set to IDLE\n");
+            MotorDriver::getInstance().toggleFan();
             break;
         case 'e':
             difficulty = EASY;
@@ -259,23 +263,22 @@ void Supervisor::idle() {
     }
     switch (idleFrameCount % 3) {
         case 0:
-            idleImage = cv::imread("pic1.bmp", CV_LOAD_IMAGE_COLOR);
+            /*idleImage = cv::imread("pic1.bmp", CV_LOAD_IMAGE_COLOR);
             if (!idleImage.data) {
                 printf("Can't open idle image\n");
             } else {
                 imshow("Video", idleImage);
             }
-            break;
+            break;*/
         case 1:
-            idleImage = cv::imread("pic2.jpg", CV_LOAD_IMAGE_COLOR);
+            idleImage = cv::imread("img2.jpg", CV_LOAD_IMAGE_COLOR);
             if (!idleImage.data) {
                 printf("Can't open idle image\n");
             } else {
-                imshow("Video", idleImage);
             }
             break;
         case 2:
-            idleImage = cv::imread("pic3.png", CV_LOAD_IMAGE_COLOR);
+            idleImage = cv::imread("img3.jpg", CV_LOAD_IMAGE_COLOR);
             if (!idleImage.data) {
                 printf("Can't open idle image\n");
             } else {
@@ -285,6 +288,10 @@ void Supervisor::idle() {
         default:
             break;
     }
+ 	cv::addText(idleImage, "Educational", cvPoint(10,idleImage.rows/2-80), font);
+ 	cv::addText(idleImage, "Content", cvPoint(10,idleImage.rows/2+80), font);
+    imshow("Video", idleImage);
+
 }
 
 void Supervisor::makeDecision(GameState& gs) {
@@ -359,7 +366,6 @@ void Supervisor::display(const GameState gs, const cv::Point_<int> movingTo) {
         }
     }
 }
-const cv::QtFont font = cv::fontQt("Monospace", 30, cv::Scalar(255, 225, 0));
 void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_<int> movingTo) {
     char tempStr[80] = {};
     const double ratio = 1.0;
