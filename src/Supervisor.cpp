@@ -374,7 +374,7 @@ void Supervisor::decorate(GameState gs, cv::Mat in, double frameRate, cv::Point_
         cv::circle(in, testTraj[i], 2, cv::Scalar(255, 255, 255), 4);
     }*/
     for (int i = 0; i < gs.puckTraj.size(); i ++) {
-        cv::line(in, gs.puckTraj.back()[0], gs.puckTraj.back()[1], cv::Scalar(255, 255, 255), 4);
+        cv::line(in, gs.puckTraj[i][0], gs.puckTraj.back[i][1], cv::Scalar(255, 255, 255), 4);
     }
 
     // drawing the motion limits
