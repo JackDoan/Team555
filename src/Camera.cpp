@@ -9,9 +9,8 @@
 #include "../inc/Camera.h"
 #include "../inc/Settings.h"
 
-#include <time.h>
-#include <stropts.h>
-#include <bits/fcntl-linux.h>
+#include <ctime>
+
 #include <fcntl.h>
 
 
@@ -33,15 +32,16 @@ Camera::Camera(int nwidth, int nheight) {
 
 //gst-launch-1.0 tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance ! bayer2rgb ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! xvimagesink
 
-    auto fd = open("/dev/bus/", O_WRONLY);
-    ioctl(fd, USBDEVFS_RESET, 0);
-    close(fd);
+//    auto fd = open("/dev/bus/", O_WRONLY);
+//    ioctl(fd, USBDEVFS_RESET, 0);
+//    close(fd);
+//
+//
 
-
-    system("tcam-ctrl -p -s \"Exposure=5000\" 42614274");
+    system("tcam-ctrl -p -s \"Exposure=4000\" 42614274");
     system("tcam-ctrl -p -s \"Gain=96\" 42614274");
     system("tcam-ctrl -p -s \"Brightness=50\" 42614274"); //auto=false red=110 green=105 blue=200
-    cv::waitKey(2000);
+    cv::waitKey(4000);
     capture.open("tcamsrc ! video/x-bayer,format=grbg,width=1280,height=720,fps=80/1 ! tcamwhitebalance auto=false red=90 green=90 blue=200 ! bayer2rgb ! video/x-raw,format=RGBx ! videoconvert ! appsink" );
     /*autovideosink*/
     //capture.open("tcambin ! video/x-raw,format=RGBx,width=1280,height=720,framerate=80/1 ! videobalance saturation=2.0 ! videobalance saturation=2.0 ! videoconvert ! appsink" );
