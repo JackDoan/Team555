@@ -179,20 +179,33 @@ std::vector<cv::Point_<int>> Trajectory::newCalc(GameState& gs) {
                 }
 
             }
-            cv::Point_<int> t = {abs(nextPoint.x - toReturn[i].x), abs(nextPoint.y - toReturn[i].y)};
-            cv::Point_<int> c = {abs(intersection.x - toReturn[i].x), abs(intersection.y - toReturn[i].y)};
-            cv::Point_<int> l = t - c;
+            cv::Point_<int> total = {abs(nextPoint.x - toReturn[i].x), abs(nextPoint.y - toReturn[i].y)};
+            cv::Point_<int> clipped = {abs(intersection.x - toReturn[i].x), abs(intersection.y - toReturn[i].y)};
+            cv::Point_<int> leftover = total - clipped;
             cv::Point_<int> nextnextPoint;
-
+            int xdir;
+            int ydir;
+            if (toReturn[i].x - toReturn[i-1].x < 0) {
+                xdir = -1;
+            } else {
+                xdir = 1;
+            }
+            if (toReturn[i].y - toReturn[i-1].y < 0) {
+                ydir = -1;
+            } else {
+                ydir = 1;
+            }
             if (bounces[0] || bounces[2]) {
-                l.x = -1* l.x;
-                nextPoint = intersection + l;
-                nextnextPoint = nextPoint + cv::Point(-1 * t.x, t.y);
+                leftover.x = -1* leftover.x;
+                leftover.y = ydir * leftover.y;
+                nextPoint = intersection + leftover;
+                nextnextPoint = nextPoint + cv::Point(-1 * total.x, total.y);
                 i++;
             } else if (bounces[1] || bounces[3]) {
-                l.y = -1 * l.y;
-                nextPoint = intersection + l;
-                nextnextPoint = nextPoint + cv::Point(t.x, -1 * t.y);
+                leftover.x = xdir * leftover.x;
+                leftover.y = -1 * leftover.y;
+                nextPoint = intersection + leftover;
+                nextnextPoint = nextPoint + cv::Point(total.x, -1 * total.y);
                 i++;
             }
 
